@@ -1,0 +1,25 @@
+[package]
+name = "validator_derive"
+version = "0.1.0"
+authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
+license = "MIT"
+description = "Macros 1.1 implementation of #[derive(Validate)]"
+homepage = "https://github.com/Keats/validator"
+repository = "https://github.com/Keats/validator"
+keywords = ["validation", "api", "validator"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.10"
+quote = "0.3"
+
+[dev-dependencies]
+serde = "0.8"
+serde_derive = "0.8"
+serde_json = "0.8"
+compiletest_rs = "*"
+
+[dependencies.validator]
+path = "../validator"

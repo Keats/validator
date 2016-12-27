@@ -1,0 +1,15 @@
+[package]
+name = "validator"
+version = "0.1.0"
+authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
+license = "MIT"
+description = "Common validation functions (email, url, length, ...) and trait"
+homepage = "https://github.com/Keats/validator"
+repository = "https://github.com/Keats/validator"
+keywords = ["validation", "api", "validator"]
+
+[dependencies]
+url = "1.2"
+regex = "0.1"
+lazy_static = "0.2"
+idna = "0.1"
