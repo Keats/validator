@@ -6,7 +6,7 @@ Status: Experimental - do not use in production
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
-It currently only works on nightly but should work on stable in Rust 1.15.
+It currently only works on nightly as it uses 2 features: `proc_macro` and `attr_literals`. `proc_macro` should be stable in Rust 1.15 but there are no plans for `attr_literals` yet.
 
 A short example:
 ```rust
