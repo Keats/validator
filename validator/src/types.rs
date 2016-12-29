@@ -12,6 +12,8 @@ pub trait Validate {
 pub enum Validator {
     // String is the path to the function
     Custom(String),
+    // String is the name of the field to match
+    MustMatch(String),
     // value is a &str
     Email,
     // value is a &str

@@ -21,6 +21,14 @@ struct SignupData {
     age: u32,
 }
 
+#[derive(Debug, Validate)]
+struct PasswordData {
+    #[validate(must_match = "password2")]
+    password: String,
+    password2: String,
+}
+
+
 fn validate_unique_username(username: &str) -> Option<String> {
     if username == "xXxShad0wxXx" {
         return Some("terrible_username".to_string());
@@ -133,4 +141,23 @@ fn test_custom_validation_error() {
     let errs = res.unwrap_err();
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["firstName"], vec!["terrible_username".to_string()]);
+}
+
+#[test]
+fn test_must_match_can_work() {
+    let data = PasswordData {
+        password: "passw0rd".to_string(),
+        password2: "passw0rd".to_string(),
+    };
+    assert!(data.validate().is_ok())
+}
+
+
+#[test]
+fn test_must_match_can_fail() {
+    let data = PasswordData {
+        password: "passw0rd".to_string(),
+        password2: "password".to_string(),
+    };
+    assert!(data.validate().is_err())
 }

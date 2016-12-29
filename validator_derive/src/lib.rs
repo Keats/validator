@@ -1,18 +1,19 @@
 #![feature(proc_macro, proc_macro_lib)]
 #![recursion_limit = "128"]
 
+
 #[macro_use] extern crate quote;
 extern crate proc_macro;
 extern crate syn;
 extern crate validator;
 
+use std::collections::HashMap;
 
 use proc_macro::TokenStream;
 use quote::ToTokens;
 use validator::{Validator};
 
 
-static LENGTH_TYPES: [&'static str; 2] = ["String", "Vec"];
 static RANGE_TYPES: [&'static str; 12] = [
     "usize", "u8", "u16", "u32", "u64", "isize", "i8", "i16", "i32", "i64", "f32", "f64"
 ];
@@ -42,13 +43,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
 
     let mut validations = vec![];
 
+    let field_types = find_fields_type(&fields);
+
     for field in fields {
         let field_ident = match field.ident {
             Some(ref i) => i,
             None => unreachable!()
         };
 
-        let (name, validators) = find_validators_for_field(field);
+        let (name, validators) = find_validators_for_field(field, &field_types);
         for validator in &validators {
             validations.push(match validator {
                 &Validator::Length {min, max, equal} =>  {
@@ -93,6 +96,14 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         }
                     )
                 },
+                &Validator::MustMatch(ref f) => {
+                    let other_ident = syn::Ident::new(f.clone());
+                    quote!(
+                        if !::validator::validate_must_match(&self.#field_ident, &self.#other_ident) {
+                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("no_match".to_string());
+                        }
+                    )
+                },
                 &Validator::Custom(ref f) => {
                     let fn_ident = syn::Ident::new(f.clone());
                     quote!(
@@ -127,8 +138,34 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
     impl_ast
 }
 
+// Find all the types (as string) for each field of the struct
+// Needed for the `must_match` filter
+fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
+    let mut types = HashMap::new();
+
+    for field in fields {
+        let field_name = match field.ident {
+            Some(ref s) => s.to_string(),
+            None => unreachable!(),
+        };
+
+        let field_type = match field.ty {
+            syn::Ty::Path(_, ref p) => {
+                let mut tokens = quote::Tokens::new();
+                p.to_tokens(&mut tokens);
+                tokens.to_string().replace(' ', "")
+
+            },
+            _ => panic!("Type `{:?}` of field `{}` not supported", field.ty, field_name)
+        };
+        types.insert(field_name, field_type);
+    }
+
+    types
+}
+
 /// Find everything we need to know about a Field.
-fn find_validators_for_field(field: &syn::Field) -> (String, Vec<Validator>) {
+fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, String>) -> (String, Vec<Validator>) {
     let mut field_name = match field.ident {
         Some(ref s) => s.to_string(),
         None => unreachable!(),
@@ -137,16 +174,10 @@ fn find_validators_for_field(field: &syn::Field) -> (String, Vec<Validator>) {
     let error = |msg: &str| -> ! {
         panic!("Invalid attribute #[validate] on field `{}`: {}", field.ident.clone().unwrap().to_string(), msg);
     };
-
-    let field_type = match field.ty {
-        syn::Ty::Path(_, ref p) => {
-            p.segments[0].ident.to_string()
-
-        },
-        _ => error(&format!("Type `{:?}` not supported", field.ty))
-    };
+    let field_type = field_types.get(&field_name).unwrap();
 
     let mut validators = vec![];
+    let mut has_validate = false;
 
     let find_struct_validator = |name: String, meta_items: &Vec<syn::NestedMetaItem>| -> Validator {
         match name.as_ref() {
@@ -237,6 +268,10 @@ fn find_validators_for_field(field: &syn::Field) -> (String, Vec<Validator>) {
             continue;
         }
 
+        if attr.name() == "validate" {
+            has_validate = true;
+        }
+
         match attr.value {
             syn::MetaItem::List(_, ref meta_items) => {
                 if attr.name() == "serde" {
@@ -269,20 +304,37 @@ fn find_validators_for_field(field: &syn::Field) -> (String, Vec<Validator>) {
                             },
                             // custom
                             syn::MetaItem::NameValue(ref name, ref val) => {
-                                if name == "custom" {
-                                    match lit_to_string(val) {
-                                        Some(s) => validators.push(Validator::Custom(s)),
-                                        None => error("invalid argument for `custom` validator: only strings are allowed"),
-                                    };
-                                } else {
-                                    panic!("unexpected name value validator: {:?}", name);
-                                }
+                                match name.to_string().as_ref() {
+                                    "custom" => {
+                                        match lit_to_string(val) {
+                                            Some(s) => validators.push(Validator::Custom(s)),
+                                            None => error("invalid argument for `custom` validator: only strings are allowed"),
+                                        };
+                                    },
+                                    "must_match" => {
+                                        match lit_to_string(val) {
+                                            Some(s) => {
+                                                if let Some(t2) = field_types.get(&s) {
+                                                    if field_type == t2 {
+                                                        validators.push(Validator::MustMatch(s));
+                                                    } else {
+                                                        error("invalid argument for `must_match` validator: types of field can't match");
+                                                    }
+                                                } else {
+                                                    error("invalid argument for `must_match` validator: field doesn't exist in struct");
+                                                }
+                                            },
+                                            None => error("invalid argument for `must_match` validator: only strings are allowed"),
+                                        };
+                                    },
+                                    _ => panic!("unexpected name value validator: {:?}", name),
+                                };
                             },
                             // validators with args: length for example
                             syn::MetaItem::List(ref name, ref meta_items) => {
                                 // Some sanity checking first
                                 if name == "length" {
-                                    if !LENGTH_TYPES.contains(&field_type.as_ref()) {
+                                    if field_type != "String" && !field_type.starts_with("Vec<") {
                                         error(&format!(
                                             "Validator `length` can only be used on types `String` or `Vec` but found `{}`",
                                             field_type
@@ -318,7 +370,7 @@ fn find_validators_for_field(field: &syn::Field) -> (String, Vec<Validator>) {
         }
     }
 
-    if validators.is_empty() {
+    if has_validate && validators.is_empty() {
         error("it needs at least one validator");
     }
 
@@ -359,10 +411,6 @@ fn find_original_field_name(meta_items: &Vec<syn::NestedMetaItem>) -> Option<Str
     original_name
 }
 
-//
-//fn quote_length_validator(min: Option<u64>, max: Option<u64>, equal: Option<u64>) {
-//
-//}
 
 fn lit_to_string(lit: &syn::Lit) -> Option<String> {
     match *lit {

@@ -103,6 +103,16 @@ Examples:
 #[validate(range(min = 1.1, max = 10.8))]
 ```
 
+### must_match
+Tests whether the 2 fields are equal. `must_match` takes 1 string argument. It will error if the field
+mentioned is missing or has a different type than the field the attribute is on.
+
+Examples:
+
+```rust
+#[validate(must_match = "password2"))]
+```
+
 ### custom
 Calls one of your function to do a custom validation. 
 The field will be given as parameter and it should return a `Option<String>` representing the error code,
