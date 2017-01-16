@@ -49,8 +49,8 @@ fn validate_domain_part(domain_part: &str) -> bool {
     // maybe we have an ip as a domain?
     match EMAIL_LITERAL_RE.captures(domain_part) {
         Some(caps) => {
-            match caps.at(1) {
-                Some(c) => validate_ip(c),
+            match caps.get(1) {
+                Some(c) => validate_ip(c.as_str()),
                 None => false,
             }
         }

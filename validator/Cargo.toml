@@ -10,6 +10,6 @@ keywords = ["validation", "api", "validator"]
 
 [dependencies]
 url = "1.2"
-regex = "0.1"
+regex = "0.2"
 lazy_static = "0.2"
 idna = "0.1"

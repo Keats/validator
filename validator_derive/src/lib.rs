@@ -1,4 +1,3 @@
-#![feature(proc_macro, proc_macro_lib)]
 #![recursion_limit = "128"]
 
 
