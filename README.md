@@ -126,3 +126,25 @@ Examples:
 ```
 
 TODO: have it return a bool and pass a `code` to the `custom` validator instead?
+
+## Struct level validation
+Often, some error validation can only be applied when looking at the full struct, here's how it works here:
+
+
+```rust
+#[derive(Debug, Validate, Deserialize)]
+#[validate(schema(function = "validate_category", skip_on_field_errors = false)]
+struct CategoryData {
+    category: String,
+    name: String,
+}
+```
+
+The function mentioned should return a `Option<(String, String)>` where the tuple is (key error, error code)
+and will be called after validation is done for all fields.
+This means that the error can be reported on an existing field or on a new key.
+
+The `skip_on_field_errors` defaults to `true` if not present and will ensure that the function is not called
+if an error happened while validating the struct fields.
+
+

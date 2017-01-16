@@ -9,6 +9,7 @@ use validator::Validate;
 
 
 #[derive(Debug, Validate, Deserialize)]
+#[validate(schema(function = "validate_signup", skip_on_field_errors = false))]
 struct SignupData {
     #[validate(email)]
     mail: String,
@@ -35,6 +36,44 @@ fn validate_unique_username(username: &str) -> Option<String> {
     }
 
     None
+}
+
+fn validate_signup(data: &SignupData) -> Option<(String, String)> {
+    if data.mail.ends_with("gmail.com") && data.age == 18 {
+        return Some(("all".to_string(), "stupid_rule".to_string()));
+    }
+
+    None
+}
+
+#[derive(Debug, Validate, Deserialize)]
+#[validate(schema(function = "validate_signup2", skip_on_field_errors = false))]
+struct SignupData2 {
+    #[validate(email)]
+    mail: String,
+    #[validate(range(min = 18, max = 20))]
+    age: u32,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+#[validate(schema(function = "validate_signup3"))]
+struct SignupData3 {
+    #[validate(email)]
+    mail: String,
+    #[validate(range(min = 18, max = 20))]
+    age: u32,
+}
+
+fn validate_signup2(data: &SignupData2) -> Option<(String, String)> {
+    if data.mail.starts_with("bob") && data.age == 18 {
+        return Some(("mail".to_string(), "stupid_rule".to_string()));
+    }
+
+    None
+}
+
+fn validate_signup3(_: &SignupData3) -> Option<(String, String)> {
+    Some(("mail".to_string(), "stupid_rule".to_string()))
 }
 
 #[test]
@@ -160,4 +199,46 @@ fn test_must_match_can_fail() {
         password2: "password".to_string(),
     };
     assert!(data.validate().is_err())
+}
+
+#[test]
+fn test_can_fail_struct_validation_new_key() {
+    let signup = SignupData {
+        mail: "bob@gmail.com".to_string(),
+        site: "https://hello.com".to_string(),
+        first_name: "xXxShad0wxXx".to_string(),
+        age: 18,
+    };
+    let res = signup.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err();
+    assert!(errs.contains_key("all"));
+    assert_eq!(errs["all"], vec!["stupid_rule".to_string()]);
+}
+
+#[test]
+fn test_can_fail_struct_validation_existing_key() {
+    let signup = SignupData2 {
+        mail: "bob".to_string(),
+        age: 18,
+    };
+    let res = signup.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err();
+    assert!(errs.contains_key("mail"));
+    assert_eq!(errs["mail"], vec!["email".to_string(), "stupid_rule".to_string()]);
+}
+
+#[test]
+fn test_skip_struct_validation_by_default_if_errors() {
+    let signup = SignupData3 {
+        mail: "bob".to_string(),
+        age: 18,
+    };
+    let res = signup.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err();
+    assert!(errs.contains_key("mail"));
+    assert_eq!(errs["mail"], vec!["email".to_string()]);
+
 }
