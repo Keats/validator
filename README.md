@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/Keats/validator.svg)](https://travis-ci.org/Keats/validator)
 
-Status: Experimental - do not use in production
-
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 It relies on the `proc_macro` feature which will be stable in Rust 1.15.
