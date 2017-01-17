@@ -97,9 +97,9 @@ Tests whether a number is in the given range. `range` takes 2 number arguments: 
 Examples:
 
 ```rust
-#[validate(range(min = 1, max = 10))]
-#[validate(range(min = 1, max = 10.8))]
-#[validate(range(min = 1.1, max = 10.8))]
+#[validate(range(min = "1", max = "10"))]
+#[validate(range(min = "1", max = "10.8"))]
+#[validate(range(min = "1.1", max = "10.8"))]
 ```
 
 ### must_match
