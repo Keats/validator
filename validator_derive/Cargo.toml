@@ -19,7 +19,7 @@ quote = "0.3"
 serde = "0.8"
 serde_derive = "0.8"
 serde_json = "0.8"
-compiletest_rs = "*"
+compiletest_rs = "0.2"
 
 [dependencies.validator]
 # path = "../validator"
