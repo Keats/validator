@@ -149,3 +149,10 @@ The `skip_on_field_errors` defaults to `true` if not present and will ensure tha
 if an error happened while validating the struct fields.
 
 
+## Changelog
+
+### 0.2.0 (2017/01/17)
+
+- Remove need for `attr_literals` feature
+- Fix error when not having validation on each field
+- Add struct level validation
