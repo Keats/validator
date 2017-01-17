@@ -154,3 +154,4 @@ if an error happened while validating the struct fields.
 - Remove need for `attr_literals` feature
 - Fix error when not having validation on each field
 - Add struct level validation
+- Add `must_match` validator
