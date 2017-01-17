@@ -6,12 +6,14 @@ Status: Experimental - do not use in production
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
-It currently only works on nightly as it uses 2 features: `proc_macro` and `attr_literals`. `proc_macro` should be stable in Rust 1.15 but there are no plans for `attr_literals` yet.
+It relies on the `proc_macro` feature which will be stable in Rust 1.15.
+
+By default all args to a `validate` must be strings if you are using stable. 
+However, if you are using nightly, you can also activate the `attr_literals` feature to be able to use int, float and boolean as well.
+
 
 A short example:
 ```rust
-#![feature(proc_macro, attr_literals)]
-
 #[macro_use] extern crate validator_derive;
 extern crate validator;
 #[macro_use] extern crate serde_derive;
@@ -26,10 +28,10 @@ struct SignupData {
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = 1), custom = "validate_unique_username")]
+    #[validate(length(min = "1"), custom = "validate_unique_username")]
     #[serde(rename = "firstName")]
     first_name: String,
-    #[validate(range(min = 18, max = 20))]
+    #[validate(range(min = "18", max = "20"))]
     age: u32,
 }
 
@@ -54,8 +56,7 @@ field is renamed from/to `firstName`. Any error on that field will be in the `fi
 not `first_name`.
 
 ## Usage
-You will need to add the `proc_macro` and `attr_literals` as seen in the example, as
-well as importing the `Validate` trait.
+You will need to import the `Validate` trait, and optionally use the `attr_literals` feature.
 
 The `validator` crate can also be used without the custom derive as it exposes all the
 validation functions.
@@ -86,10 +87,10 @@ At least one argument is required with a maximum of 2 (having `min` and `max` at
 Examples:
 
 ```rust
-#[validate(length(min = 1, max = 10))]
-#[validate(length(min = 1))]
-#[validate(length(max = 10))]
-#[validate(length(equal = 10))]
+#[validate(length(min = "1", max = "10"))]
+#[validate(length(min = "1"))]
+#[validate(length(max = "10"))]
+#[validate(length(equal = "10"))]
 ```
 
 ### range
@@ -133,7 +134,7 @@ Often, some error validation can only be applied when looking at the full struct
 
 ```rust
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_category", skip_on_field_errors = false)]
+#[validate(schema(function = "validate_category", skip_on_field_errors = "false")]
 struct CategoryData {
     category: String,
     name: String,

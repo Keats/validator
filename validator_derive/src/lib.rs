@@ -526,6 +526,8 @@ fn lit_to_string(lit: &syn::Lit) -> Option<String> {
 fn lit_to_int(lit: &syn::Lit) -> Option<u64> {
     match *lit {
         syn::Lit::Int(ref s, _) => Some(*s),
+        // TODO: remove when attr_literals is stable
+        syn::Lit::Str(ref s, _) => Some(s.parse::<u64>().unwrap()),
         _ => None,
     }
 }
@@ -534,6 +536,8 @@ fn lit_to_float(lit: &syn::Lit) -> Option<f64> {
     match *lit {
         syn::Lit::Float(ref s, _) => Some(s.parse::<f64>().unwrap()),
         syn::Lit::Int(ref s, _) => Some(*s as f64),
+        // TODO: remove when attr_literals is stable
+        syn::Lit::Str(ref s, _) => Some(s.parse::<f64>().unwrap()),
         _ => None,
     }
 }
@@ -541,6 +545,7 @@ fn lit_to_float(lit: &syn::Lit) -> Option<f64> {
 fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     match *lit {
         syn::Lit::Bool(ref s) => Some(*s),
+        syn::Lit::Str(ref s, _) => if s == "true" { Some(true) } else { Some(false) },
         _ => None,
     }
 }

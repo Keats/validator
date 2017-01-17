@@ -1,5 +1,3 @@
-#![feature(attr_literals)]
-
 #[macro_use] extern crate validator_derive;
 extern crate validator;
 #[macro_use] extern crate serde_derive;
@@ -9,16 +7,16 @@ use validator::Validate;
 
 
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_signup", skip_on_field_errors = false))]
+#[validate(schema(function = "validate_signup", skip_on_field_errors = "false"))]
 struct SignupData {
     #[validate(email)]
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = 1), custom = "validate_unique_username")]
+    #[validate(length(min = "1"), custom = "validate_unique_username")]
     #[serde(rename = "firstName")]
     first_name: String,
-    #[validate(range(min = 18, max = 20))]
+    #[validate(range(min = "18", max = "20"))]
     age: u32,
 }
 
@@ -47,11 +45,11 @@ fn validate_signup(data: &SignupData) -> Option<(String, String)> {
 }
 
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_signup2", skip_on_field_errors = false))]
+#[validate(schema(function = "validate_signup2", skip_on_field_errors = "false"))]
 struct SignupData2 {
     #[validate(email)]
     mail: String,
-    #[validate(range(min = 18, max = 20))]
+    #[validate(range(min = "18", max = "20"))]
     age: u32,
 }
 
@@ -60,7 +58,7 @@ struct SignupData2 {
 struct SignupData3 {
     #[validate(email)]
     mail: String,
-    #[validate(range(min = 18, max = 20))]
+    #[validate(range(min = "18", max = "20"))]
     age: u32,
 }
 
