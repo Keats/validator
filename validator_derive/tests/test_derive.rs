@@ -56,7 +56,7 @@ struct SignupData2 {
 #[derive(Debug, Validate, Deserialize)]
 #[validate(schema(function = "validate_signup3"))]
 struct SignupData3 {
-    #[validate(email)]
+    #[validate(email, contains = "bob")]
     mail: String,
     #[validate(range(min = "18", max = "20"))]
     age: u32,
@@ -96,7 +96,7 @@ fn test_bad_email_fails_validation() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
     assert_eq!(errs["mail"], vec!["email".to_string()]);
 }
@@ -111,7 +111,7 @@ fn test_bad_url_fails_validation() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("site"));
     assert_eq!(errs["site"], vec!["url".to_string()]);
 }
@@ -126,8 +126,7 @@ fn test_bad_length_fails_validation_and_points_to_original_name() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
-    println!("{:?}", errs);
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["firstName"], vec!["length".to_string()]);
 }
@@ -143,7 +142,7 @@ fn test_bad_range_fails_validation() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
     assert_eq!(errs["age"], vec!["range".to_string()]);
 }
@@ -158,7 +157,7 @@ fn test_can_have_multiple_errors() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["age"], vec!["range".to_string()]);
@@ -175,7 +174,7 @@ fn test_custom_validation_error() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["firstName"], vec!["terrible_username".to_string()]);
 }
@@ -209,7 +208,7 @@ fn test_can_fail_struct_validation_new_key() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("all"));
     assert_eq!(errs["all"], vec!["stupid_rule".to_string()]);
 }
@@ -222,7 +221,7 @@ fn test_can_fail_struct_validation_existing_key() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
     assert_eq!(errs["mail"], vec!["email".to_string(), "stupid_rule".to_string()]);
 }
@@ -235,8 +234,20 @@ fn test_skip_struct_validation_by_default_if_errors() {
     };
     let res = signup.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err();
+    let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
     assert_eq!(errs["mail"], vec!["email".to_string()]);
+}
 
+#[test]
+fn test_can_fail_contains_validation() {
+    let signup = SignupData3 {
+        mail: "bo@gmail.com".to_string(),
+        age: 18,
+    };
+    let res = signup.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().inner();
+    assert!(errs.contains_key("mail"));
+    assert_eq!(errs["mail"], vec!["contains".to_string()]);
 }

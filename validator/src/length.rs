@@ -1,7 +1,9 @@
 use types::Validator;
 
-// a bit sad but we can generically refer to a struct that has a len() method
-// so we impl our own trait for it
+/// Trait to implement if one wants to make the `length` validator
+/// work for more types
+///
+/// A bit sad it's not there by default in Rust
 pub trait HasLen {
     fn length(&self) -> u64;
 }

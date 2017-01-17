@@ -112,6 +112,16 @@ Examples:
 #[validate(must_match = "password2"))]
 ```
 
+### contains
+Tests whether the string contains the substring given or if a key is present in a hashmap. `contains` takes
+1 string argument.
+
+Examples:
+
+```rust
+#[validate(contains = "gmail"))]
+```
+
 ### custom
 Calls one of your function to do a custom validation. 
 The field will be given as parameter and it should return a `Option<String>` representing the error code,

@@ -75,7 +75,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                             },
                             &self.#field_ident
                         ) {
-                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("length".to_string());
+                            errors.add(#name, "length");
                         }
                     )
                 },
@@ -85,21 +85,21 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                             ::validator::Validator::Range {min: #min, max: #max},
                             self.#field_ident as f64
                         ) {
-                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("range".to_string());
+                            errors.add(#name, "range");
                         }
                     )
                 },
                 &Validator::Email => {
                     quote!(
                         if !::validator::validate_email(&self.#field_ident) {
-                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("email".to_string());
+                            errors.add(#name, "email");
                         }
                     )
                 }
                 &Validator::Url => {
                     quote!(
                         if !::validator::validate_url(&self.#field_ident) {
-                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("url".to_string());
+                            errors.add(#name, "url");
                         }
                     )
                 },
@@ -107,7 +107,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     let other_ident = syn::Ident::new(f.clone());
                     quote!(
                         if !::validator::validate_must_match(&self.#field_ident, &self.#other_ident) {
-                            errors.entry(#name.to_string()).or_insert_with(|| vec![]).push("no_match".to_string());
+                            errors.add(#name, "no_match");
                         }
                     )
                 },
@@ -116,10 +116,17 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     quote!(
                         match #fn_ident(&self.#field_ident) {
                             ::std::option::Option::Some(s) => {
-                                errors.entry(#name.to_string()).or_insert_with(|| vec![]).push(s)
+                                errors.add(#name, &s);
                             },
                             ::std::option::Option::None => (),
                         };
+                    )
+                },
+                &Validator::Contains(ref n) => {
+                    quote!(
+                        if !::validator::validate_contains(&self.#field_ident, &#n) {
+                            errors.add(#name, "contains");
+                        }
                     )
                 },
             });
@@ -135,7 +142,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if errors.is_empty() {
                         match #fn_ident(self) {
                             ::std::option::Option::Some((key, val)) => {
-                                errors.entry(key).or_insert_with(|| vec![]).push(val)
+                                errors.add(&key, &val);
                             },
                             ::std::option::Option::None => (),
                         }
@@ -145,7 +152,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 quote!(
                     match #fn_ident(self) {
                         ::std::option::Option::Some((key, val)) => {
-                            errors.entry(key).or_insert_with(|| vec![]).push(val)
+                            errors.add(&key, &val);
                         },
                         ::std::option::Option::None => (),
                     }
@@ -159,8 +166,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
     let impl_ast = quote!(
         impl Validate for #ident {
             fn validate(&self) -> ::std::result::Result<(), ::validator::Errors> {
-                use std::collections::HashMap;
-                let mut errors = HashMap::new();
+                let mut errors = ::validator::Errors::new();
 
                 #(#validations)*
 
@@ -416,13 +422,19 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 },
                                 _ => panic!("Unexpected word validator: {}", name)
                             },
-                            // custom
+                            // custom, contains, must_match
                             syn::MetaItem::NameValue(ref name, ref val) => {
                                 match name.to_string().as_ref() {
                                     "custom" => {
                                         match lit_to_string(val) {
                                             Some(s) => validators.push(Validator::Custom(s)),
                                             None => error("invalid argument for `custom` validator: only strings are allowed"),
+                                        };
+                                    },
+                                    "contains" => {
+                                        match lit_to_string(val) {
+                                            Some(s) => validators.push(Validator::Contains(s)),
+                                            None => error("invalid argument for `contains` validator: only strings are allowed"),
                                         };
                                     },
                                     "must_match" => {
@@ -555,6 +567,7 @@ fn lit_to_float(lit: &syn::Lit) -> Option<f64> {
 fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     match *lit {
         syn::Lit::Bool(ref s) => Some(*s),
+        // TODO: remove when attr_literals is stable
         syn::Lit::Str(ref s, _) => if s == "true" { Some(true) } else { Some(false) },
         _ => None,
     }

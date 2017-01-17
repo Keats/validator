@@ -1,13 +1,34 @@
 use std::collections::HashMap;
 
 
-pub type Errors = HashMap<String, Vec<String>>;
+pub struct Errors(HashMap<String, Vec<String>>);
+
+impl Errors {
+    pub fn new() -> Errors {
+        Errors(HashMap::new())
+    }
+
+    pub fn inner(self) -> HashMap<String, Vec<String>> {
+        self.0
+    }
+
+    pub fn add(&mut self, field: &str, err: &str) {
+        self.0.entry(field.to_string()).or_insert_with(|| vec![]).push(err.to_string());
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
 
 pub trait Validate {
-    //fn load_and_validate<T>(data: &str) -> Result<T, Errors>;
     fn validate(&self) -> Result<(), Errors>;
 }
 
+/// Contains all the validators that can be used
+///
+/// In this crate as it's not allowed to export more than the proc macro
+/// in a proc macro crate
 #[derive(Debug, Clone)]
 pub enum Validator {
     // String is the path to the function
@@ -18,6 +39,10 @@ pub enum Validator {
     Email,
     // value is a &str
     Url,
+    // value is a &str or a HashMap<String, ..>
+    Contains(String),
+    // value is a &str
+    // Regex(String),
     // value is a number
     Range {
         min: f64,

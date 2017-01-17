@@ -11,6 +11,7 @@ mod length;
 mod range;
 mod urls;
 mod must_match;
+mod contains;
 
 
 pub use types::{Errors, Validate, Validator};
@@ -20,3 +21,4 @@ pub use length::{HasLen, validate_length};
 pub use range::{validate_range};
 pub use urls::{validate_url};
 pub use must_match::{validate_must_match};
+pub use contains::{Contains, validate_contains};
