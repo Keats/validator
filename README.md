@@ -122,6 +122,16 @@ Examples:
 #[validate(contains = "gmail"))]
 ```
 
+### regex
+Tests whether the string matchs the regex given. `regex` takes
+1 string argument: the path to a static Regex instance.
+
+Examples:
+
+```rust
+#[validate(regex = "ALLOWED_USERNAMES_RE"))]
+```
+
 ### custom
 Calls one of your function to do a custom validation. 
 The field will be given as parameter and it should return a `Option<String>` representing the error code,

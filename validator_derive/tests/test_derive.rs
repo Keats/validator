@@ -2,8 +2,11 @@
 extern crate validator;
 #[macro_use] extern crate serde_derive;
 extern crate serde_json;
+extern crate regex;
+#[macro_use] extern crate lazy_static;
 
 use validator::Validate;
+use regex::Regex;
 
 
 #[derive(Debug, Validate, Deserialize)]
@@ -250,4 +253,21 @@ fn test_can_fail_contains_validation() {
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
     assert_eq!(errs["mail"], vec!["contains".to_string()]);
+}
+
+#[test]
+fn test_can_check_regex_validator() {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"[a-z]{2}").unwrap();
+    }
+
+    #[derive(Debug, Validate)]
+    struct RegexStruct {
+        #[validate(regex = "RE")]
+        name: String,
+    }
+    let s = RegexStruct {name: "al".to_string()};
+    assert!(s.validate().is_ok());
+    let s2 = RegexStruct {name: "AL".to_string()};
+    assert!(s2.validate().is_err());
 }

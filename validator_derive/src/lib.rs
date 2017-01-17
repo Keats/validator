@@ -129,6 +129,14 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         }
                     )
                 },
+                &Validator::Regex(ref re) => {
+                    let re_ident = syn::Ident::new(re.clone());
+                    quote!(
+                        if !#re_ident.is_match(&self.#field_ident) {
+                            errors.add(#name, "regex");
+                        }
+                    )
+                },
             });
         }
     }
@@ -437,6 +445,12 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                             None => error("invalid argument for `contains` validator: only strings are allowed"),
                                         };
                                     },
+                                    "regex" => {
+                                        match lit_to_string(val) {
+                                            Some(s) => validators.push(Validator::Regex(s)),
+                                            None => error("invalid argument for `regex` validator: only strings are allowed"),
+                                        };
+                                    }
                                     "must_match" => {
                                         match lit_to_string(val) {
                                             Some(s) => {

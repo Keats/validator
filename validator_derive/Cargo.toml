@@ -20,6 +20,8 @@ serde = "0.8"
 serde_derive = "0.8"
 serde_json = "0.8"
 compiletest_rs = "0.2"
+regex = "0.2"
+lazy_static = "0.2"
 
 [dependencies.validator]
 path = "../validator"

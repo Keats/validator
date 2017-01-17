@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 
+#[derive(Debug)]
 pub struct Errors(HashMap<String, Vec<String>>);
 
 impl Errors {
@@ -42,7 +43,7 @@ pub enum Validator {
     // value is a &str or a HashMap<String, ..>
     Contains(String),
     // value is a &str
-    // Regex(String),
+    Regex(String),
     // value is a number
     Range {
         min: f64,
