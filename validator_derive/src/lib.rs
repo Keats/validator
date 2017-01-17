@@ -130,17 +130,27 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
     let struct_validation_tokens = match struct_validation {
         Some(s) => {
             let fn_ident = syn::Ident::new(s.function);
-            let skip_on_field_errors = s.skip_on_field_errors;
-            quote!(
-                if !#skip_on_field_errors || #skip_on_field_errors && errors.len() == 0 {
+            if s.skip_on_field_errors {
+                quote!(
+                    if errors.is_empty() {
+                        match #fn_ident(self) {
+                            ::std::option::Option::Some((key, val)) => {
+                                errors.entry(key).or_insert_with(|| vec![]).push(val)
+                            },
+                            ::std::option::Option::None => (),
+                        }
+                    }
+                )
+            } else {
+                quote!(
                     match #fn_ident(self) {
                         ::std::option::Option::Some((key, val)) => {
                             errors.entry(key).or_insert_with(|| vec![]).push(val)
                         },
                         ::std::option::Option::None => (),
                     }
-                }
-            )
+                )
+            }
         },
         None => quote!()
     };
