@@ -169,6 +169,11 @@ if an error happened while validating the struct fields.
 
 ## Changelog
 
+### 0.3.0 (2017/01/17)
+
+- Add `contains` and `regex` validator
+- BREAKING: change `Errors` type to be a newtype in order to extend it
+
 ### 0.2.0 (2017/01/17)
 
 - Remove need for `attr_literals` feature
