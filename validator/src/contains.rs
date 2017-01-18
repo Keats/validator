@@ -7,6 +7,12 @@ pub trait Contains {
     fn has_element(&self, needle: &str) -> bool;
 }
 
+impl Contains for String {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
 impl<'a> Contains for &'a String {
     fn has_element(&self, needle: &str) -> bool {
         self.contains(needle)

@@ -18,8 +18,8 @@ static RANGE_TYPES: [&'static str; 24] = [
     "isize", "i8", "i16", "i32", "i64",
     "f32", "f64",
 
-    "Option<size>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
-    "Option<size>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
+    "Option<usize>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
+    "Option<isize>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
     "Option<32>", "Option<64>",
 ];
 
@@ -63,56 +63,117 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
         };
 
         let (name, validators) = find_validators_for_field(field, &field_types);
-        let validator_param = if field_types.get(&field_ident.to_string()).unwrap().starts_with("&") {
+        let field_name = field_types.get(&field_ident.to_string()).unwrap();
+        // Don't put a & in front a pointer
+        let validator_param = if field_name.starts_with("&") {
           quote!(self.#field_ident)
         } else {
           quote!(&self.#field_ident)
         };
+        // same but for the ident used in a if let block
+        let optional_validator_param = if field_name.starts_with("Option<&") {
+          quote!(#field_ident)
+        } else {
+          quote!(&#field_ident)
+        };
 
         for validator in &validators {
-            println!("field: {}, types: {:?}", field_ident, field_types);
             validations.push(match validator {
                 &Validator::Length {min, max, equal} =>  {
                     // Can't interpolate None
                     let min_tokens = option_u64_to_tokens(min);
                     let max_tokens = option_u64_to_tokens(max);
                     let equal_tokens = option_u64_to_tokens(equal);
-                    quote!(
-                        if !::validator::validate_length(
-                            ::validator::Validator::Length {
-                                min: #min_tokens,
-                                max: #max_tokens,
-                                equal: #equal_tokens
-                            },
-                            #validator_param
-                        ) {
-                            errors.add(#name, "length");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !::validator::validate_length(
+                                    ::validator::Validator::Length {
+                                        min: #min_tokens,
+                                        max: #max_tokens,
+                                        equal: #equal_tokens
+                                    },
+                                    #field_ident
+                                ) {
+                                    errors.add(#name, "length");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !::validator::validate_length(
+                                ::validator::Validator::Length {
+                                    min: #min_tokens,
+                                    max: #max_tokens,
+                                    equal: #equal_tokens
+                                },
+                                #validator_param
+                            ) {
+                                errors.add(#name, "length");
+                            }
+                        )
+                    }
                 },
                 &Validator::Range {min, max} => {
-                    quote!(
-                        if !::validator::validate_range(
-                            ::validator::Validator::Range {min: #min, max: #max},
-                            self.#field_ident as f64
-                        ) {
-                            errors.add(#name, "range");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !::validator::validate_range(
+                                    ::validator::Validator::Range {min: #min, max: #max},
+                                    #field_ident as f64
+                                ) {
+                                    errors.add(#name, "range");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !::validator::validate_range(
+                                ::validator::Validator::Range {min: #min, max: #max},
+                                self.#field_ident as f64
+                            ) {
+                                errors.add(#name, "range");
+                            }
+                        )
+                    }
                 },
                 &Validator::Email => {
-                    quote!(
-                        if !::validator::validate_email(#validator_param) {
-                            errors.add(#name, "email");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !::validator::validate_email(#field_ident) {
+                                    errors.add(#name, "email");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !::validator::validate_email(#validator_param) {
+                                errors.add(#name, "email");
+                            }
+                        )
+                    }
                 }
                 &Validator::Url => {
-                    quote!(
-                        if !::validator::validate_url(#validator_param) {
-                            errors.add(#name, "url");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !::validator::validate_url(#field_ident) {
+                                    errors.add(#name, "url");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !::validator::validate_url(#validator_param) {
+                                errors.add(#name, "url");
+                            }
+                        )
+                    }
                 },
                 &Validator::MustMatch(ref f) => {
                     let other_ident = syn::Ident::new(f.clone());
@@ -124,29 +185,65 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 },
                 &Validator::Custom(ref f) => {
                     let fn_ident = syn::Ident::new(f.clone());
-                    quote!(
-                        match #fn_ident(#validator_param) {
-                            ::std::option::Option::Some(s) => {
-                                errors.add(#name, &s);
-                            },
-                            ::std::option::Option::None => (),
-                        };
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                match #fn_ident(#field_ident) {
+                                    ::std::option::Option::Some(s) => {
+                                        errors.add(#name, &s);
+                                    },
+                                    ::std::option::Option::None => (),
+                                };
+                            }
+                        )
+                    } else {
+                        quote!(
+                            match #fn_ident(#validator_param) {
+                                ::std::option::Option::Some(s) => {
+                                    errors.add(#name, &s);
+                                },
+                                ::std::option::Option::None => (),
+                            };
+                        )
+                    }
                 },
                 &Validator::Contains(ref n) => {
-                    quote!(
-                        if !::validator::validate_contains(#validator_param, &#n) {
-                            errors.add(#name, "contains");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !::validator::validate_contains(#optional_validator_param, &#n) {
+                                    errors.add(#name, "contains");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !::validator::validate_contains(#validator_param, &#n) {
+                                errors.add(#name, "contains");
+                            }
+                        )
+                    }
                 },
                 &Validator::Regex(ref re) => {
                     let re_ident = syn::Ident::new(re.clone());
-                    quote!(
-                        if !#re_ident.is_match(#validator_param) {
-                            errors.add(#name, "regex");
-                        }
-                    )
+                    // wrap in if-let if we have an option
+                    if field_name.starts_with("Option<") {
+                        quote!(
+                            if let Some(#field_ident) = self.#field_ident {
+                                if !#re_ident.is_match(#field_ident) {
+                                    errors.add(#name, "regex");
+                                }
+                            }
+                        )
+                    } else {
+                        quote!(
+                            if !#re_ident.is_match(#validator_param) {
+                                errors.add(#name, "regex");
+                            }
+                        )
+                    }
                 },
             });
         }
@@ -440,14 +537,18 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                             // email, url
                             syn::MetaItem::Word(ref name) => match name.to_string().as_ref() {
                                 "email" => {
-                                    if field_type != "String" {
-                                        panic!("`email` validator can only be used on String");
+                                    if field_type != "String"
+                                        && field_type != "&str"
+                                        && !(field_type.starts_with("Option<") && field_type.ends_with("str>")) {
+                                        panic!("`email` validator can only be used on String or &str");
                                     }
                                     validators.push(Validator::Email);
                                 },
                                 "url" => {
-                                    if field_type != "String" {
-                                        panic!("`url` validator can only be used on String");
+                                    if field_type != "String"
+                                        && field_type != "&str"
+                                        && !(field_type.starts_with("Option<") && field_type.ends_with("str>")) {
+                                        panic!("`url` validator can only be used on String or &str");
                                     }
                                     validators.push(Validator::Url);
                                 },
@@ -497,7 +598,11 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                             syn::MetaItem::List(ref name, ref meta_items) => {
                                 // Some sanity checking first
                                 if name == "length" {
-                                    if field_type != "String" && !field_type.starts_with("Vec<") && field_type != "&str" {
+                                    if field_type != "String"
+                                        && !field_type.starts_with("Vec<")
+                                        // a bit ugly
+                                        && !(field_type.starts_with("Option<") && field_type.ends_with("str>"))
+                                        && field_type != "&str" {
                                         error(&format!(
                                             "Validator `length` can only be used on types `String`, `&str` or `Vec` but found `{}`",
                                             field_type

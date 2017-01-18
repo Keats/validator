@@ -272,14 +272,43 @@ fn test_can_check_regex_validator() {
     assert!(s2.validate().is_err());
 }
 
-//
-//#[test]
-//fn test_can_validate_option_fields() {
-//    #[derive(Debug, Validate)]
-//    struct PutStruct<'a> {
-//        #[validate(length(min = "1", max = "10"))]
-//        name: Option<&'a str>,
-//    }
-//    let s = PutStruct {name: Some("al")};
-//    assert!(s.validate().is_ok());
-//}
+
+#[test]
+fn test_can_validate_option_fields() {
+    lazy_static! {
+        static ref RE2: Regex = Regex::new(r"[a-z]{2}").unwrap();
+    }
+
+    #[derive(Debug, Validate)]
+    struct PutStruct<'a> {
+        #[validate(length(min = "1", max = "10"))]
+        name: Option<&'a str>,
+        #[validate(range(min = "1", max = "10"))]
+        range: Option<usize>,
+        #[validate(email)]
+        email: Option<&'a str>,
+        #[validate(url)]
+        url: Option<&'a str>,
+        #[validate(contains = "@")]
+        text: Option<&'a str>,
+        #[validate(regex = "RE2")]
+        re: Option<&'a str>,
+        #[validate(custom = "check_str")]
+        custom: Option<&'a str>,
+    }
+
+    fn check_str(val: &str) -> Option<String> {
+        None
+    }
+
+    let s = PutStruct {
+        name: Some("al"),
+        range: Some(2),
+        email: Some("hi@gmail.com"),
+        url: Some("http://google.com"),
+        text: Some("@someone"),
+        re: Some("hi"),
+        custom: Some("hey"),
+    };
+    assert!(s.validate().is_ok());
+}
