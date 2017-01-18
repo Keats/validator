@@ -6,7 +6,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 //~^ ERROR: custom derive attribute panicked
-//~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `length` can only be used on types `String` or `Vec` but found `usize`
+//~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `length` can only be used on types `String`, `&str` or `Vec` but found `usize`
 struct Test {
     #[validate(length())]
     s: usize,

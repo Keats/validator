@@ -13,10 +13,14 @@ use quote::ToTokens;
 use validator::{Validator};
 
 
-static RANGE_TYPES: [&'static str; 12] = [
+static RANGE_TYPES: [&'static str; 24] = [
     "usize", "u8", "u16", "u32", "u64",
     "isize", "i8", "i16", "i32", "i64",
     "f32", "f64",
+
+    "Option<size>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
+    "Option<size>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
+    "Option<32>", "Option<64>",
 ];
 
 #[derive(Debug)]
@@ -59,7 +63,14 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
         };
 
         let (name, validators) = find_validators_for_field(field, &field_types);
+        let validator_param = if field_types.get(&field_ident.to_string()).unwrap().starts_with("&") {
+          quote!(self.#field_ident)
+        } else {
+          quote!(&self.#field_ident)
+        };
+
         for validator in &validators {
+            println!("field: {}, types: {:?}", field_ident, field_types);
             validations.push(match validator {
                 &Validator::Length {min, max, equal} =>  {
                     // Can't interpolate None
@@ -73,7 +84,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                                 max: #max_tokens,
                                 equal: #equal_tokens
                             },
-                            &self.#field_ident
+                            #validator_param
                         ) {
                             errors.add(#name, "length");
                         }
@@ -91,14 +102,14 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 },
                 &Validator::Email => {
                     quote!(
-                        if !::validator::validate_email(&self.#field_ident) {
+                        if !::validator::validate_email(#validator_param) {
                             errors.add(#name, "email");
                         }
                     )
                 }
                 &Validator::Url => {
                     quote!(
-                        if !::validator::validate_url(&self.#field_ident) {
+                        if !::validator::validate_url(#validator_param) {
                             errors.add(#name, "url");
                         }
                     )
@@ -114,7 +125,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 &Validator::Custom(ref f) => {
                     let fn_ident = syn::Ident::new(f.clone());
                     quote!(
-                        match #fn_ident(&self.#field_ident) {
+                        match #fn_ident(#validator_param) {
                             ::std::option::Option::Some(s) => {
                                 errors.add(#name, &s);
                             },
@@ -124,7 +135,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 },
                 &Validator::Contains(ref n) => {
                     quote!(
-                        if !::validator::validate_contains(&self.#field_ident, &#n) {
+                        if !::validator::validate_contains(#validator_param, &#n) {
                             errors.add(#name, "contains");
                         }
                     )
@@ -132,7 +143,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 &Validator::Regex(ref re) => {
                     let re_ident = syn::Ident::new(re.clone());
                     quote!(
-                        if !#re_ident.is_match(&self.#field_ident) {
+                        if !#re_ident.is_match(#validator_param) {
                             errors.add(#name, "regex");
                         }
                     )
@@ -171,8 +182,11 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
     };
 
     let ident = &ast.ident;
+
+    // Helper is provided for handling complex generic types correctly and effortlessly
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     let impl_ast = quote!(
-        impl Validate for #ident {
+        impl #impl_generics Validate for #ident #ty_generics #where_clause {
             fn validate(&self) -> ::std::result::Result<(), ::validator::Errors> {
                 let mut errors = ::validator::Errors::new();
 
@@ -276,7 +290,6 @@ fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
             Some(ref s) => s.to_string(),
             None => unreachable!(),
         };
-
         let field_type = match field.ty {
             syn::Ty::Path(_, ref p) => {
                 let mut tokens = quote::Tokens::new();
@@ -284,8 +297,18 @@ fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
                 tokens.to_string().replace(' ', "")
 
             },
+            syn::Ty::Rptr(ref l, ref p) => {
+                let mut tokens = quote::Tokens::new();
+                p.ty.to_tokens(&mut tokens);
+                let mut name = tokens.to_string().replace(' ', "");
+                if l.is_some() {
+                    name.insert(0, '&')
+                }
+                name
+            },
             _ => panic!("Type `{:?}` of field `{}` not supported", field.ty, field_name)
         };
+        //println!("{:?}", field_type);
         types.insert(field_name, field_type);
     }
 
@@ -474,9 +497,9 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                             syn::MetaItem::List(ref name, ref meta_items) => {
                                 // Some sanity checking first
                                 if name == "length" {
-                                    if field_type != "String" && !field_type.starts_with("Vec<") {
+                                    if field_type != "String" && !field_type.starts_with("Vec<") && field_type != "&str" {
                                         error(&format!(
-                                            "Validator `length` can only be used on types `String` or `Vec` but found `{}`",
+                                            "Validator `length` can only be used on types `String`, `&str` or `Vec` but found `{}`",
                                             field_type
                                         ));
                                     }

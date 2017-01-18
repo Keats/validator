@@ -271,3 +271,15 @@ fn test_can_check_regex_validator() {
     let s2 = RegexStruct {name: "AL".to_string()};
     assert!(s2.validate().is_err());
 }
+
+//
+//#[test]
+//fn test_can_validate_option_fields() {
+//    #[derive(Debug, Validate)]
+//    struct PutStruct<'a> {
+//        #[validate(length(min = "1", max = "10"))]
+//        name: Option<&'a str>,
+//    }
+//    let s = PutStruct {name: Some("al")};
+//    assert!(s.validate().is_ok());
+//}
