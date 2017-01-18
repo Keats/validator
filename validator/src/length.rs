@@ -8,15 +8,21 @@ pub trait HasLen {
     fn length(&self) -> u64;
 }
 
+impl HasLen for String {
+    fn length(&self) -> u64 {
+        self.chars().count() as u64
+    }
+}
+
 impl<'a> HasLen for &'a String {
     fn length(&self) -> u64 {
-        self.len() as u64
+        self.chars().count() as u64
     }
 }
 
 impl<'a> HasLen for &'a str {
     fn length(&self) -> u64 {
-        self.len() as u64
+        self.chars().count() as u64
     }
 }
 
@@ -92,5 +98,11 @@ mod tests {
     fn test_validate_length_vec() {
         let validator = Validator::Length { min: None, max: None, equal: Some(3) };
         assert_eq!(validate_length(validator, vec![1, 2, 3]), true);
+    }
+
+    #[test]
+    fn test_validate_length_unicode_chars() {
+        let validator = Validator::Length { min: None, max: None, equal: Some(2) };
+        assert_eq!(validate_length(validator, "日本"), true);
     }
 }
