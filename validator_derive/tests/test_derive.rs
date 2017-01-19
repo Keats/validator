@@ -297,7 +297,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         custom: Option<&'a str>,
     }
 
-    fn check_str(val: &str) -> Option<String> {
+    fn check_str(_: &str) -> Option<String> {
         None
     }
 
