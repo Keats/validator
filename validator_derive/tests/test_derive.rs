@@ -274,7 +274,7 @@ fn test_can_check_regex_validator() {
 
 
 #[test]
-fn test_can_validate_option_fields() {
+fn test_can_validate_option_fields_with_lifetime() {
     lazy_static! {
         static ref RE2: Regex = Regex::new(r"[a-z]{2}").unwrap();
     }
@@ -309,6 +309,49 @@ fn test_can_validate_option_fields() {
         text: Some("@someone"),
         re: Some("hi"),
         custom: Some("hey"),
+    };
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn test_can_validate_option_fields_without_lifetime() {
+    lazy_static! {
+        static ref RE2: Regex = Regex::new(r"[a-z]{2}").unwrap();
+    }
+
+    #[derive(Debug, Validate)]
+    struct PutStruct {
+        #[validate(length(min = "1", max = "10"))]
+        name: Option<String>,
+        #[validate(length(min = "1", max = "10"))]
+        ids: Option<Vec<usize>>,
+        #[validate(range(min = "1", max = "10"))]
+        range: Option<usize>,
+        #[validate(email)]
+        email: Option<String>,
+        #[validate(url)]
+        url: Option<String>,
+        #[validate(contains = "@")]
+        text: Option<String>,
+        #[validate(regex = "RE2")]
+        re: Option<String>,
+        #[validate(custom = "check_str")]
+        custom: Option<String>,
+    }
+
+    fn check_str(_: &str) -> Option<String> {
+        None
+    }
+
+    let s = PutStruct {
+        name: Some("al".to_string()),
+        ids: Some(vec![1, 2, 3]),
+        range: Some(2),
+        email: Some("hi@gmail.com".to_string()),
+        url: Some("http://google.com".to_string()),
+        text: Some("@someone".to_string()),
+        re: Some("hi".to_string()),
+        custom: Some("hey".to_string()),
     };
     assert!(s.validate().is_ok());
 }

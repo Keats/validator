@@ -71,10 +71,12 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
           quote!(&self.#field_ident)
         };
         // same but for the ident used in a if let block
-        let optional_validator_param = if field_name.starts_with("Option<&") {
+        let optional_validator_param = quote!(#field_ident);
+        // same but for the ident used in a if let Some variable
+        let optional_pattern_matched = if field_name.starts_with("Option<&") {
           quote!(#field_ident)
         } else {
-          quote!(&#field_ident)
+          quote!(ref #field_ident)
         };
 
         for validator in &validators {
@@ -87,14 +89,14 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
                                 if !::validator::validate_length(
                                     ::validator::Validator::Length {
                                         min: #min_tokens,
                                         max: #max_tokens,
                                         equal: #equal_tokens
                                     },
-                                    #field_ident
+                                    #optional_validator_param
                                 ) {
                                     errors.add(#name, "length");
                                 }
@@ -143,8 +145,8 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
-                                if !::validator::validate_email(#field_ident) {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
+                                if !::validator::validate_email(#optional_validator_param) {
                                     errors.add(#name, "email");
                                 }
                             }
@@ -161,8 +163,8 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
-                                if !::validator::validate_url(#field_ident) {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
+                                if !::validator::validate_url(#optional_validator_param) {
                                     errors.add(#name, "url");
                                 }
                             }
@@ -188,8 +190,8 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
-                                match #fn_ident(#field_ident) {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
+                                match #fn_ident(#optional_validator_param) {
                                     ::std::option::Option::Some(s) => {
                                         errors.add(#name, &s);
                                     },
@@ -212,7 +214,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
                                 if !::validator::validate_contains(#optional_validator_param, &#n) {
                                     errors.add(#name, "contains");
                                 }
@@ -231,8 +233,8 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     // wrap in if-let if we have an option
                     if field_name.starts_with("Option<") {
                         quote!(
-                            if let Some(#field_ident) = self.#field_ident {
-                                if !#re_ident.is_match(#field_ident) {
+                            if let Some(#optional_pattern_matched) = self.#field_ident {
+                                if !#re_ident.is_match(#optional_validator_param) {
                                     errors.add(#name, "regex");
                                 }
                             }
@@ -539,6 +541,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 "email" => {
                                     if field_type != "String"
                                         && field_type != "&str"
+                                        && field_type != "Option<String>"
                                         && !(field_type.starts_with("Option<") && field_type.ends_with("str>")) {
                                         panic!("`email` validator can only be used on String or &str");
                                     }
@@ -547,6 +550,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 "url" => {
                                     if field_type != "String"
                                         && field_type != "&str"
+                                        && field_type != "Option<String>"
                                         && !(field_type.starts_with("Option<") && field_type.ends_with("str>")) {
                                         panic!("`url` validator can only be used on String or &str");
                                     }
@@ -600,6 +604,8 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 if name == "length" {
                                     if field_type != "String"
                                         && !field_type.starts_with("Vec<")
+                                        && !field_type.starts_with("Option<Vec<")
+                                        && field_type != "Option<String>"
                                         // a bit ugly
                                         && !(field_type.starts_with("Option<") && field_type.ends_with("str>"))
                                         && field_type != "&str" {
