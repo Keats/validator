@@ -53,6 +53,10 @@ Note that `validator` works in conjunction with serde: in the example we can see
 field is renamed from/to `firstName`. Any error on that field will be in the `firstName` key of the hashmap,
 not `first_name`.
 
+If you are adding a validation on a `Option<..>` field, it will only be ran if there is value. The exception
+being `must_match` that doesn't currently work with `Option` due to me not finding a use case for it. If you have one,
+please comment on https://github.com/Keats/validator/issues/7.
+
 ## Usage
 You will need to import the `Validate` trait, and optionally use the `attr_literals` feature.
 
