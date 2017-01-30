@@ -1,6 +1,6 @@
 [package]
 name = "validator_derive"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"
 description = "Macros 1.1 implementation of #[derive(Validate)]"
@@ -24,5 +24,5 @@ regex = "0.2"
 lazy_static = "0.2"
 
 [dependencies.validator]
-path = "../validator"
-# version = "0.3.0"
+# path = "../validator"
+version = "0.3.0"
