@@ -313,12 +313,11 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
     };
 
     for attr in struct_attrs {
+        if attr.value.name() != "validate" {
+            continue;
+        }
         match attr.value {
             syn::MetaItem::List(ref ident, ref meta_items) => {
-                if ident != "validate" {
-                    continue;
-                }
-
                 match meta_items[0] {
                     syn::NestedMetaItem::MetaItem(ref item) => match item {
                         &syn::MetaItem::List(ref ident2, ref args) => {
