@@ -173,6 +173,9 @@ if an error happened while validating the struct fields.
 
 ## Changelog
 
+### 0.4.1 (2017/02/14) > validator_derive only
+- Fix potential conflicts with other attributes
+
 ### 0.4.0 (2017/01/30)
 
 - Validators now work on `Option` field and struct/fields with lifetimes
