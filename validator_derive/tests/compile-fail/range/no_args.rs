@@ -3,7 +3,7 @@ extern crate validator;
 use validator::Validate;
 
 #[derive(Validate)]
-//~^ ERROR: custom derive attribute panicked
+//~^ ERROR: proc-macro derive panicked
 //~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `range` requires 2 arguments: `min` and `max`
 struct Test {
     #[validate(range())]

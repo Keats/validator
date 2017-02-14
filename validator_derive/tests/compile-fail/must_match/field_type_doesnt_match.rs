@@ -3,7 +3,7 @@ extern crate validator;
 use validator::Validate;
 
 #[derive(Validate)]
-//~^ ERROR: custom derive attribute panicked
+//~^ ERROR: proc-macro derive panicked
 //~^^ HELP: Invalid attribute #[validate] on field `password`: invalid argument for `must_match` validator: types of field can't match
 struct Test {
     #[validate(must_match = "password2")]

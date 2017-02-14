@@ -3,7 +3,7 @@ extern crate validator;
 use validator::Validate;
 
 #[derive(Validate)]
-//~^ ERROR: custom derive attribute panicked
+//~^ ERROR: proc-macro derive panicked
 //~^^ HELP: Invalid schema level validation: `function` is required
 #[validate(schema())]
 struct Test {
