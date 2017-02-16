@@ -1,5 +1,5 @@
+use std::{self, fmt};
 use std::collections::HashMap;
-
 
 #[derive(Debug)]
 pub struct Errors(HashMap<String, Vec<String>>);
@@ -19,6 +19,33 @@ impl Errors {
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+}
+
+impl fmt::Display for Errors {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "Validation failed:\n")?;
+        for (field, errs) in &self.0 {
+            write!(fmt, "    {}: [", field)?;
+
+            let last = errs.len() - 1;
+            for (index, err) in errs.iter().enumerate() {
+                write!(fmt, "{}", err)?;
+                if index < last { write!(fmt, ", ")? }
+            }
+            write!(fmt, "]\n")?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for Errors {
+    fn description(&self) -> &str {
+        "validation failed"
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        None
     }
 }
 
