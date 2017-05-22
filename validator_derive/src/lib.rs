@@ -18,9 +18,9 @@ static RANGE_TYPES: [&'static str; 24] = [
     "isize", "i8", "i16", "i32", "i64",
     "f32", "f64",
 
-    "Option<usize>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
-    "Option<isize>", "Option<8>", "Option<16>", "Option<32>", "Option<64>",
-    "Option<32>", "Option<64>",
+    "Option<usize>", "Option<u8>", "Option<u16>", "Option<u32>", "Option<u64>",
+    "Option<isize>", "Option<i8>", "Option<i16>", "Option<i32>", "Option<i64>",
+    "Option<f32>", "Option<f64>",
 ];
 
 #[derive(Debug)]
