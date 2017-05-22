@@ -173,7 +173,13 @@ if an error happened while validating the struct fields.
 
 ## Changelog
 
+### 0.5.0 (2017/05/22) > validator_derive only
+
+- Fix range validator not working on Option
+- Update to serde 1.0
+
 ### 0.4.1 (2017/02/14) > validator_derive only
+
 - Fix potential conflicts with other attributes
 
 ### 0.4.0 (2017/01/30)
