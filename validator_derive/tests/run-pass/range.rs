@@ -22,6 +22,8 @@ struct Test {
     s7: i8,
     #[validate(range(min = 18.0, max = 22))]
     s8: u8,
+    #[validate(range(min = 18.0, max = 22))]
+    s9: Option<u8>,
 }
 
 fn main() {}
