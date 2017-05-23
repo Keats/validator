@@ -8,7 +8,6 @@ extern crate regex;
 use validator::Validate;
 use regex::Regex;
 
-
 #[derive(Debug, Validate, Deserialize)]
 #[validate(schema(function = "validate_signup", skip_on_field_errors = "false"))]
 struct SignupData {
