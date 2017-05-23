@@ -101,7 +101,7 @@ fn test_bad_email_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec![Error::new("email", "errorMessage")]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "is not an e-mail address")]);
 }
 
 #[test]
@@ -226,7 +226,7 @@ fn test_can_fail_struct_validation_existing_key() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec![Error::new("email", "errorMessage"), Error::new("stupid_rule", "errorMessage")]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "is not an e-mail address"), Error::new("stupid_rule", "errorMessage")]);
 }
 
 #[test]
@@ -239,7 +239,7 @@ fn test_skip_struct_validation_by_default_if_errors() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec![Error::new("email", "errorMessage")]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "is not an e-mail address")]);
 }
 
 #[test]
