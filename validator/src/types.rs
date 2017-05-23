@@ -1,7 +1,7 @@
 use std::{self, fmt};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Errors(HashMap<String, Vec<String>>);
 
 impl Errors {
