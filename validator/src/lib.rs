@@ -14,7 +14,7 @@ mod must_match;
 mod contains;
 
 
-pub use types::{Errors, Validate, Validator};
+pub use types::{Error, Errors, Validate, Validator};
 pub use ip::{validate_ip, validate_ip_v4, validate_ip_v6};
 pub use email::{validate_email};
 pub use length::{HasLen, validate_length};
