@@ -61,7 +61,7 @@ impl std::error::Error for Errors {
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
-    validator: String,
+    code: String,
     message: String,
 }
 
@@ -71,13 +71,13 @@ impl Error {
         message: T
     ) -> Error {
         Error {
-            validator: validator.into(),
+            code: validator.into(),
             message: message.into(),
         }
     }
 
-    pub fn validator(&self) -> &str {
-        &self.validator
+    pub fn code(&self) -> &str {
+        &self.code
     }
 
     pub fn message(&self) -> &str {
@@ -87,7 +87,7 @@ impl Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Error({}): {}", self.validator, self.message)?;
+        write!(fmt, "Error({}): {}", self.code, self.message)?;
         Ok(())
     }
 }
