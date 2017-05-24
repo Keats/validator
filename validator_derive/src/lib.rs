@@ -218,15 +218,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_contains(#optional_validator_param, &#n) {
-                                    errors.add(#name, "contains", "errorMessage");
+                                if let Err(err) = ::validator::validate_contains(#optional_validator_param, &#n) {
+                                    errors.add(#name, "contains", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_contains(#validator_param, &#n) {
-                                errors.add(#name, "contains", "errorMessage");
+                            if let Err(err) = ::validator::validate_contains(#validator_param, &#n) {
+                                errors.add(#name, "contains", &err);
                             }
                         )
                     }

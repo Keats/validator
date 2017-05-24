@@ -255,7 +255,7 @@ fn test_can_fail_contains_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec![Error::new("contains", "errorMessage")]);
+    assert_eq!(errs["mail"], vec![Error::new("contains", "must contain 'bob'")]);
 }
 
 #[test]
