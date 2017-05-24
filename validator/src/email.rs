@@ -17,7 +17,15 @@ lazy_static! {
 }
 
 /// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
-pub fn validate_email(val: &str) -> bool {
+pub fn validate_email(val: &str) -> Result<(), &'static str> {
+    if inner_validate_email(val) {
+        Ok(())
+    } else {
+        Err("not a valid e-mail address")
+    }
+}
+
+fn inner_validate_email(val: &str) -> bool {
     if val.is_empty() || !val.contains('@') {
         return false;
     }

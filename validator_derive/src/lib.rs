@@ -146,15 +146,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_email(#optional_validator_param) {
-                                    errors.add(#name, "email", "is not an e-mail address");
+                                if let Err(err) = ::validator::validate_email(#optional_validator_param) {
+                                    errors.add(#name, "email", err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_email(#validator_param) {
-                                errors.add(#name, "email", "is not an e-mail address");
+                            if let Err(err) = ::validator::validate_email(#validator_param) {
+                                errors.add(#name, "email", err);
                             }
                         )
                     }
