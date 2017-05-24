@@ -90,7 +90,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_length(
+                                if let Err(err) = ::validator::validate_length(
                                     ::validator::Validator::Length {
                                         min: #min_tokens,
                                         max: #max_tokens,
@@ -98,13 +98,13 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                                     },
                                     #optional_validator_param
                                 ) {
-                                    errors.add(#name, "length", "errorMessage");
+                                    errors.add(#name, "length", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_length(
+                            if let Err(err) = ::validator::validate_length(
                                 ::validator::Validator::Length {
                                     min: #min_tokens,
                                     max: #max_tokens,
@@ -112,7 +112,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                                 },
                                 #validator_param
                             ) {
-                                errors.add(#name, "length", "errorMessage");
+                                errors.add(#name, "length", &err);
                             }
                         )
                     }

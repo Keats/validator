@@ -131,7 +131,7 @@ fn test_bad_length_fails_validation_and_points_to_original_name() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"], vec![Error::new("length", "errorMessage")]);
+    assert_eq!(errs["firstName"], vec![Error::new("length", "must be at least 1 characters long")]);
 }
 
 
@@ -164,7 +164,7 @@ fn test_can_have_multiple_errors() {
     assert!(errs.contains_key("age"));
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["age"], vec![Error::new("range", "errorMessage")]);
-    assert_eq!(errs["firstName"], vec![Error::new("length", "errorMessage")]);
+    assert_eq!(errs["firstName"], vec![Error::new("length", "must be at least 1 characters long")]);
 }
 
 #[test]

@@ -21,10 +21,7 @@ impl Errors {
         validator: &str,
         err: &str
     ) {
-        let error = Error {
-            validator: validator.into(),
-            message: err.into(),
-        };
+        let error = Error::new(validator, err);
         self.0.entry(field.to_string())
             .or_insert_with(|| vec![])
             .push(error);

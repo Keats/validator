@@ -42,28 +42,30 @@ impl<'a, T> HasLen for &'a Vec<T> {
 ///
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
-pub fn validate_length<T: HasLen>(length: Validator, val: T) -> bool {
+pub fn validate_length<T: HasLen>(length: Validator, val: T) -> Result<(), String> {
     match length {
         Validator::Length { min, max, equal } => {
             let val_length = val.length();
             if let Some(eq) = equal {
-                return val_length == eq;
+                if val_length != eq {
+                    return Err(format!("must be exactly {} characters long", eq));
+                }
             }
             if let Some(m) = min {
                 if val_length < m {
-                    return false;
+                    return Err(format!("must be at least {} characters long", m));
                 }
             }
             if let Some(m) = max {
                 if val_length > m {
-                    return false;
+                    return Err(format!("must be at most {} characters long", m));
                 }
             }
         },
         _ => unreachable!()
     }
 
-    true
+    Ok(())
 }
 
 #[cfg(test)]
