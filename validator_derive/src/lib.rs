@@ -238,14 +238,18 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
                                 if !#re_ident.is_match(#optional_validator_param) {
-                                    errors.add(#name, "regex", "errorMessage");
+                                    errors.add(
+                                        #name,
+                                        "regex",
+                                        &format!("must match regular expression '{}'", stringify!(#re_ident))
+                                    );
                                 }
                             }
                         )
                     } else {
                         quote!(
                             if !#re_ident.is_match(#validator_param) {
-                                errors.add(#name, "regex", "errorMessage");
+                                errors.add(#name, "regex", &format!("must match regular expression '{}'", stringify!(#re_ident)));
                             }
                         )
                     }

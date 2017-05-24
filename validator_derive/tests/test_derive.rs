@@ -272,7 +272,10 @@ fn test_can_check_regex_validator() {
     let s = RegexStruct {name: "al".to_string()};
     assert!(s.validate().is_ok());
     let s2 = RegexStruct {name: "AL".to_string()};
-    assert!(s2.validate().is_err());
+    let res = s2.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().inner();
+    assert_eq!(errs["name"], vec![Error::new("regex", "must match regular expression 'RE'")])
 }
 
 
