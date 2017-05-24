@@ -179,7 +179,7 @@ fn test_custom_validation_error() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"], vec![Error::new("terrible_username", "errorMessage")]);
+    assert_eq!(errs["firstName"], vec![Error::new("custom", "terrible_username")]);
 }
 
 #[test]

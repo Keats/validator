@@ -196,7 +196,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                             if let Some(#optional_pattern_matched) = self.#field_ident {
                                 match #fn_ident(#optional_validator_param) {
                                     ::std::option::Option::Some(s) => {
-                                        errors.add(#name, &s, "errorMessage");
+                                        errors.add(#name, "custom", &s);
                                     },
                                     ::std::option::Option::None => (),
                                 };
@@ -206,7 +206,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         quote!(
                             match #fn_ident(#validator_param) {
                                 ::std::option::Option::Some(s) => {
-                                    errors.add(#name, &s, "errorMessage");
+                                    errors.add(#name, "custom", &s);
                                 },
                                 ::std::option::Option::None => (),
                             };
