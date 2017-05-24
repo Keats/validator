@@ -116,7 +116,7 @@ fn test_bad_url_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("site"));
-    assert_eq!(errs["site"], vec![Error::new("url", "errorMessage")]);
+    assert_eq!(errs["site"], vec![Error::new("url", "not a valid URL")]);
 }
 
 #[test]

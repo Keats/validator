@@ -164,15 +164,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_url(#optional_validator_param) {
-                                    errors.add(#name, "url", "errorMessage");
+                                if let Err(err) = ::validator::validate_url(#optional_validator_param) {
+                                    errors.add(#name, "url", err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_url(#validator_param) {
-                                errors.add(#name, "url", "errorMessage");
+                            if let Err(err) = ::validator::validate_url(#validator_param) {
+                                errors.add(#name, "url", err);
                             }
                         )
                     }
