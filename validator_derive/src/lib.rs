@@ -122,21 +122,21 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#field_ident) = self.#field_ident {
-                                if !::validator::validate_range(
+                                if let Err(err) = ::validator::validate_range(
                                     ::validator::Validator::Range {min: #min, max: #max},
                                     #field_ident as f64
                                 ) {
-                                    errors.add(#name, "range", "errorMessage");
+                                    errors.add(#name, "range", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_range(
+                            if let Err(err) = ::validator::validate_range(
                                 ::validator::Validator::Range {min: #min, max: #max},
                                 self.#field_ident as f64
                             ) {
-                                errors.add(#name, "range", "errorMessage");
+                                errors.add(#name, "range", &err);
                             }
                         )
                     }

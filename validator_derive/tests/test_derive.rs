@@ -147,7 +147,7 @@ fn test_bad_range_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
-    assert_eq!(errs["age"], vec![Error::new("range", "errorMessage")]);
+    assert_eq!(errs["age"], vec![Error::new("range", "must be between 18 and 20")]);
 }
 
 #[test]
@@ -163,7 +163,7 @@ fn test_can_have_multiple_errors() {
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["age"], vec![Error::new("range", "errorMessage")]);
+    assert_eq!(errs["age"], vec![Error::new("range", "must be between 18 and 20")]);
     assert_eq!(errs["firstName"], vec![Error::new("length", "must be at least 1 characters long")]);
 }
 
