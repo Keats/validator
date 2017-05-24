@@ -40,8 +40,12 @@ impl<'a, S> Contains for &'a HashMap<String, S> {
 /// Validates whether the value contains the needle
 /// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>
 /// by default.
-pub fn validate_contains<T: Contains>(val: T, needle: &str) -> bool {
-    val.has_element(needle)
+pub fn validate_contains<T: Contains>(val: T, needle: &str) -> Result<(), String> {
+    if val.has_element(needle) {
+        Ok(())
+    } else {
+        Err(format!("must contain '{}'", needle))
+    }
 }
 
 #[cfg(test)]

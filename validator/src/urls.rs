@@ -2,11 +2,10 @@ use url::Url;
 
 
 /// Validates whether the string given is a url
-pub fn validate_url(val: &str) -> bool {
-    match Url::parse(val) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+pub fn validate_url(val: &str) -> Result<(), &'static str> {
+    Url::parse(val)
+        .map(|_| ())
+        .map_err(|_| "not a valid URL")
 }
 
 #[cfg(test)]

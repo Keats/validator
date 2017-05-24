@@ -3,10 +3,14 @@ use types::Validator;
 /// Validates that a number is in the given range
 ///
 /// TODO: see if can be generic over the number type
-pub fn validate_range(range: Validator, val: f64) -> bool {
+pub fn validate_range(range: Validator, val: f64) -> Result<(), String> {
     match range {
         Validator::Range { min, max } => {
-            val >= min && val <= max
+            if val >= min && val <= max {
+                Ok(())
+            } else {
+                Err(format!("must be between {} and {}", min, max))
+            }
         },
         _ => unreachable!()
     }

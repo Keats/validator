@@ -1,20 +1,30 @@
 use std::{self, fmt};
 use std::collections::HashMap;
 
+type Field = String;
+
 #[derive(Debug)]
-pub struct Errors(HashMap<String, Vec<String>>);
+pub struct Errors(HashMap<Field, Vec<Error>>);
 
 impl Errors {
     pub fn new() -> Errors {
         Errors(HashMap::new())
     }
 
-    pub fn inner(self) -> HashMap<String, Vec<String>> {
+    pub fn inner(self) -> HashMap<Field, Vec<Error>> {
         self.0
     }
 
-    pub fn add(&mut self, field: &str, err: &str) {
-        self.0.entry(field.to_string()).or_insert_with(|| vec![]).push(err.to_string());
+    pub fn add(
+        &mut self,
+        field: &str,
+        validator: &str,
+        err: &str
+    ) {
+        let error = Error::new(validator, err);
+        self.0.entry(field.to_string())
+            .or_insert_with(|| vec![])
+            .push(error);
     }
 
     pub fn is_empty(&self) -> bool {
@@ -46,6 +56,39 @@ impl std::error::Error for Errors {
 
     fn cause(&self) -> Option<&std::error::Error> {
         None
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Error {
+    code: String,
+    message: String,
+}
+
+impl Error {
+    pub fn new<T: Into<String>>(
+        validator: T,
+        message: T
+    ) -> Error {
+        Error {
+            code: validator.into(),
+            message: message.into(),
+        }
+    }
+
+    pub fn code(&self) -> &str {
+        &self.code
+    }
+
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "Error({}): {}", self.code, self.message)?;
+        Ok(())
     }
 }
 

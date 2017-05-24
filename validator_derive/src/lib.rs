@@ -90,7 +90,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_length(
+                                if let Err(err) = ::validator::validate_length(
                                     ::validator::Validator::Length {
                                         min: #min_tokens,
                                         max: #max_tokens,
@@ -98,13 +98,13 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                                     },
                                     #optional_validator_param
                                 ) {
-                                    errors.add(#name, "length");
+                                    errors.add(#name, "length", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_length(
+                            if let Err(err) = ::validator::validate_length(
                                 ::validator::Validator::Length {
                                     min: #min_tokens,
                                     max: #max_tokens,
@@ -112,7 +112,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                                 },
                                 #validator_param
                             ) {
-                                errors.add(#name, "length");
+                                errors.add(#name, "length", &err);
                             }
                         )
                     }
@@ -122,21 +122,21 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#field_ident) = self.#field_ident {
-                                if !::validator::validate_range(
+                                if let Err(err) = ::validator::validate_range(
                                     ::validator::Validator::Range {min: #min, max: #max},
                                     #field_ident as f64
                                 ) {
-                                    errors.add(#name, "range");
+                                    errors.add(#name, "range", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_range(
+                            if let Err(err) = ::validator::validate_range(
                                 ::validator::Validator::Range {min: #min, max: #max},
                                 self.#field_ident as f64
                             ) {
-                                errors.add(#name, "range");
+                                errors.add(#name, "range", &err);
                             }
                         )
                     }
@@ -146,15 +146,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_email(#optional_validator_param) {
-                                    errors.add(#name, "email");
+                                if let Err(err) = ::validator::validate_email(#optional_validator_param) {
+                                    errors.add(#name, "email", err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_email(#validator_param) {
-                                errors.add(#name, "email");
+                            if let Err(err) = ::validator::validate_email(#validator_param) {
+                                errors.add(#name, "email", err);
                             }
                         )
                     }
@@ -164,15 +164,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_url(#optional_validator_param) {
-                                    errors.add(#name, "url");
+                                if let Err(err) = ::validator::validate_url(#optional_validator_param) {
+                                    errors.add(#name, "url", err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_url(#validator_param) {
-                                errors.add(#name, "url");
+                            if let Err(err) = ::validator::validate_url(#validator_param) {
+                                errors.add(#name, "url", err);
                             }
                         )
                     }
@@ -180,8 +180,11 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 &Validator::MustMatch(ref f) => {
                     let other_ident = syn::Ident::new(f.clone());
                     quote!(
-                        if !::validator::validate_must_match(&self.#field_ident, &self.#other_ident) {
-                            errors.add(#name, "no_match");
+                        if let Err(err) = ::validator::validate_must_match(
+                            &self.#field_ident, stringify!(#field_ident),
+                            &self.#other_ident, stringify!(#other_ident)
+                        ) {
+                            errors.add(#name, "no_match", &err);
                         }
                     )
                 },
@@ -193,7 +196,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                             if let Some(#optional_pattern_matched) = self.#field_ident {
                                 match #fn_ident(#optional_validator_param) {
                                     ::std::option::Option::Some(s) => {
-                                        errors.add(#name, &s);
+                                        errors.add(#name, "custom", &s);
                                     },
                                     ::std::option::Option::None => (),
                                 };
@@ -203,7 +206,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         quote!(
                             match #fn_ident(#validator_param) {
                                 ::std::option::Option::Some(s) => {
-                                    errors.add(#name, &s);
+                                    errors.add(#name, "custom", &s);
                                 },
                                 ::std::option::Option::None => (),
                             };
@@ -215,15 +218,15 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if field_name.starts_with("Option<") {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
-                                if !::validator::validate_contains(#optional_validator_param, &#n) {
-                                    errors.add(#name, "contains");
+                                if let Err(err) = ::validator::validate_contains(#optional_validator_param, &#n) {
+                                    errors.add(#name, "contains", &err);
                                 }
                             }
                         )
                     } else {
                         quote!(
-                            if !::validator::validate_contains(#validator_param, &#n) {
-                                errors.add(#name, "contains");
+                            if let Err(err) = ::validator::validate_contains(#validator_param, &#n) {
+                                errors.add(#name, "contains", &err);
                             }
                         )
                     }
@@ -235,14 +238,18 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                         quote!(
                             if let Some(#optional_pattern_matched) = self.#field_ident {
                                 if !#re_ident.is_match(#optional_validator_param) {
-                                    errors.add(#name, "regex");
+                                    errors.add(
+                                        #name,
+                                        "regex",
+                                        &format!("must match regular expression '{}'", stringify!(#re_ident))
+                                    );
                                 }
                             }
                         )
                     } else {
                         quote!(
                             if !#re_ident.is_match(#validator_param) {
-                                errors.add(#name, "regex");
+                                errors.add(#name, "regex", &format!("must match regular expression '{}'", stringify!(#re_ident)));
                             }
                         )
                     }
@@ -260,7 +267,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                     if errors.is_empty() {
                         match #fn_ident(self) {
                             ::std::option::Option::Some((key, val)) => {
-                                errors.add(&key, &val);
+                                errors.add(&key, &val, "errorMessage");
                             },
                             ::std::option::Option::None => (),
                         }
@@ -270,7 +277,7 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 quote!(
                     match #fn_ident(self) {
                         ::std::option::Option::Some((key, val)) => {
-                            errors.add(&key, &val);
+                            errors.add(&key, &val, "errorMessage");
                         },
                         ::std::option::Option::None => (),
                     }

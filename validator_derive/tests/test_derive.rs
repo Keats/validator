@@ -7,7 +7,7 @@ extern crate regex;
 
 use validator::Validate;
 use regex::Regex;
-
+use validator::Error;
 
 #[derive(Debug, Validate, Deserialize)]
 #[validate(schema(function = "validate_signup", skip_on_field_errors = "false"))]
@@ -101,7 +101,7 @@ fn test_bad_email_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec!["email".to_string()]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "not a valid e-mail address")]);
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn test_bad_url_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("site"));
-    assert_eq!(errs["site"], vec!["url".to_string()]);
+    assert_eq!(errs["site"], vec![Error::new("url", "not a valid URL")]);
 }
 
 #[test]
@@ -131,7 +131,7 @@ fn test_bad_length_fails_validation_and_points_to_original_name() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"], vec!["length".to_string()]);
+    assert_eq!(errs["firstName"], vec![Error::new("length", "must be at least 1 characters long")]);
 }
 
 
@@ -147,7 +147,7 @@ fn test_bad_range_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
-    assert_eq!(errs["age"], vec!["range".to_string()]);
+    assert_eq!(errs["age"], vec![Error::new("range", "must be between 18 and 20")]);
 }
 
 #[test]
@@ -163,8 +163,8 @@ fn test_can_have_multiple_errors() {
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("age"));
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["age"], vec!["range".to_string()]);
-    assert_eq!(errs["firstName"], vec!["length".to_string()]);
+    assert_eq!(errs["age"], vec![Error::new("range", "must be between 18 and 20")]);
+    assert_eq!(errs["firstName"], vec![Error::new("length", "must be at least 1 characters long")]);
 }
 
 #[test]
@@ -179,7 +179,7 @@ fn test_custom_validation_error() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"], vec!["terrible_username".to_string()]);
+    assert_eq!(errs["firstName"], vec![Error::new("custom", "terrible_username")]);
 }
 
 #[test]
@@ -198,7 +198,10 @@ fn test_must_match_can_fail() {
         password: "passw0rd".to_string(),
         password2: "password".to_string(),
     };
-    assert!(data.validate().is_err())
+    let res = data.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().inner();
+    assert_eq!(errs["password"], vec![Error::new("no_match", "field 'password' must match field 'password2'")]);
 }
 
 #[test]
@@ -213,7 +216,7 @@ fn test_can_fail_struct_validation_new_key() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("all"));
-    assert_eq!(errs["all"], vec!["stupid_rule".to_string()]);
+    assert_eq!(errs["all"], vec![Error::new("stupid_rule", "errorMessage")]);
 }
 
 #[test]
@@ -226,7 +229,7 @@ fn test_can_fail_struct_validation_existing_key() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec!["email".to_string(), "stupid_rule".to_string()]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "not a valid e-mail address"), Error::new("stupid_rule", "errorMessage")]);
 }
 
 #[test]
@@ -239,7 +242,7 @@ fn test_skip_struct_validation_by_default_if_errors() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec!["email".to_string()]);
+    assert_eq!(errs["mail"], vec![Error::new("email", "not a valid e-mail address")]);
 }
 
 #[test]
@@ -252,7 +255,7 @@ fn test_can_fail_contains_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("mail"));
-    assert_eq!(errs["mail"], vec!["contains".to_string()]);
+    assert_eq!(errs["mail"], vec![Error::new("contains", "must contain 'bob'")]);
 }
 
 #[test]
@@ -269,7 +272,10 @@ fn test_can_check_regex_validator() {
     let s = RegexStruct {name: "al".to_string()};
     assert!(s.validate().is_ok());
     let s2 = RegexStruct {name: "AL".to_string()};
-    assert!(s2.validate().is_err());
+    let res = s2.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().inner();
+    assert_eq!(errs["name"], vec![Error::new("regex", "must match regular expression 'RE'")])
 }
 
 
