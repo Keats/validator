@@ -180,8 +180,11 @@ fn expand_validation(ast: &syn::MacroInput) -> quote::Tokens {
                 &Validator::MustMatch(ref f) => {
                     let other_ident = syn::Ident::new(f.clone());
                     quote!(
-                        if !::validator::validate_must_match(&self.#field_ident, &self.#other_ident) {
-                            errors.add(#name, "no_match", "errorMessage");
+                        if let Err(err) = ::validator::validate_must_match(
+                            &self.#field_ident, stringify!(#field_ident),
+                            &self.#other_ident, stringify!(#other_ident)
+                        ) {
+                            errors.add(#name, "no_match", &err);
                         }
                     )
                 },

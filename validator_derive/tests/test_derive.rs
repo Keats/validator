@@ -198,7 +198,10 @@ fn test_must_match_can_fail() {
         password: "passw0rd".to_string(),
         password2: "password".to_string(),
     };
-    assert!(data.validate().is_err())
+    let res = data.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().inner();
+    assert_eq!(errs["password"], vec![Error::new("no_match", "field 'password' must match field 'password2'")]);
 }
 
 #[test]
