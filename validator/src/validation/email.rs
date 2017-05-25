@@ -1,7 +1,7 @@
 use regex::Regex;
+use idna::domain_to_ascii;
 
-use ip::{validate_ip};
-use idna::{domain_to_ascii};
+use validation::ip::validate_ip;
 
 
 lazy_static! {

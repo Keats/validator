@@ -1,41 +1,5 @@
-use types::Validator;
-
-/// Trait to implement if one wants to make the `length` validator
-/// work for more types
-///
-/// A bit sad it's not there by default in Rust
-pub trait HasLen {
-    fn length(&self) -> u64;
-}
-
-impl HasLen for String {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
-}
-
-impl<'a> HasLen for &'a String {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
-}
-
-impl<'a> HasLen for &'a str {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
-}
-
-impl<T> HasLen for Vec<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-impl<'a, T> HasLen for &'a Vec<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
+use validation::Validator;
+use traits::HasLen;
 
 /// Validates the length of the value given.
 /// If the validator has `equal` set, it will ignore any `min` and `max` value.
