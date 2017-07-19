@@ -1,6 +1,6 @@
 [package]
 name = "validator_derive"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"
 description = "Macros 1.1 implementation of #[derive(Validate)]"

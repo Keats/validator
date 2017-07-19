@@ -4,21 +4,24 @@
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
-It relies on the `proc_macro` feature which will be stable in Rust 1.15.
+It relies on the `proc_macro` feature which is stable since Rust 1.15.
 
 By default all args to a `validate` must be strings if you are using stable. 
 However, if you are using nightly, you can also activate the `attr_literals` feature to be able to use int, float and boolean as well.
 
 
 A short example:
+
 ```rust
-#[macro_use] extern crate validator_derive;
+#[macro_use] 
+extern crate validator_derive;
 extern crate validator;
-#[macro_use] extern crate serde_derive;
+#[macro_use] 
+extern crate serde_derive;
 extern crate serde_json;
 
 // A trait that the Validate derive will impl
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 #[derive(Debug, Validate, Deserialize)]
 struct SignupData {
@@ -33,21 +36,29 @@ struct SignupData {
     age: u32,
 }
 
-fn validate_unique_username(username: &str) -> Option<String> {
+fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
     if username == "xXxShad0wxXx" {
-        return Some("terrible_username".to_string());
+        // the value of the username will automatically be added later
+        return Err(ValidationError::new("terrible_username"));
     }
 
-    None
+    Ok(())
 }
 
-// load the struct from some json...
-// `validate` returns `Result<(), HashMap<String, Vec<String>>>`
-signup_data.validate()?;
+let errors = signup_data.validate()?;
 ```
 
-This crate only sends back error codes for each field, it's up to you to write a message
-for each error code.
+An error has the following structure:
+
+```rust
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ValidationError {
+  pub code: Cow<'static, str>,
+  pub message: Option<Cow<'static, str>>,
+  pub params: HashMap<Cow<'static, str>, Value>,
+}
+```
+The value of the field will automatically be added to the params with a key of `value`.
 
 Note that `validator` works in conjunction with serde: in the example we can see that the `first_name`
 field is renamed from/to `firstName`. Any error on that field will be in the `firstName` key of the hashmap,
@@ -57,11 +68,12 @@ If you are adding a validation on a `Option<..>` field, it will only be ran if t
 being `must_match` that doesn't currently work with `Option` due to me not finding a use case for it. If you have one,
 please comment on https://github.com/Keats/validator/issues/7.
 
+
 ## Usage
 You will need to import the `Validate` trait, and optionally use the `attr_literals` feature.
 
 The `validator` crate can also be used without the custom derive as it exposes all the
-validation functions.
+validation functions and types.
 
 ## Validators
 The crate comes with some built-in validators and you can have several validators for a given field.
@@ -153,7 +165,6 @@ TODO: have it return a bool and pass a `code` to the `custom` validator instead?
 ## Struct level validation
 Often, some error validation can only be applied when looking at the full struct, here's how it works here:
 
-
 ```rust
 #[derive(Debug, Validate, Deserialize)]
 #[validate(schema(function = "validate_category", skip_on_field_errors = "false")]
@@ -170,28 +181,60 @@ This means that the error can be reported on an existing field or on a new key.
 The `skip_on_field_errors` defaults to `true` if not present and will ensure that the function is not called
 if an error happened while validating the struct fields.
 
+Any error on the schema level validation will appear in the key `__all__` of the hashmap of errors.
 
-## Changelog
+## Message and code
 
-### 0.5.0 (2017/05/22) > validator_derive only
+Each validator can take 2 optional arguments in addition to their own arguments:
+
+- `message`: a message to go with the error, for example if you want to do i18n
+- `code`: each validator has a default error code (for example the `regex` validator code is `regex`) but it can be overriden
+if necessary, mainly needed for the `custom` validator
+
+For example, the following attributes all work:
+
+```rust
+#[validate(email)]
+#[validate(email(code="mail"))]
+#[validate(email(message="Email %s is not valid"))]
+#[validate(email(code="mail", message="Email %s is not valid"))]
+```
+
+## Changelogs
+
+### validator
+
+#### 0.6.0 (unreleased)
+
+- Re-design `ValidationError` and `Validate` trait
+
+### validator_derive
+
+#### 0.6.0 (unreleased)
+
+- Change generated code to make the new design of errors work
+
+### Previous
+
+#### 0.5.0 (2017/05/22) > validator_derive only
 
 - Fix range validator not working on Option
 - Update to serde 1.0
 
-### 0.4.1 (2017/02/14) > validator_derive only
+#### 0.4.1 (2017/02/14) > validator_derive only
 
 - Fix potential conflicts with other attributes
 
-### 0.4.0 (2017/01/30)
+#### 0.4.0 (2017/01/30)
 
 - Validators now work on `Option` field and struct/fields with lifetimes
 
-### 0.3.0 (2017/01/17)
+#### 0.3.0 (2017/01/17)
 
 - Add `contains` and `regex` validator
 - BREAKING: change `Errors` type to be a newtype in order to extend it
 
-### 0.2.0 (2017/01/17)
+#### 0.2.0 (2017/01/17)
 
 - Remove need for `attr_literals` feature
 - Fix error when not having validation on each field
