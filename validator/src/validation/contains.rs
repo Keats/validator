@@ -1,41 +1,4 @@
-use std::collections::HashMap;
-
-
-/// Trait to implement if one wants to make the `contains` validator
-/// work for more types
-pub trait Contains {
-    fn has_element(&self, needle: &str) -> bool;
-}
-
-impl Contains for String {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> Contains for &'a String {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> Contains for &'a str {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<S> Contains for HashMap<String, S> {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains_key(needle)
-    }
-}
-
-impl<'a, S> Contains for &'a HashMap<String, S> {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains_key(needle)
-    }
-}
+use traits::Contains;
 
 /// Validates whether the value contains the needle
 /// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>

@@ -2,7 +2,7 @@
 
 #[macro_use] extern crate validator_derive;
 extern crate validator;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 #[derive(Validate)]
 #[validate(schema(function = "hey"))]
@@ -10,8 +10,8 @@ struct Test {
     s: String,
 }
 
-fn hey(_: &Test) -> Option<(String, String)> {
-    None
+fn hey(_: &Test) -> Result<(), ValidationError> {
+    Ok(())
 }
 
 #[derive(Validate)]
@@ -20,8 +20,9 @@ struct Test2 {
     s: String,
 }
 
-fn hey2(_: &Test2) -> Option<(String, String)> {
-    None
+fn hey2(_: &Test2) -> Result<(), ValidationError> {
+    Ok(())
 }
+
 
 fn main() {}

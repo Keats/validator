@@ -1,4 +1,4 @@
-use types::Validator;
+use validation::Validator;
 
 /// Validates that a number is in the given range
 ///

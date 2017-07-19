@@ -4,7 +4,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 //~^ ERROR: proc-macro derive panicked
-//~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `length` can only be used on types `String`, `&str` or `Vec` but found `usize`
+//~^^ HELP: Validator `length` can only be used on types `String`, `&str` or `Vec` but found `usize`
 struct Test {
     #[validate(length())]
     s: usize,
