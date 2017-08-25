@@ -45,7 +45,10 @@ fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
-let errors = signup_data.validate()?;
+match signup_data.validate() {
+  Ok(_) => (),
+  Err(e) => return e;
+};
 ```
 
 An error has the following structure:
