@@ -207,13 +207,13 @@ For example, the following attributes all work:
 
 ### validator
 
-#### 0.6.0 (2017/09/12)
+#### 0.6.0 (2017/08/12)
 
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
 
-#### 0.6.0 (2017/09/12)
+#### 0.6.0 (2017/08/12)
 
 - Change generated code to make the new design of errors work
 
