@@ -9,7 +9,7 @@ extern crate regex;
 extern crate lazy_static;
 
 use regex::Regex;
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidationError, ValidationErrors};
 
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
@@ -152,4 +152,21 @@ fn test_can_validate_option_fields_without_lifetime() {
         custom: Some("hey".to_string()),
     };
     assert!(s.validate().is_ok());
+}
+
+#[test]
+fn test_works_with_question_mark_operator() {
+    fn some_fn() -> Result<(), ValidationErrors> {
+        let signup = SignupData {
+            mail: "invalid_email".to_string(),
+            site: "http://hello.com".to_string(),
+            first_name: "Bob".to_string(),
+            age: 18,
+        };
+
+        signup.validate()?;
+        Ok(())
+    }
+
+    assert!(some_fn().is_err());
 }
