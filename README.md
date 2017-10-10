@@ -151,6 +151,16 @@ Examples:
 #[validate(regex = "ALLOWED_USERNAMES_RE"))]
 ```
 
+### credit\_card
+Test whetever the string is a valid credit card number. To use this validator,
+you must enable the `credit_cards` feature for the `validator` crate.
+
+Examples:
+
+```rust
+#[validate(credit_card)]
+```
+
 ### custom
 Calls one of your function to do a custom validation. 
 The field will be given as parameter and it should return a `Option<String>` representing the error code,
