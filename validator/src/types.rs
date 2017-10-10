@@ -59,3 +59,14 @@ impl ValidationErrors {
         self.0.is_empty()
     }
 }
+
+impl std::error::Error for ValidationErrors {
+    fn description(&self) -> &str { "Validation failed" }
+    fn cause(&self) -> Option<&std::error::Error> { None }
+}
+
+impl fmt::Display for ValidationErrors {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, fmt)
+    }
+}
