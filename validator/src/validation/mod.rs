@@ -5,6 +5,9 @@ pub mod range;
 pub mod urls;
 pub mod must_match;
 pub mod contains;
+pub mod cards;
+#[cfg(feature = "phone")]
+pub mod phone;
 
 /// Contains all the validators that can be used
 ///
@@ -32,6 +35,9 @@ pub enum Validator {
         max: Option<u64>,
         equal: Option<u64>,
     },
+    CreditCard(String),
+    #[cfg(feature = "phone")]
+    Phone,
 }
 
 impl Validator {
@@ -45,6 +51,9 @@ impl Validator {
             Validator::Regex(_) => "regex",
             Validator::Range {..} => "range",
             Validator::Length {..} => "length",
+            Validator::CreditCard(_) => "credit_card",
+            #[cfg(feature = "phone")]
+            Validator::Phone => "phone",
         }
     }
 }

@@ -16,3 +16,8 @@ idna = "0.1"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
+card-validate = "2.1"
+phonenumber = { version = "0.1.0+8.7.0", optional = true }
+
+[features]
+phone = ["phonenumber"]
