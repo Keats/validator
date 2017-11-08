@@ -215,6 +215,8 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
 
     let validator = match validator_name.as_ref() {
         "email" => Validator::Email,
+        "credit_card" => Validator::CreditCard,
+        #[cfg(feature = "phone")]
         "phone" => Validator::Phone,
         _ => Validator::Url
     };

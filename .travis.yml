@@ -6,6 +6,6 @@ rust:
 
 script:
   - (cd validator && cargo test --all-features)
-  - (cd validator_derive && cargo test)
+  - (cd validator_derive && cargo test --all-features)
 notifications:
   email: false

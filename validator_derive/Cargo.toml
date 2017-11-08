@@ -11,6 +11,9 @@ keywords = ["validation", "api", "validator"]
 [lib]
 proc-macro = true
 
+[features]
+phone = ["validator/phone"]
+
 [dependencies]
 syn = "0.11"
 quote = "0.3"
@@ -28,7 +31,3 @@ lazy_static = "0.2"
 # path = "../validator"
 version = "0.6"
 
-[dev-dependencies.validator]
-# path = "../validator"
-version = "0.6"
-features = ["phone"]

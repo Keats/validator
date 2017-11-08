@@ -166,7 +166,7 @@ Examples:
 Tests whether the String is a valid phone number (in international format, ie. 
 containing the country indicator like `+14152370800` for an US number — where `4152370800` 
 is the national number equivalent, which is seen as invalid). 
-To use this validator, you must enable the `phone` feature for the `validator` crate.
+To use this validator, you must enable the `phone` feature for the `validator_derive` crate.
 This validator doesn't take any arguments: `#[validate(phone)]`;
 
 ### custom

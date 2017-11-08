@@ -24,7 +24,7 @@ fn can_validate_valid_card_number() {
 fn bad_credit_card_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(email)]
+        #[validate(credit_card)]
         val: String,
     }
 
@@ -36,7 +36,7 @@ fn bad_credit_card_fails_validation() {
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "email");
+    assert_eq!(errs["val"][0].code, "credit_card");
     assert_eq!(errs["val"][0].params["value"], "bob");
 }
 

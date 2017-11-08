@@ -174,6 +174,7 @@ pub fn quote_credit_card_validation(field_quoter: &FieldQuoter, validation: &Fie
     field_quoter.wrap_if_option(quoted)
 }
 
+#[cfg(feature = "phone")]
 pub fn quote_phone_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> quote::Tokens {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
@@ -326,6 +327,7 @@ pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldVali
         Validator::Contains(_) => quote_contains_validation(&field_quoter, validation),
         Validator::Regex(_) => quote_regex_validation(&field_quoter, validation),
         Validator::CreditCard => quote_credit_card_validation(&field_quoter, validation),
+        #[cfg(feature = "phone")]
         Validator::Phone => quote_phone_validation(&field_quoter, validation),
     }
 }
