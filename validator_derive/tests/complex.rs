@@ -33,6 +33,8 @@ fn validate_signup(data: &SignupData) -> Result<(), ValidationError> {
 struct SignupData {
     #[validate(email)]
     mail: String,
+    #[validate(phone)]
+    phone: String,
     #[validate(url)]
     site: String,
     #[validate(length(min = "1"), custom = "validate_unique_username")]
@@ -47,6 +49,7 @@ struct SignupData {
 fn is_fine_with_many_valid_validations() {
     let signup = SignupData {
         mail: "bob@bob.com".to_string(),
+        phone: "+14152370800".to_string(),
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
@@ -59,6 +62,7 @@ fn is_fine_with_many_valid_validations() {
 fn failed_validation_points_to_original_field_name() {
     let signup = SignupData {
         mail: "bob@bob.com".to_string(),
+        phone: "+14152370800".to_string(),
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
@@ -85,6 +89,8 @@ fn test_can_validate_option_fields_with_lifetime() {
         range: Option<usize>,
         #[validate(email)]
         email: Option<&'a str>,
+        #[validate(phone)]
+        phone: Option<&'a str>,
         #[validate(url)]
         url: Option<&'a str>,
         #[validate(contains = "@")]
@@ -103,6 +109,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         name: Some("al"),
         range: Some(2),
         email: Some("hi@gmail.com"),
+        phone: Some("+14152370800"),
         url: Some("http://google.com"),
         text: Some("@someone"),
         re: Some("hi"),
@@ -127,6 +134,8 @@ fn test_can_validate_option_fields_without_lifetime() {
         range: Option<usize>,
         #[validate(email)]
         email: Option<String>,
+        #[validate(phone)]
+        phone: Option<String>,
         #[validate(url)]
         url: Option<String>,
         #[validate(contains = "@")]
@@ -146,6 +155,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         ids: Some(vec![1, 2, 3]),
         range: Some(2),
         email: Some("hi@gmail.com".to_string()),
+        phone: Some("+14152370800".to_string()),
         url: Some("http://google.com".to_string()),
         text: Some("@someone".to_string()),
         re: Some("hi".to_string()),

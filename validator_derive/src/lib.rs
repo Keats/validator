@@ -256,7 +256,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                 for meta_item in meta_items {
                     match *meta_item {
                         syn::NestedMetaItem::MetaItem(ref item) => match *item {
-                            // email, url
+                            // email, url, phone
                             syn::MetaItem::Word(ref name) => match name.to_string().as_ref() {
                                 "email" => {
                                     assert_string_type("email", field_type);
@@ -265,6 +265,10 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 "url" => {
                                     assert_string_type("url", field_type);
                                     validators.push(FieldValidation::new(Validator::Url));
+                                },
+                                "phone" => {
+                                    assert_string_type("phone", field_type);
+                                    validators.push(FieldValidation::new(Validator::Phone));
                                 },
                                 _ => panic!("Unexpected validator: {}", name)
                             },
@@ -311,7 +315,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                     assert_has_range(rust_ident.clone(), field_type);
                                     validators.push(extract_range_validation(rust_ident.clone(), meta_items));
                                 },
-                                "email" | "url" => {
+                                "email" | "url" | "phone" => {
                                     validators.push(extract_argless_validation(name.to_string(), rust_ident.clone(), meta_items));
                                 },
                                 "custom" => {
