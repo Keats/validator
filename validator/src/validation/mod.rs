@@ -35,7 +35,7 @@ pub enum Validator {
         max: Option<u64>,
         equal: Option<u64>,
     },
-    CreditCard(String),
+    CreditCard,
     #[cfg(feature = "phone")]
     Phone,
 }
@@ -51,7 +51,7 @@ impl Validator {
             Validator::Regex(_) => "regex",
             Validator::Range {..} => "range",
             Validator::Length {..} => "length",
-            Validator::CreditCard(_) => "credit_card",
+            Validator::CreditCard => "credit_card",
             #[cfg(feature = "phone")]
             Validator::Phone => "phone",
         }

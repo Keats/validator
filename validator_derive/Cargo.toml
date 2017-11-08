@@ -25,5 +25,10 @@ regex = "0.2"
 lazy_static = "0.2"
 
 [dependencies.validator]
-# path = "../validator"
-version = "0.6.0"
+path = "../validator"
+# version = "0.6"
+
+[dev-dependencies.validator]
+path = "../validator"
+# version = "0.6"
+features = ["phone"]

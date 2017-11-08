@@ -270,6 +270,10 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                     assert_string_type("phone", field_type);
                                     validators.push(FieldValidation::new(Validator::Phone));
                                 },
+                                "credit_card" => {
+                                    assert_string_type("credit_card", field_type);
+                                    validators.push(FieldValidation::new(Validator::CreditCard));
+                                },
                                 _ => panic!("Unexpected validator: {}", name)
                             },
                             // custom, contains, must_match, regex
@@ -315,7 +319,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                     assert_has_range(rust_ident.clone(), field_type);
                                     validators.push(extract_range_validation(rust_ident.clone(), meta_items));
                                 },
-                                "email" | "url" | "phone" => {
+                                "email" | "url" | "phone" | "credit_card" => {
                                     validators.push(extract_argless_validation(name.to_string(), rust_ident.clone(), meta_items));
                                 },
                                 "custom" => {

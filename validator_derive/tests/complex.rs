@@ -170,6 +170,7 @@ fn test_works_with_question_mark_operator() {
         let signup = SignupData {
             mail: "invalid_email".to_string(),
             site: "http://hello.com".to_string(),
+            phone: "+14152370800".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
         };
