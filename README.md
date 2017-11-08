@@ -225,15 +225,23 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.6.2 (2017/11/08)
+
+- Fix credit card validation being incorrect in enum
+
 #### 0.6.1 (2017/11/08)
 
-- Add international phone number validation
+- Add international phone number and credit card validation
 
 #### 0.6.0 (2017/08/12)
 
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.6.1 (2017/11/08)
+
+- Add international phone number and credit card derive
 
 #### 0.6.0 (2017/08/12)
 
