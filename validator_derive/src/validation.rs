@@ -173,7 +173,7 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMetaI
     }
 }
 
-/// Extract url/email field validation with a code or a message
+/// Extract url/email/phone field validation with a code or a message
 pub fn extract_argless_validation(validator_name: String, field: String, meta_items: &Vec<syn::NestedMetaItem>) -> FieldValidation {
     let mut code = None;
     let mut message = None;
@@ -213,7 +213,12 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
         }
     }
 
-    let validator = if validator_name == "email" { Validator::Email } else { Validator::Url };
+    let validator = match validator_name.as_ref() {
+        "email" => Validator::Email,
+        "phone" => Validator::Phone,
+        _ => Validator::Url
+    };
+
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),

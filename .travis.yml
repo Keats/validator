@@ -5,7 +5,7 @@ rust:
   - nightly
 
 script:
-  - (cd validator && cargo test)
+  - (cd validator && cargo test --all-features)
   - (cd validator_derive && cargo test)
 notifications:
   email: false

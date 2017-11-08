@@ -6,17 +6,17 @@ Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow]
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 It relies on the `proc_macro` feature which is stable since Rust 1.15.
 
-By default all args to a `validate` must be strings if you are using stable. 
+By default all args to a `validate` must be strings if you are using stable.
 However, if you are using nightly, you can also activate the `attr_literals` feature to be able to use int, float and boolean as well.
 
 
 A short example:
 
 ```rust
-#[macro_use] 
+#[macro_use]
 extern crate validator_derive;
 extern crate validator;
-#[macro_use] 
+#[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 
@@ -27,6 +27,8 @@ use validator::{Validate, ValidationError};
 struct SignupData {
     #[validate(email)]
     mail: String,
+    #[validate(phone)]
+    phone: String,
     #[validate(url)]
     site: String,
     #[validate(length(min = "1"), custom = "validate_unique_username")]
@@ -152,8 +154,7 @@ Examples:
 ```
 
 ### credit\_card
-Test whetever the string is a valid credit card number. To use this validator,
-you must enable the `credit_cards` feature for the `validator` crate.
+Test whetever the string is a valid credit card number.
 
 Examples:
 
@@ -161,8 +162,15 @@ Examples:
 #[validate(credit_card)]
 ```
 
+### phone
+Tests whether the String is a valid phone number (in international format, ie. 
+containing the country indicator like `+14152370800` for an US number — where `4152370800` 
+is the national number equivalent, which is seen as invalid). 
+To use this validator, you must enable the `phone` feature for the `validator` crate.
+This validator doesn't take any arguments: `#[validate(phone)]`;
+
 ### custom
-Calls one of your function to do a custom validation. 
+Calls one of your function to do a custom validation.
 The field will be given as parameter and it should return a `Option<String>` representing the error code,
 if there was an error.
 
