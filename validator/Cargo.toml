@@ -1,6 +1,6 @@
 [package]
 name = "validator"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"
 description = "Common validation functions (email, url, length, ...) and trait"
