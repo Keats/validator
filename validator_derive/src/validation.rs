@@ -31,7 +31,7 @@ impl FieldValidation {
     }
 }
 
-pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMetaItem>) -> FieldValidation {
+pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
     let mut min = None;
     let mut max = None;
     let mut equal = None;
@@ -43,31 +43,31 @@ pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta
     };
 
     for meta_item in meta_items {
-        if let syn::NestedMetaItem::MetaItem(ref item) = *meta_item {
-            if let syn::MetaItem::NameValue(ref name, ref val) = *item {
-                match name.to_string().as_ref() {
+        if let syn::NestedMeta::Meta(ref item) = *meta_item {
+            if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item {
+                match ident.as_ref() {
                     "message" | "code" => continue,
                     "min" => {
-                        min = match lit_to_int(val) {
+                        min = match lit_to_int(lit) {
                             Some(s) => Some(s),
                             None => error("invalid argument type for `min` of `length` validator: only integers are allowed"),
                         };
                     },
                     "max" => {
-                        max = match lit_to_int(val) {
+                        max = match lit_to_int(lit) {
                             Some(s) => Some(s),
                             None => error("invalid argument type for `max` of `length` validator: only integers are allowed"),
                         };
                     },
                     "equal" => {
-                        equal = match lit_to_int(val) {
+                        equal = match lit_to_int(lit) {
                             Some(s) => Some(s),
                             None => error("invalid argument type for `equal` of `length` validator: only integers are allowed"),
                         };
                     },
-                    _ => error(&format!(
+                    v => error(&format!(
                         "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
-                        name.to_string()
+                        v
                     ))
                 }
             } else {
@@ -91,7 +91,7 @@ pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta
     }
 }
 
-pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMetaItem>) -> FieldValidation {
+pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
     let mut min = 0.0;
     let mut max = 0.0;
 
@@ -107,27 +107,27 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMetaI
 
     for meta_item in meta_items {
         match *meta_item {
-            syn::NestedMetaItem::MetaItem(ref item) => match *item {
-                syn::MetaItem::NameValue(ref name, ref val) => {
-                    match name.to_string().as_ref() {
+            syn::NestedMeta::Meta(ref item) => match *item {
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                    match ident.as_ref() {
                         "message" | "code" => continue,
                         "min" => {
-                            min = match lit_to_float(val) {
+                            min = match lit_to_float(lit) {
                                 Some(s) => s,
                                 None => error("invalid argument type for `min` of `range` validator: only integers are allowed")
                             };
                             has_min = true;
                         },
                         "max" => {
-                            max = match lit_to_float(val) {
+                            max = match lit_to_float(lit) {
                                 Some(s) => s,
                                 None => error("invalid argument type for `max` of `range` validator: only integers are allowed")
                             };
                             has_max = true;
                         },
-                        _ => error(&format!(
+                        v => error(&format!(
                             "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
-                            name.to_string()
+                            v
                         ))
                     }
                 },
@@ -150,18 +150,18 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMetaI
 }
 
 /// Extract url/email/phone field validation with a code or a message
-pub fn extract_argless_validation(validator_name: String, field: String, meta_items: &Vec<syn::NestedMetaItem>) -> FieldValidation {
+pub fn extract_argless_validation(validator_name: String, field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
 
     for meta_item in meta_items {
         match *meta_item {
-            syn::NestedMetaItem::MetaItem(ref item) => match *item {
-                syn::MetaItem::NameValue(ref name, ref val) => {
-                    match name.to_string().as_ref() {
+            syn::NestedMeta::Meta(ref item) => match *item {
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, .. }) => {
+                    match ident.as_ref() {
                         "message" | "code" => continue,
-                        _ => panic!(
+                        v => panic!(
                             "Unknown argument `{}` for validator `{}` on field `{}`",
-                            name.to_string(), validator_name, field
+                            v, validator_name, field
                         )
                     }
                 },
@@ -187,18 +187,18 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
 }
 
 /// For custom, contains, regex, must_match
-pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field: String, meta_items: &Vec<syn::NestedMetaItem>) -> FieldValidation {
+pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
     let mut value = None;
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
 
     for meta_item in meta_items {
         match *meta_item {
-            syn::NestedMetaItem::MetaItem(ref item) => match *item {
-                syn::MetaItem::NameValue(ref name, ref val) => {
-                    match name.to_string().as_ref() {
+            syn::NestedMeta::Meta(ref item) => match *item {
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                    match ident.as_ref() {
                         "message" | "code" => continue,
                         v if v == val_name => {
-                            value = match lit_to_string(val) {
+                            value = match lit_to_string(lit) {
                                 Some(s) => Some(s),
                                 None => panic!(
                                     "Invalid argument type for `{}` for validator `{}` on field `{}`: only a string is allowed",
@@ -206,9 +206,9 @@ pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field:
                                 ),
                             };
                         },
-                        _ => panic!(
+                        v => panic!(
                             "Unknown argument `{}` for validator `{}` on field `{}`",
-                            name.to_string(), validator_name, field
+                            v, validator_name, field
                         )
                     }
                 },
@@ -237,15 +237,15 @@ pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field:
     }
 }
 
-fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<syn::NestedMetaItem>) -> (Option<String>, Option<String>) {
+fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<syn::NestedMeta>) -> (Option<String>, Option<String>) {
     let mut message = None;
     let mut code = None;
 
     for meta_item in meta_items {
-        if let syn::NestedMetaItem::MetaItem(syn::MetaItem::NameValue(ref name, ref val)) = *meta_item {
-            match name.to_string().as_ref() {
+        if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref ident , ref lit, .. })) = *meta_item {
+            match ident.as_ref() {
                 "code" => {
-                    code = match lit_to_string(val) {
+                    code = match lit_to_string(lit) {
                         Some(s) => Some(s),
                         None => panic!(
                             "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
@@ -254,7 +254,7 @@ fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<
                     };
                 },
                 "message" => {
-                    message = match lit_to_string(val) {
+                    message = match lit_to_string(lit) {
                         Some(s) => Some(s),
                         None => panic!(
                             "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",

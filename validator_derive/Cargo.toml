@@ -15,8 +15,8 @@ proc-macro = true
 phone = ["validator/phone"]
 
 [dependencies]
-syn = "0.11"
-quote = "0.3"
+syn = { version = "0.12", features = ["extra-traits"] }
+quote = "0.4"
 if_chain = "0"
 validator = { version = "0.6", path = "../validator"}
 
