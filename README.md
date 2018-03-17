@@ -181,8 +181,6 @@ Examples:
 #[validate(custom = "::utils::validate_something"]
 ```
 
-TODO: have it return a bool and pass a `code` to the `custom` validator instead?
-
 ## Struct level validation
 Often, some error validation can only be applied when looking at the full struct, here's how it works here:
 
@@ -238,6 +236,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.6.2 (2018/03/17)
+
+- Update syn and quote
 
 #### 0.6.1 (2017/11/08)
 
