@@ -4,6 +4,7 @@
 #[macro_use]
 extern crate quote;
 extern crate proc_macro;
+#[macro_use]
 extern crate syn;
 #[macro_use]
 extern crate if_chain;
@@ -30,23 +31,21 @@ use quoting::{FieldQuoter, quote_field_validation, quote_schema_validation};
 
 #[proc_macro_derive(Validate, attributes(validate))]
 pub fn derive_validation(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    // Parse the string representation to an AST
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
 
     let expanded = impl_validate(&ast);
-    expanded.parse().unwrap()
+    expanded.into()
 }
 
 
-fn impl_validate(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_validate(ast: &syn::DeriveInput) -> quote::Tokens {
     // Ensure the macro is on a struct with named fields
-    let fields = match ast.body {
-        syn::Body::Struct(syn::VariantData::Struct(ref fields)) => {
+    let fields = match ast.data {
+        syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
             if fields.iter().any(|field| field.ident.is_none()) {
                 panic!("struct has unnamed fields");
             }
-            fields
+            fields.iter().cloned().collect()
         },
         _ => panic!("#[derive(Validate)] can only be used with structs"),
     };
@@ -55,7 +54,7 @@ fn impl_validate(ast: &syn::MacroInput) -> quote::Tokens {
 
     let field_types = find_fields_type(&fields);
 
-    for field in fields {
+    for field in &fields {
         let field_ident = field.ident.clone().unwrap();
         let (name, field_validations) = find_validators_for_field(field, &field_types);
         let field_type = field_types.get(&field_ident.to_string()).cloned().unwrap();
@@ -102,17 +101,17 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
     };
 
     for attr in struct_attrs {
-        if attr.value.name() != "validate" {
+        if attr.path != parse_quote!(validate) {
             continue;
         }
 
         if_chain! {
-            if let syn::MetaItem::List(_, ref meta_items) = attr.value;
-            if let syn::NestedMetaItem::MetaItem(ref item) = meta_items[0];
-            if let &syn::MetaItem::List(ref ident2, ref args) = item;
+            if let Some(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.interpret_meta();
+            if let syn::NestedMeta::Meta(ref item) = nested[0];
+            if let &syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) = item;
 
             then {
-                if ident2 != "schema" {
+                if ident.as_ref() != "schema" {
                     error("Only `schema` is allowed as validator on a struct")
                 }
 
@@ -121,36 +120,36 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
                 let mut code = None;
                 let mut message = None;
 
-                for arg in args {
+                for arg in nested {
                     if_chain! {
-                        if let syn::NestedMetaItem::MetaItem(ref item) = *arg;
-                        if let syn::MetaItem::NameValue(ref name, ref val) = *item;
+                        if let syn::NestedMeta::Meta(ref item) = *arg;
+                        if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item;
 
                         then {
-                            match name.to_string().as_ref() {
+                            match ident.as_ref() {
                                 "function" => {
-                                    function = match lit_to_string(val) {
+                                    function = match lit_to_string(lit) {
                                         Some(s) => s,
                                         None => error("invalid argument type for `function` \
                                         : only a string is allowed"),
                                     };
                                 },
                                 "skip_on_field_errors" => {
-                                    skip_on_field_errors = match lit_to_bool(val) {
+                                    skip_on_field_errors = match lit_to_bool(lit) {
                                         Some(s) => s,
                                         None => error("invalid argument type for `skip_on_field_errors` \
                                         : only a bool is allowed"),
                                     };
                                 },
                                 "code" => {
-                                    code = match lit_to_string(val) {
+                                    code = match lit_to_string(lit) {
                                         Some(s) => Some(s),
                                         None => error("invalid argument type for `code` \
                                         : only a string is allowed"),
                                     };
                                 },
                                 "message" => {
-                                    message = match lit_to_string(val) {
+                                    message = match lit_to_string(lit) {
                                         Some(s) => Some(s),
                                         None => error("invalid argument type for `message` \
                                         : only a string is allowed"),
@@ -194,17 +193,17 @@ fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
     for field in fields {
         let field_ident = field.ident.clone().unwrap().to_string();
         let field_type = match field.ty {
-            syn::Ty::Path(_, ref p) => {
+            syn::Type::Path(syn::TypePath { ref path, .. }) => {
                 let mut tokens = quote::Tokens::new();
-                p.to_tokens(&mut tokens);
+                path.to_tokens(&mut tokens);
                 tokens.to_string().replace(' ', "")
 
             },
-            syn::Ty::Rptr(ref l, ref p) => {
+            syn::Type::Reference(syn::TypeReference { ref lifetime, ref elem, .. }) => {
                 let mut tokens = quote::Tokens::new();
-                p.ty.to_tokens(&mut tokens);
+                elem.to_tokens(&mut tokens);
                 let mut name = tokens.to_string().replace(' ', "");
-                if l.is_some() {
+                if lifetime.is_some() {
                     name.insert(0, '&')
                 }
                 name
@@ -235,19 +234,20 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
     let mut has_validate = false;
 
     for attr in &field.attrs {
-        if attr.name() != "validate" && attr.name() != "serde" {
+        if attr.path != parse_quote!(validate) && attr.path != parse_quote!(serde) {
             continue;
         }
 
-        if attr.name() == "validate" {
+        if attr.path == parse_quote!(validate) {
             has_validate = true;
         }
 
-        match attr.value {
-            syn::MetaItem::List(_, ref meta_items) => {
+        match attr.interpret_meta() {
+            Some(syn::Meta::List(syn::MetaList { ref nested, .. })) => {
+                let meta_items = nested.iter().collect();
                 // original name before serde rename
-                if attr.name() == "serde" {
-                    if let Some(s) = find_original_field_name(meta_items) {
+                if attr.path == parse_quote!(serde) {
+                    if let Some(s) = find_original_field_name(&meta_items) {
                         field_ident = s;
                     }
                     continue;
@@ -256,9 +256,9 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                 // only validation from there on
                 for meta_item in meta_items {
                     match *meta_item {
-                        syn::NestedMetaItem::MetaItem(ref item) => match *item {
+                        syn::NestedMeta::Meta(ref item) => match *item {
                             // email, url, phone
-                            syn::MetaItem::Word(ref name) => match name.to_string().as_ref() {
+                            syn::Meta::Word(ref name) => match name.to_string().as_ref() {
                                 "email" => {
                                     assert_string_type("email", field_type);
                                     validators.push(FieldValidation::new(Validator::Email));
@@ -279,28 +279,28 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                 _ => panic!("Unexpected validator: {}", name)
                             },
                             // custom, contains, must_match, regex
-                            syn::MetaItem::NameValue(ref name, ref val) => {
-                                match name.to_string().as_ref() {
+                            syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                                match ident.as_ref() {
                                     "custom" => {
-                                        match lit_to_string(val) {
+                                        match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom(s))),
                                             None => error("invalid argument for `custom` validator: only strings are allowed"),
                                         };
                                     },
                                     "contains" => {
-                                        match lit_to_string(val) {
+                                        match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Contains(s))),
                                             None => error("invalid argument for `contains` validator: only strings are allowed"),
                                         };
                                     },
                                     "regex" => {
-                                        match lit_to_string(val) {
+                                        match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Regex(s))),
                                             None => error("invalid argument for `regex` validator: only strings are allowed"),
                                         };
                                     }
                                     "must_match" => {
-                                        match lit_to_string(val) {
+                                        match lit_to_string(lit) {
                                             Some(s) => {
                                                 assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s));
                                                 validators.push(FieldValidation::new(Validator::MustMatch(s)));
@@ -308,42 +308,45 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                             None => error("invalid argument for `must_match` validator: only strings are allowed"),
                                         };
                                     },
-                                    _ => panic!("unexpected name value validator: {:?}", name),
+                                    v => panic!("unexpected name value validator: {:?}", v),
                                 };
                             },
                             // Validators with several args
-                            syn::MetaItem::List(ref name, ref meta_items) => match name.to_string().as_ref() {
-                                "length" => {
-                                    assert_has_len(rust_ident.clone(), field_type);
-                                    validators.push(extract_length_validation(rust_ident.clone(), meta_items));
-                                },
-                                "range" => {
-                                    assert_has_range(rust_ident.clone(), field_type);
-                                    validators.push(extract_range_validation(rust_ident.clone(), meta_items));
-                                },
-                                "email" | "url" | "phone" | "credit_card" => {
-                                    validators.push(extract_argless_validation(name.to_string(), rust_ident.clone(), meta_items));
-                                },
-                                "custom" => {
-                                    validators.push(extract_one_arg_validation("function", name.to_string(), rust_ident.clone(), meta_items));
-                                },
-                                "contains" => {
-                                    validators.push(extract_one_arg_validation("pattern", name.to_string(), rust_ident.clone(), meta_items));
-                                },
-                                "regex" => {
-                                    validators.push(extract_one_arg_validation("path", name.to_string(), rust_ident.clone(), meta_items));
-                                },
-                                "must_match" => {
-                                    let validation = extract_one_arg_validation("other", name.to_string(), rust_ident.clone(), meta_items);
-                                    if let Validator::MustMatch(ref t2) = validation.validator {
-                                        assert_type_matches(rust_ident.clone(), field_type, field_types.get(t2));
-                                    }
-                                    validators.push(validation);
-                                },
-                                _ => panic!("unexpected list validator: {:?}", name.to_string())
+                            syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) => {
+                                let meta_items = nested.iter().cloned().collect();
+                                match ident.as_ref() {
+                                    "length" => {
+                                        assert_has_len(rust_ident.clone(), field_type);
+                                        validators.push(extract_length_validation(rust_ident.clone(), &meta_items));
+                                    },
+                                    "range" => {
+                                        assert_has_range(rust_ident.clone(), field_type);
+                                        validators.push(extract_range_validation(rust_ident.clone(), &meta_items));
+                                    },
+                                    "email" | "url" | "phone" | "credit_card" => {
+                                        validators.push(extract_argless_validation(ident.to_string(), rust_ident.clone(), &meta_items));
+                                    },
+                                    "custom" => {
+                                        validators.push(extract_one_arg_validation("function", ident.to_string(), rust_ident.clone(), &meta_items));
+                                    },
+                                    "contains" => {
+                                        validators.push(extract_one_arg_validation("pattern", ident.to_string(), rust_ident.clone(), &meta_items));
+                                    },
+                                    "regex" => {
+                                        validators.push(extract_one_arg_validation("path", ident.to_string(), rust_ident.clone(), &meta_items));
+                                    },
+                                    "must_match" => {
+                                        let validation = extract_one_arg_validation("other", ident.to_string(), rust_ident.clone(), &meta_items);
+                                        if let Validator::MustMatch(ref t2) = validation.validator {
+                                            assert_type_matches(rust_ident.clone(), field_type, field_types.get(t2));
+                                        }
+                                        validators.push(validation);
+                                    },
+                                    v => panic!("unexpected list validator: {:?}", v)
+                                }
                             },
                         },
-                        _ => unreachable!("Found a non MetaItem while looking for validators")
+                        _ => unreachable!("Found a non Meta while looking for validators")
                     };
                 }
             },
@@ -363,20 +366,20 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
 ///
 /// For example a JS frontend might send camelCase fields and Rust converts them to snake_case
 /// but we want to send the errors back with the original name
-fn find_original_field_name(meta_items: &Vec<syn::NestedMetaItem>) -> Option<String> {
+fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String> {
     let mut original_name = None;
 
     for meta_item in meta_items {
         match *meta_item {
-            syn::NestedMetaItem::MetaItem(ref item) => match *item {
-                syn::MetaItem::Word(_) => continue,
-                syn::MetaItem::NameValue(ref name, ref val) => {
-                    if name == "rename" {
-                        original_name = Some(lit_to_string(val).unwrap());
+            &syn::NestedMeta::Meta(ref item) => match *item {
+                syn::Meta::Word(_) => continue,
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                    if ident.as_ref() == "rename" {
+                        original_name = Some(lit_to_string(lit).unwrap());
                     }
                 },
-                syn::MetaItem::List(_, ref meta_items) => {
-                    return find_original_field_name(meta_items);
+                syn::Meta::List(syn::MetaList { ref nested, .. }) => {
+                    return find_original_field_name(&nested.iter().collect());
                 }
             },
             _ => unreachable!()

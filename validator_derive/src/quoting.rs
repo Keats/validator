@@ -228,7 +228,7 @@ pub fn quote_must_match_validation(field_quoter: &FieldQuoter, validation: &Fiel
     let field_name = &field_quoter.name;
 
     if let Validator::MustMatch(ref other) = validation.validator {
-        let other_ident = syn::Ident::new(other.clone());
+        let other_ident = syn::Ident::from(other.clone());
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !::validator::validate_must_match(&self.#ident, &self.#other_ident) {
@@ -250,7 +250,7 @@ pub fn quote_custom_validation(field_quoter: &FieldQuoter, validation: &FieldVal
     let validator_param = field_quoter.quote_validator_param();
 
     if let Validator::Custom(ref fun) = validation.validator {
-        let fn_ident = syn::Ident::new(fun.clone());
+        let fn_ident = syn::Ident::from(fun.clone());
         let add_message_quoted = if let Some(ref m) = validation.message {
             quote!(err.message = Some(::std::borrow::Cow::from(#m));)
         } else {
@@ -300,7 +300,7 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     let validator_param = field_quoter.quote_validator_param();
 
     if let Validator::Regex(ref re) = validation.validator {
-        let re_ident = syn::Ident::new(re.clone());
+        let re_ident = syn::Ident::from(re.clone());
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !#re_ident.is_match(#validator_param) {
@@ -335,7 +335,7 @@ pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 
 pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> quote::Tokens {
     if let Some(v) = validation {
-        let fn_ident = syn::Ident::new(v.function);
+        let fn_ident = syn::Ident::from(v.function);
 
         let add_message_quoted = if let Some(ref m) = v.message {
             quote!(err.message = Some(::std::borrow::Cow::from(#m));)
