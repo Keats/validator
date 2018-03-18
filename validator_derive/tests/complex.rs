@@ -131,6 +131,8 @@ fn test_can_validate_option_fields_without_lifetime() {
         address: Option<Option<String>>,
         #[validate(length(min = "1", max = "10"))]
         ids: Option<Vec<usize>>,
+        #[validate(length(min = "1", max = "10"))]
+        opt_ids: Option<Option<Vec<usize>>>,
         #[validate(range(min = "1", max = "100"))]
         age: Option<Option<usize>>,
         #[validate(range(min = "1", max = "10"))]
@@ -155,6 +157,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         name: Some("al".to_string()),
         address: Some(Some("gol".to_string())),
         ids: Some(vec![1, 2, 3]),
+        opt_ids: Some(Some(vec![1, 2, 3])),
         age: Some(Some(20)),
         range: Some(2),
         email: Some("hi@gmail.com".to_string()),
