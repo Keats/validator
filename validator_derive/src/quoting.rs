@@ -250,7 +250,7 @@ pub fn quote_custom_validation(field_quoter: &FieldQuoter, validation: &FieldVal
     let validator_param = field_quoter.quote_validator_param();
 
     if let Validator::Custom(ref fun) = validation.validator {
-        let fn_ident = syn::Ident::from(fun.clone());
+        let fn_ident: syn::Path = syn::parse_str(fun).unwrap();
         let add_message_quoted = if let Some(ref m) = validation.message {
             quote!(err.message = Some(::std::borrow::Cow::from(#m));)
         } else {
