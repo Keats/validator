@@ -185,3 +185,35 @@ fn test_works_with_question_mark_operator() {
 
     assert!(some_fn().is_err());
 }
+
+#[test]
+fn test_works_with_none_values() {
+    #[derive(Debug, Validate)]
+    struct PutStruct {
+        #[validate(length(min = "1", max = "10"))]
+        name: Option<String>,
+        #[validate(length(min = "1", max = "10"))]
+        address: Option<Option<String>>,
+        #[validate(range(min = "1", max = "100"))]
+        age: Option<Option<usize>>,
+        #[validate(range(min = "1", max = "10"))]
+        range: Option<usize>,
+    }
+
+    let p = PutStruct {
+        name: None,
+        address: None,
+        age: None,
+        range: None,
+    };
+
+    let q = PutStruct {
+        name: None,
+        address: Some(None),
+        age: Some(None),
+        range: None,
+    };
+
+    assert!(p.validate().is_ok());
+    assert!(q.validate().is_ok());
+}
