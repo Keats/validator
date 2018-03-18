@@ -81,6 +81,10 @@ fn test_can_validate_option_fields_with_lifetime() {
     struct PutStruct<'a> {
         #[validate(length(min = "1", max = "10"))]
         name: Option<&'a str>,
+        #[validate(length(min = "1", max = "10"))]
+        address: Option<Option<&'a str>>,
+        #[validate(range(min = "1", max = "100"))]
+        age: Option<Option<usize>>,
         #[validate(range(min = "1", max = "10"))]
         range: Option<usize>,
         #[validate(email)]
@@ -101,6 +105,8 @@ fn test_can_validate_option_fields_with_lifetime() {
 
     let s = PutStruct {
         name: Some("al"),
+        address: Some(Some("gol")),
+        age: Some(Some(20)),
         range: Some(2),
         email: Some("hi@gmail.com"),
         url: Some("http://google.com"),
@@ -122,7 +128,11 @@ fn test_can_validate_option_fields_without_lifetime() {
         #[validate(length(min = "1", max = "10"))]
         name: Option<String>,
         #[validate(length(min = "1", max = "10"))]
+        address: Option<Option<String>>,
+        #[validate(length(min = "1", max = "10"))]
         ids: Option<Vec<usize>>,
+        #[validate(range(min = "1", max = "100"))]
+        age: Option<Option<usize>>,
         #[validate(range(min = "1", max = "10"))]
         range: Option<usize>,
         #[validate(email)]
@@ -143,7 +153,9 @@ fn test_can_validate_option_fields_without_lifetime() {
 
     let s = PutStruct {
         name: Some("al".to_string()),
+        address: Some(Some("gol".to_string())),
         ids: Some(vec![1, 2, 3]),
+        age: Some(Some(20)),
         range: Some(2),
         email: Some("hi@gmail.com".to_string()),
         url: Some("http://google.com".to_string()),
