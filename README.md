@@ -237,6 +237,10 @@ For example, the following attributes all work:
 
 ### validator_derive
 
+#### 0.6.3 (2018/03/19)
+
+- Fix path for custom validators starting with `::`
+
 #### 0.6.2 (2018/03/17)
 
 - Update syn and quote
