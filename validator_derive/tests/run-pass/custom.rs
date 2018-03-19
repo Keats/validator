@@ -10,6 +10,12 @@ struct Test {
     s: String,
 }
 
+#[derive(Validate)]
+struct TestPath {
+    #[validate(custom = "::validate_something")]
+    s: String,
+}
+
 fn validate_something(s: &str) -> Result<(), ValidationError> {
     Ok(())
 }
