@@ -40,7 +40,8 @@ impl FieldQuoter {
 
     pub fn get_optional_validator_param(&self) -> quote::Tokens {
         let ident = &self.ident;
-        if self._type.starts_with("Option<&") || NUMBER_TYPES.contains(&self._type.as_ref()) {
+        if self._type.starts_with("Option<&") || self._type.starts_with("Option<Option<&")
+            || NUMBER_TYPES.contains(&self._type.as_ref()) {
           quote!(#ident)
         } else {
           quote!(ref #ident)
@@ -52,7 +53,13 @@ impl FieldQuoter {
     pub fn wrap_if_option(&self, tokens: quote::Tokens) -> quote::Tokens {
         let field_ident = &self.ident;
         let optional_pattern_matched = self.get_optional_validator_param();
-        if self._type.starts_with("Option<") {
+        if self._type.starts_with("Option<Option<") {
+            return quote!(
+                if let Some(Some(#optional_pattern_matched)) = self.#field_ident {
+                    #tokens
+                }
+            )
+        } else if self._type.starts_with("Option<") {
             return quote!(
                 if let Some(#optional_pattern_matched) = self.#field_ident {
                     #tokens
