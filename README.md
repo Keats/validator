@@ -237,6 +237,10 @@ For example, the following attributes all work:
 
 ### validator_derive
 
+#### 0.6.4 (2018/03/20)
+
+- Support `Option<Option<T>>` types
+
 #### 0.6.3 (2018/03/19)
 
 - Fix path for custom validators starting with `::`
