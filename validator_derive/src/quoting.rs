@@ -307,7 +307,7 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     let validator_param = field_quoter.quote_validator_param();
 
     if let Validator::Regex(ref re) = validation.validator {
-        let re_ident = syn::Ident::from(re.clone());
+        let re_ident: syn::Path = syn::parse_str(re).unwrap();
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !#re_ident.is_match(#validator_param) {
