@@ -163,9 +163,9 @@ Examples:
 ```
 
 ### phone
-Tests whether the String is a valid phone number (in international format, ie. 
-containing the country indicator like `+14152370800` for an US number — where `4152370800` 
-is the national number equivalent, which is seen as invalid). 
+Tests whether the String is a valid phone number (in international format, ie.
+containing the country indicator like `+14152370800` for an US number — where `4152370800`
+is the national number equivalent, which is seen as invalid).
 To use this validator, you must enable the `phone` feature for the `validator_derive` crate.
 This validator doesn't take any arguments: `#[validate(phone)]`;
 
@@ -236,6 +236,11 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.6.5 (2018/04/14)
+
+- Fix path for regex starting with `::`
+- Update syn and quote
 
 #### 0.6.4 (2018/03/20)
 
