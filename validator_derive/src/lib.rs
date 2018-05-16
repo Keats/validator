@@ -272,6 +272,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                                     assert_string_type("phone", field_type);
                                     validators.push(FieldValidation::new(Validator::Phone));
                                 },
+                                #[cfg(feature = "card")]
                                 "credit_card" => {
                                     assert_string_type("credit_card", field_type);
                                     validators.push(FieldValidation::new(Validator::CreditCard));

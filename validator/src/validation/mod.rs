@@ -5,6 +5,7 @@ pub mod range;
 pub mod urls;
 pub mod must_match;
 pub mod contains;
+#[cfg(feature = "card")]
 pub mod cards;
 #[cfg(feature = "phone")]
 pub mod phone;
