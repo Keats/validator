@@ -2,10 +2,13 @@ language: rust
 cache: cargo
 
 rust:
+  - 1.15.0
+  - stable
   - nightly
 
 script:
   - (cd validator && cargo test --all-features)
   - (cd validator_derive && cargo test --all-features)
+
 notifications:
   email: false
