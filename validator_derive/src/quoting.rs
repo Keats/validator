@@ -165,6 +165,7 @@ pub fn quote_range_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     unreachable!()
 }
 
+#[cfg(feature = "card")]
 pub fn quote_credit_card_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> quote::Tokens {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
