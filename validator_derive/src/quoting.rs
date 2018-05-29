@@ -334,6 +334,7 @@ pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldVali
         Validator::Custom(_) => quote_custom_validation(&field_quoter, validation),
         Validator::Contains(_) => quote_contains_validation(&field_quoter, validation),
         Validator::Regex(_) => quote_regex_validation(&field_quoter, validation),
+        #[cfg(feature = "card")]
         Validator::CreditCard => quote_credit_card_validation(&field_quoter, validation),
         #[cfg(feature = "phone")]
         Validator::Phone => quote_phone_validation(&field_quoter, validation),

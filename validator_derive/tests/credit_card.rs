@@ -4,7 +4,7 @@ extern crate validator;
 
 use validator::Validate;
 
-
+#[cfg(feature = "card")]
 #[test]
 fn can_validate_valid_card_number() {
     #[derive(Debug, Validate)]
@@ -20,6 +20,7 @@ fn can_validate_valid_card_number() {
     assert!(s.validate().is_ok());
 }
 
+#[cfg(feature = "card")]
 #[test]
 fn bad_credit_card_fails_validation() {
     #[derive(Debug, Validate)]
@@ -40,6 +41,7 @@ fn bad_credit_card_fails_validation() {
     assert_eq!(errs["val"][0].params["value"], "bob");
 }
 
+#[cfg(feature = "card")]
 #[test]
 fn can_specify_code_for_credit_card() {
     #[derive(Debug, Validate)]
@@ -58,6 +60,7 @@ fn can_specify_code_for_credit_card() {
     assert_eq!(errs["val"][0].code, "oops");
 }
 
+#[cfg(feature = "card")]
 #[test]
 fn can_specify_message_for_credit_card() {
     #[derive(Debug, Validate)]

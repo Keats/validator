@@ -223,6 +223,10 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.7.0 (2018/05/29)
+
+- Feature gate the card validator
+
 #### 0.6.2 (2017/11/08)
 
 - Fix credit card validation being incorrect in enum
@@ -236,6 +240,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.7.0 (2018/05/29)
+
+- Feature gate the card validator
 
 #### 0.6.5 (2018/04/14)
 

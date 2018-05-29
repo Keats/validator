@@ -1,6 +1,6 @@
 [package]
 name = "validator"
-version = "0.6.3"
+version = "0.7.0"
 authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
 license = "MIT"
 description = "Common validation functions (email, url, length, ...) and trait"
@@ -10,7 +10,7 @@ keywords = ["validation", "api", "validator"]
 
 [dependencies]
 url = "1"
-regex = "0.2"
+regex = "1"
 lazy_static = "1"
 idna = "0.1"
 serde = "1"
