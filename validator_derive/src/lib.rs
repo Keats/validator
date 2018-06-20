@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate quote;
 extern crate proc_macro;
+extern crate proc_macro2;
 #[macro_use]
 extern crate syn;
 #[macro_use]
@@ -37,7 +38,7 @@ pub fn derive_validation(input: TokenStream) -> TokenStream {
 }
 
 
-fn impl_validate(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Ensure the macro is on a struct with named fields
     let fields = match ast.data {
         syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
@@ -110,7 +111,7 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
             if let &syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) = item;
 
             then {
-                if ident.as_ref() != "schema" {
+                if ident != "schema" {
                     error("Only `schema` is allowed as validator on a struct")
                 }
 
@@ -125,7 +126,7 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
                         if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item;
 
                         then {
-                            match ident.as_ref() {
+                            match ident.to_string().as_ref() {
                                 "function" => {
                                     function = match lit_to_string(lit) {
                                         Some(s) => s,
@@ -193,13 +194,13 @@ fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
         let field_ident = field.ident.clone().unwrap().to_string();
         let field_type = match field.ty {
             syn::Type::Path(syn::TypePath { ref path, .. }) => {
-                let mut tokens = quote::Tokens::new();
+                let mut tokens = proc_macro2::TokenStream::empty();
                 path.to_tokens(&mut tokens);
                 tokens.to_string().replace(' ', "")
 
             },
             syn::Type::Reference(syn::TypeReference { ref lifetime, ref elem, .. }) => {
-                let mut tokens = quote::Tokens::new();
+                let mut tokens = proc_macro2::TokenStream::empty();
                 elem.to_tokens(&mut tokens);
                 let mut name = tokens.to_string().replace(' ', "");
                 if lifetime.is_some() {
@@ -280,7 +281,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                             },
                             // custom, contains, must_match, regex
                             syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
-                                match ident.as_ref() {
+                                match ident.to_string().as_ref() {
                                     "custom" => {
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom(s))),
@@ -314,7 +315,7 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                             // Validators with several args
                             syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) => {
                                 let meta_items = nested.iter().cloned().collect();
-                                match ident.as_ref() {
+                                match ident.to_string().as_ref() {
                                     "length" => {
                                         assert_has_len(rust_ident.clone(), field_type);
                                         validators.push(extract_length_validation(rust_ident.clone(), &meta_items));
@@ -374,7 +375,7 @@ fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String
             &syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::Word(_) => continue,
                 syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
-                    if ident.as_ref() == "rename" {
+                    if ident == "rename" {
                         original_name = Some(lit_to_string(lit).unwrap());
                     }
                 },
