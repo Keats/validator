@@ -45,7 +45,7 @@ pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(ref item) = *meta_item {
             if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item {
-                match ident.as_ref() {
+                match ident.to_string().as_ref() {
                     "message" | "code" => continue,
                     "min" => {
                         min = match lit_to_int(lit) {
@@ -109,7 +109,7 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMeta>
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
-                    match ident.as_ref() {
+                    match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         "min" => {
                             min = match lit_to_float(lit) {
@@ -157,7 +157,7 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::NameValue(syn::MetaNameValue { ref ident, .. }) => {
-                    match ident.as_ref() {
+                    match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         v => panic!(
                             "Unknown argument `{}` for validator `{}` on field `{}`",
@@ -196,7 +196,7 @@ pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field:
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
-                    match ident.as_ref() {
+                    match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         v if v == val_name => {
                             value = match lit_to_string(lit) {
@@ -244,7 +244,7 @@ fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<
 
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref ident , ref lit, .. })) = *meta_item {
-            match ident.as_ref() {
+            match ident.to_string().as_ref() {
                 "code" => {
                     code = match lit_to_string(lit) {
                         Some(s) => Some(s),

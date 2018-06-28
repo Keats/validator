@@ -1,5 +1,5 @@
-use quote;
 use syn;
+use proc_macro2;
 
 
 pub fn lit_to_string(lit: &syn::Lit) -> Option<String> {
@@ -37,7 +37,7 @@ pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     }
 }
 
-pub fn option_u64_to_tokens(opt: Option<u64>) -> quote::Tokens {
+pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
     match opt {
         Some(ref t) => quote!(::std::option::Option::Some(#t)),
         None => quote!(::std::option::Option::None)
