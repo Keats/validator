@@ -241,6 +241,10 @@ For example, the following attributes all work:
 
 ### validator_derive
 
+#### 0.7.1 (2018/06/28)
+
+- Update dependencies
+
 #### 0.7.0 (2018/05/29)
 
 - Feature gate the card validator

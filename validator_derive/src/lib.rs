@@ -194,13 +194,13 @@ fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
         let field_ident = field.ident.clone().unwrap().to_string();
         let field_type = match field.ty {
             syn::Type::Path(syn::TypePath { ref path, .. }) => {
-                let mut tokens = proc_macro2::TokenStream::empty();
+                let mut tokens = proc_macro2::TokenStream::new();
                 path.to_tokens(&mut tokens);
                 tokens.to_string().replace(' ', "")
 
             },
             syn::Type::Reference(syn::TypeReference { ref lifetime, ref elem, .. }) => {
-                let mut tokens = proc_macro2::TokenStream::empty();
+                let mut tokens = proc_macro2::TokenStream::new();
                 elem.to_tokens(&mut tokens);
                 let mut name = tokens.to_string().replace(' ', "");
                 if lifetime.is_some() {
