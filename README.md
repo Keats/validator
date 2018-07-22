@@ -130,7 +130,7 @@ mentioned is missing or has a different type than the field the attribute is on.
 Examples:
 
 ```rust
-#[validate(must_match = "password2"))]
+#[validate(must_match = "password2")]
 ```
 
 ### contains
@@ -140,7 +140,7 @@ Tests whether the string contains the substring given or if a key is present in 
 Examples:
 
 ```rust
-#[validate(contains = "gmail"))]
+#[validate(contains = "gmail")]
 ```
 
 ### regex
@@ -150,7 +150,7 @@ Tests whether the string matchs the regex given. `regex` takes
 Examples:
 
 ```rust
-#[validate(regex = "ALLOWED_USERNAMES_RE"))]
+#[validate(regex = "ALLOWED_USERNAMES_RE")]
 ```
 
 ### credit\_card
@@ -178,7 +178,7 @@ Examples:
 
 ```rust
 #[validate(custom = "validate_something")]
-#[validate(custom = "::utils::validate_something"]
+#[validate(custom = "::utils::validate_something")]
 ```
 
 ## Struct level validation
