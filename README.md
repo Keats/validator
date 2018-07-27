@@ -223,6 +223,10 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.7.1 (2018/07/27)
+
+- Make validators work on `Cow`
+
 #### 0.7.0 (2018/05/29)
 
 - Feature gate the card validator
@@ -240,6 +244,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.7.2 (2018/07/27)
+
+- Make validators work on `Cow`
 
 #### 0.7.1 (2018/06/28)
 
