@@ -1,10 +1,13 @@
-use std::str::FromStr;
+use std::borrow::Cow;
 use std::net::IpAddr;
+use std::str::FromStr;
 
 
 /// Validates whether the given string is an IP V4
-pub fn validate_ip_v4(val: &str) -> bool {
-    match IpAddr::from_str(val) {
+pub fn validate_ip_v4<'a, T>(val: T) -> bool
+    where T: Into<Cow<'a, str>>
+{
+    match IpAddr::from_str(val.into().as_ref()) {
         Ok(i) => match i {
             IpAddr::V4(_) => true,
             IpAddr::V6(_) => false,
@@ -14,8 +17,10 @@ pub fn validate_ip_v4(val: &str) -> bool {
 }
 
 /// Validates whether the given string is an IP V6
-pub fn validate_ip_v6(val: &str) -> bool {
-    match IpAddr::from_str(val) {
+pub fn validate_ip_v6<'a, T>(val: T) -> bool
+    where T: Into<Cow<'a, str>>
+{
+    match IpAddr::from_str(val.into().as_ref()) {
         Ok(i) => match i {
             IpAddr::V4(_) => false,
             IpAddr::V6(_) => true,
@@ -25,8 +30,10 @@ pub fn validate_ip_v6(val: &str) -> bool {
 }
 
 /// Validates whether the given string is an IP
-pub fn validate_ip(val: &str) -> bool {
-    match IpAddr::from_str(val) {
+pub fn validate_ip<'a, T>(val: T) -> bool
+    where T: Into<Cow<'a, str>>
+{
+    match IpAddr::from_str(val.into().as_ref()) {
         Ok(_) => true,
         Err(_) => false,
     }
@@ -35,6 +42,8 @@ pub fn validate_ip(val: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+
     use super::{validate_ip_v4, validate_ip_v6, validate_ip};
 
     #[test]
@@ -57,6 +66,18 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_ip_cow() {
+        let test: Cow<'static, str> = "1.1.1.1".into();
+        assert_eq!(validate_ip(test), true);
+        let test: Cow<'static, str> = String::from("1.1.1.1").into();
+        assert_eq!(validate_ip(test), true);
+        let test: Cow<'static, str> = "2a02::223:6cff :fe8a:2e8a".into();
+        assert_eq!(validate_ip(test), false);
+        let test: Cow<'static, str> = String::from("2a02::223:6cff :fe8a:2e8a").into();
+        assert_eq!(validate_ip(test), false);
+    }
+
+    #[test]
     fn test_validate_ip_v4() {
         let tests = vec![
             ("1.1.1.1", true),
@@ -73,6 +94,18 @@ mod tests {
         for (input, expected) in tests {
             assert_eq!(validate_ip_v4(input), expected);
         }
+    }
+
+    #[test]
+    fn test_validate_ip_v4_cow() {
+        let test: Cow<'static, str> = "1.1.1.1".into();
+        assert_eq!(validate_ip_v4(test), true);
+        let test: Cow<'static, str> = String::from("1.1.1.1").into();
+        assert_eq!(validate_ip_v4(test), true);
+        let test: Cow<'static, str> = "٧.2٥.3٣.243".into();
+        assert_eq!(validate_ip_v4(test), false);
+        let test: Cow<'static, str> = String::from("٧.2٥.3٣.243").into();
+        assert_eq!(validate_ip_v4(test), false);
     }
 
     #[test]
@@ -103,5 +136,17 @@ mod tests {
         for (input, expected) in tests {
             assert_eq!(validate_ip_v6(input), expected);
         }
+    }
+
+    #[test]
+    fn test_validate_ip_v6_cow() {
+        let test: Cow<'static, str> = "fe80::223:6cff:fe8a:2e8a".into();
+        assert_eq!(validate_ip_v6(test), true);
+        let test: Cow<'static, str> = String::from("fe80::223:6cff:fe8a:2e8a").into();
+        assert_eq!(validate_ip_v6(test), true);
+        let test: Cow<'static, str> = "::ffff:zzzz:0a0a".into();
+        assert_eq!(validate_ip_v6(test), false);
+        let test: Cow<'static, str> = String::from("::ffff:zzzz:0a0a").into();
+        assert_eq!(validate_ip_v6(test), false);
     }
 }

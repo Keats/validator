@@ -9,6 +9,7 @@ pub fn validate_contains<T: Contains>(val: T, needle: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use std::collections::HashMap;
 
     use super::*;
@@ -35,5 +36,21 @@ mod tests {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
         assert_eq!(validate_contains(map, "bob"), false);
+    }
+
+    #[test]
+    fn test_validate_contains_cow() {
+        let test: Cow<'static, str> = "hey".into();
+        assert!(validate_contains(test, "e"));
+        let test: Cow<'static, str> = String::from("hey").into();
+        assert!(validate_contains(test, "e"));
+    }
+
+    #[test]
+    fn test_validate_contains_cow_can_fail() {
+        let test: Cow<'static, str> = "hey".into();
+        assert_eq!(validate_contains(test, "o"), false);
+        let test: Cow<'static, str> = String::from("hey").into();
+        assert_eq!(validate_contains(test, "o"), false);
     }
 }

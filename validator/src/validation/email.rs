@@ -1,5 +1,6 @@
-use regex::Regex;
 use idna::domain_to_ascii;
+use std::borrow::Cow;
+use regex::Regex;
 
 use validation::ip::validate_ip;
 
@@ -17,7 +18,10 @@ lazy_static! {
 }
 
 /// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
-pub fn validate_email(val: &str) -> bool {
+pub fn validate_email<'a, T>(val: T) -> bool
+    where T: Into<Cow<'a, str>>
+{
+    let val = val.into();
     if val.is_empty() || !val.contains('@') {
         return false;
     }
@@ -61,6 +65,8 @@ fn validate_domain_part(domain_part: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+
     use super::validate_email;
 
     #[test]
@@ -117,5 +123,17 @@ mod tests {
             println!("{} - {}", input, expected);
             assert_eq!(validate_email(input), expected);
         }
+    }
+
+    #[test]
+    fn test_validate_email_cow() {
+        let test: Cow<'static, str> = "email@here.com".into();
+        assert_eq!(validate_email(test), true);
+        let test: Cow<'static, str> = String::from("email@here.com").into();
+        assert_eq!(validate_email(test), true);
+        let test: Cow<'static, str> = "a@[127.0.0.1]\n".into();
+        assert_eq!(validate_email(test), false);
+        let test: Cow<'static, str> = String::from("a@[127.0.0.1]\n").into();
+        assert_eq!(validate_email(test), false);
     }
 }
