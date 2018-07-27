@@ -4,7 +4,7 @@ use proc_macro2::{self, Span};
 
 use lit::option_u64_to_tokens;
 use validation::{FieldValidation, SchemaValidation};
-use asserts::NUMBER_TYPES;
+use asserts::{COW_TYPE, NUMBER_TYPES};
 
 
 /// Pass around all the information needed for creating a validation
@@ -31,6 +31,8 @@ impl FieldQuoter {
 
         if self._type.starts_with("Option<") {
             quote!(#ident)
+        } else if COW_TYPE.is_match(&self._type.as_ref()) {
+            quote!(self.#ident.as_ref())
         } else if self._type.starts_with("&") || NUMBER_TYPES.contains(&self._type.as_ref()) {
             quote!(self.#ident)
         } else {

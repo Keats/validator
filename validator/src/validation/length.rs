@@ -32,6 +32,8 @@ pub fn validate_length<T: HasLen>(length: Validator, val: T) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+
     use super::{validate_length, Validator};
 
     #[test]
@@ -56,6 +58,16 @@ mod tests {
     fn test_validate_length_string_max_only() {
         let validator = Validator::Length { min: None, max: Some(1), equal: None };
         assert_eq!(validate_length(validator, "hello"), false);
+    }
+
+    #[test]
+    fn test_validate_length_cow() {
+        let validator = Validator::Length { min: Some(1), max: Some(2), equal: Some(5) };
+        let test: Cow<'static, str> = "hello".into();
+        assert_eq!(validate_length(validator, test), true);
+        let validator = Validator::Length { min: Some(1), max: Some(2), equal: Some(5) };
+        let test: Cow<'static, str> = String::from("hello").into();
+        assert_eq!(validate_length(validator, test), true);
     }
 
     #[test]

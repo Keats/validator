@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use types::ValidationErrors;
@@ -26,6 +27,12 @@ impl<'a> HasLen for &'a String {
 impl<'a> HasLen for &'a str {
     fn length(&self) -> u64 {
         self.chars().count() as u64
+    }
+}
+
+impl<'a> HasLen for Cow<'a, str> {
+    fn length(&self) -> u64 {
+        self.len() as u64
     }
 }
 
@@ -59,6 +66,12 @@ impl<'a> Contains for &'a String {
 }
 
 impl<'a> Contains for &'a str {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
+impl<'a> Contains for Cow<'a, str> {
     fn has_element(&self, needle: &str) -> bool {
         self.contains(needle)
     }

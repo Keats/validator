@@ -1,3 +1,8 @@
+use regex::Regex;
+
+lazy_static! {
+    pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
+}
 
 pub static NUMBER_TYPES: [&'static str; 36] = [
     "usize", "u8", "u16", "u32", "u64",
@@ -17,11 +22,12 @@ pub static NUMBER_TYPES: [&'static str; 36] = [
 pub fn assert_string_type(name: &str, field_type: &String) {
     if field_type != "String"
         && field_type != "&str"
+        && !COW_TYPE.is_match(field_type)
         && field_type != "Option<String>"
         && field_type != "Option<Option<String>>"
         && !(field_type.starts_with("Option<") && field_type.ends_with("str>"))
         && !(field_type.starts_with("Option<Option<") && field_type.ends_with("str>>")) {
-        panic!("`{}` validator can only be used on String, &str or an Option of those", name);
+        panic!("`{}` validator can only be used on String, &str, Cow<'_,str> or an Option of those", name);
     }
 }
 
@@ -45,9 +51,10 @@ pub fn assert_has_len(field_name: String, field_type: &String) {
         // a bit ugly
         && !(field_type.starts_with("Option<") && field_type.ends_with("str>"))
         && !(field_type.starts_with("Option<Option<") && field_type.ends_with("str>>"))
+        && !COW_TYPE.is_match(field_type)
         && field_type != "&str" {
             panic!(
-                "Validator `length` can only be used on types `String`, `&str` or `Vec` but found `{}` for field `{}`",
+                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `{}` for field `{}`",
                 field_type, field_name
             );
     }
