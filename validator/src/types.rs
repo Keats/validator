@@ -55,6 +55,11 @@ impl ValidationErrors {
         self.0.entry(field).or_insert_with(|| vec![]).push(error);
     }
 
+    pub fn merge(mut self, other: ValidationErrors) -> Self {
+        self.0.extend(other.inner());
+        self
+    }
+
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
