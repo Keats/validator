@@ -8,7 +8,7 @@ use serde::ser::Serialize;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
-    pub path: Vec<Cow<'static, str>>,
+    pub path: Vec<String>,
     pub code: Cow<'static, str>,
     pub message: Option<Cow<'static, str>>,
     pub params: HashMap<Cow<'static, str>, Value>,
@@ -24,8 +24,8 @@ impl ValidationError {
         }
     }
 
-    pub fn set_path(mut self, path: Vec<&'static str>) -> Self {
-        self.path.extend(path.into_iter().map(Cow::from));
+    pub fn set_path(mut self, path: Vec<String>) -> Self {
+        self.path.extend(path.into_iter().clone());
         self
     }
 
@@ -46,7 +46,7 @@ impl std::error::Error for ValidationError {
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct ValidationErrors(HashMap<String, Vec<ValidationError>>, Vec<&'static str>);
+pub struct ValidationErrors(HashMap<String, Vec<ValidationError>>, Vec<String>);
 
 
 impl ValidationErrors {
@@ -74,7 +74,7 @@ impl ValidationErrors {
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
-        let path = FieldPath::concat(Some(field), Some(&self.1));
+        let path = FieldPath::concat(Some(String::from(field)), Some(&self.1));
         self.0.entry(path.join(".")).or_insert_with(|| vec![]).push(error.set_path(path));
     }
 
@@ -99,10 +99,10 @@ impl fmt::Display for ValidationErrors {
     }
 }
 
-pub struct FieldPath(Vec<&'static str>);
+pub struct FieldPath(Vec<String>);
 
 impl FieldPath {
-    pub fn concat(field: Option<&'static str>, path: Option<&Vec<&'static str>>) -> Vec<&'static str> {
+    pub fn concat(field: Option<String>, path: Option<&Vec<String>>) -> Vec<String> {
         let mut vec = path.map_or(Vec::new(), |p| p.to_vec());
         if let Some(f) = field {
             vec.push(f);
@@ -110,11 +110,11 @@ impl FieldPath {
         vec
     }
 
-    pub fn new(field: Option<&'static str>, path: Option<&FieldPath>) -> FieldPath {
+    pub fn new(field: Option<String>, path: Option<&FieldPath>) -> FieldPath {
         FieldPath(FieldPath::concat(field, path.map(|p| &p.0)))
     }
 
-    pub fn to_vec(&self) -> Vec<&'static str> {
+    pub fn to_vec(&self) -> Vec<String> {
         self.0.to_vec()
     }
 }

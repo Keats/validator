@@ -40,13 +40,25 @@ impl FieldQuoter {
         }
     }
 
+    pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
+        let ident = &self.ident;
+
+        if self._type.starts_with("Option<") || self._type.starts_with("Vec<") {
+            quote!(#ident)
+        } else if COW_TYPE.is_match(&self._type.as_ref()) {
+            quote!(self.#ident.as_ref())
+        } else {
+            quote!(self.#ident)
+        }
+    }
+
     pub fn get_optional_validator_param(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
         if self._type.starts_with("Option<&") || self._type.starts_with("Option<Option<&")
             || NUMBER_TYPES.contains(&self._type.as_ref()) {
-          quote!(#ident)
+            quote!(#ident)
         } else {
-          quote!(ref #ident)
+            quote!(ref #ident)
         }
     }
 
@@ -327,9 +339,21 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 }
 
 pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
-    let ident = &field_quoter.ident;
-    let name = &field_quoter.name;
-    quote!(result = ::validator::ValidationErrors::merge_results(result, self.#ident.nested_validate(::validator::FieldPath::new(Some(#name), Some(&path))));)
+    let field_name = &field_quoter.name;
+    let field_ident = &field_quoter.ident;
+    let validator_field = field_quoter.quote_validator_field();
+    let quoted = if field_quoter._type.starts_with("Vec<") {
+        quote!(
+            for (i, #field_ident) in self.#field_ident.iter().enumerate() {
+                result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(::validator::FieldPath::new(Some(format!("{}[{}]", #field_name, i)), Some(&path))));
+            }
+        )
+    } else {
+        quote!(
+            result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(::validator::FieldPath::new(Some(#field_name.to_string()), Some(&path))));
+        )
+    };
+    field_quoter.wrap_if_option(quoted)
 }
 
 pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldValidation,

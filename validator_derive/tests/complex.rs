@@ -40,8 +40,34 @@ struct SignupData {
     first_name: String,
     #[validate(range(min = "18", max = "20"))]
     age: u32,
+    #[validate]
+    phone: Phone,
+    #[validate]
+    card: Option<Card>,
+    #[validate]
+    preferences: Vec<Preference>
 }
 
+#[derive(Debug, Validate, Deserialize)]
+struct Phone {
+    #[validate(phone)]
+    number: String
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct Card {
+    #[validate(credit_card)]
+    number: String,
+    #[validate(range(min = "100", max = "9999"))]
+    cvv: u32,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct Preference {
+    #[validate(length(min = "4"))]
+    name: String,
+    value: bool,
+}
 
 #[test]
 fn is_fine_with_many_valid_validations() {
@@ -50,6 +76,19 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
+        phone: Phone {
+            number: "+14152370800".to_string()
+        },
+        card: Some(Card {
+            number: "5236313877109142".to_string(),
+            cvv: 123
+        }),
+        preferences: vec![
+            Preference {
+                name: "marketing".to_string(),
+                value: false
+            },
+        ]
     };
 
     assert!(signup.validate().is_ok());
@@ -62,6 +101,19 @@ fn failed_validation_points_to_original_field_name() {
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
+        phone: Phone {
+            number: "123 invalid".to_string(),
+        },
+        card: Some(Card {
+            number: "1234567890123456".to_string(),
+            cvv: 1
+        }),
+        preferences: vec![
+            Preference {
+                name: "abc".to_string(),
+                value: true
+            },
+        ]
     };
     let res = signup.validate();
     assert!(res.is_err());
@@ -69,6 +121,23 @@ fn failed_validation_points_to_original_field_name() {
     assert!(errs.contains_key("firstName"));
     assert_eq!(errs["firstName"].len(), 1);
     assert_eq!(errs["firstName"][0].code, "length");
+    assert_eq!(errs["firstName"][0].path, vec!["firstName"]);
+    assert!(errs.contains_key("phone.number"));
+    assert_eq!(errs["phone.number"].len(), 1);
+    assert_eq!(errs["phone.number"][0].code, "phone");
+    assert_eq!(errs["phone.number"][0].path, vec!["phone", "number"]);
+    assert!(errs.contains_key("card.number"));
+    assert_eq!(errs["card.number"].len(), 1);
+    assert_eq!(errs["card.number"][0].code, "credit_card");
+    assert_eq!(errs["card.number"][0].path, vec!["card", "number"]);
+    assert!(errs.contains_key("card.cvv"));
+    assert_eq!(errs["card.cvv"].len(), 1);
+    assert_eq!(errs["card.cvv"][0].code, "range");
+    assert_eq!(errs["card.cvv"][0].path, vec!["card", "cvv"]);
+    assert!(errs.contains_key("preferences[0].name"));
+    assert_eq!(errs["preferences[0].name"].len(), 1);
+    assert_eq!(errs["preferences[0].name"][0].code, "length");
+    assert_eq!(errs["preferences[0].name"][0].path, vec!["preferences[0]", "name"]);
 }
 
 #[test]
@@ -177,6 +246,11 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
+            phone: Phone {
+                number: "+14152370800".to_string()
+            },
+            card: None,
+            preferences: Vec::new(),
         };
 
         signup.validate()?;
