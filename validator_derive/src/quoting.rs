@@ -83,6 +83,23 @@ impl FieldQuoter {
 
         tokens
     }
+
+
+    /// Wrap the quoted output of a validation with a for loop if
+    /// the field type is a vector
+    pub fn wrap_if_vector(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+        let field_ident = &self.ident;
+        if self._type.starts_with("Vec<") {
+            return quote!(
+                for (i, #field_ident) in self.#field_ident.iter().enumerate() {
+                    let path = path.index(i);
+                    #tokens
+                }
+            )
+        }
+
+        tokens
+    }
 }
 
 /// Quote an actual end-user error creation automatically
@@ -340,20 +357,9 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 
 pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
-    let field_ident = &field_quoter.ident;
     let validator_field = field_quoter.quote_validator_field();
-    let quoted = if field_quoter._type.starts_with("Vec<") {
-        quote!(
-            for (i, #field_ident) in self.#field_ident.iter().enumerate() {
-                result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(::validator::FieldPath::new(Some(format!("{}[{}]", #field_name, i)), Some(&path))));
-            }
-        )
-    } else {
-        quote!(
-            result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(::validator::FieldPath::new(Some(#field_name.to_string()), Some(&path))));
-        )
-    };
-    field_quoter.wrap_if_option(quoted)
+    let quoted = quote!(result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(path.child(#field_name.to_string()))););
+    field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 
 pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldValidation,

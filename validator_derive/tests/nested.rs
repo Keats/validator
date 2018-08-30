@@ -168,12 +168,12 @@ fn test_can_validate_vector_fields() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert_eq!(errs.len(), 2);
-    assert!(errs.contains_key("child[1].value"));
-    assert_eq!(errs["child[1].value"].len(), 1);
-    assert_eq!(errs["child[1].value"][0].path, vec!["child[1]", "value"]);
-    assert_eq!(errs["child[1].value"][0].code, "length");
-    assert!(errs.contains_key("child[3].value"));
-    assert_eq!(errs["child[3].value"].len(), 1);
-    assert_eq!(errs["child[3].value"][0].path, vec!["child[3]", "value"]);
-    assert_eq!(errs["child[3].value"][0].code, "length");
+    assert!(errs.contains_key("child.1.value"));
+    assert_eq!(errs["child.1.value"].len(), 1);
+    assert_eq!(errs["child.1.value"][0].path, vec!["child", "1", "value"]);
+    assert_eq!(errs["child.1.value"][0].code, "length");
+    assert!(errs.contains_key("child.3.value"));
+    assert_eq!(errs["child.3.value"].len(), 1);
+    assert_eq!(errs["child.3.value"][0].path, vec!["child", "3", "value"]);
+    assert_eq!(errs["child.3.value"][0].code, "length");
 }

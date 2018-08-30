@@ -134,10 +134,10 @@ fn failed_validation_points_to_original_field_name() {
     assert_eq!(errs["card.cvv"].len(), 1);
     assert_eq!(errs["card.cvv"][0].code, "range");
     assert_eq!(errs["card.cvv"][0].path, vec!["card", "cvv"]);
-    assert!(errs.contains_key("preferences[0].name"));
-    assert_eq!(errs["preferences[0].name"].len(), 1);
-    assert_eq!(errs["preferences[0].name"][0].code, "length");
-    assert_eq!(errs["preferences[0].name"][0].path, vec!["preferences[0]", "name"]);
+    assert!(errs.contains_key("preferences.0.name"));
+    assert_eq!(errs["preferences.0.name"].len(), 1);
+    assert_eq!(errs["preferences.0.name"][0].code, "length");
+    assert_eq!(errs["preferences.0.name"][0].path, vec!["preferences", "0", "name"]);
 }
 
 #[test]

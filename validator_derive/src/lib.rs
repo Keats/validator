@@ -73,7 +73,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let impl_ast = quote!(
         impl #impl_generics Validate for #ident #ty_generics #where_clause {
             fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                self.nested_validate(::validator::FieldPath::new(None, None))
+                self.nested_validate(::validator::FieldPath::new())
             }
 
             #[allow(unused_mut)]
