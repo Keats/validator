@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use types::ValidationErrors;
+use types::{FieldPath, ValidationErrors};
 
 
 /// Trait to implement if one wants to make the `length` validator
@@ -93,13 +93,7 @@ impl<'a, S> Contains for &'a HashMap<String, S> {
 pub trait Validate {
     fn validate(&self) -> Result<(), ValidationErrors>;
 
-    fn nested_validate(&self, result: Result<(), ValidationErrors>) -> Result<(), ValidationErrors> {
-        match self.validate() {
-            Ok(()) => result,
-            Err(nested_errors) => match result {
-                Ok(()) => Err(nested_errors),
-                Err(errors) => Err(errors.merge(nested_errors))
-            }
-        }
+    fn nested_validate(&self, _path: FieldPath) -> Result<(), ValidationErrors> {
+        Ok(())
     }
 }

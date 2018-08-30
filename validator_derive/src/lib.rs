@@ -72,9 +72,13 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     let impl_ast = quote!(
         impl #impl_generics Validate for #ident #ty_generics #where_clause {
-            #[allow(unused_mut)]
             fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                let mut errors = ::validator::ValidationErrors::new();
+                self.nested_validate(::validator::FieldPath::new(None, None))
+            }
+
+            #[allow(unused_mut)]
+            fn nested_validate(&self, path: ::validator::FieldPath) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                let mut errors = ::validator::ValidationErrors::new().set_path(&path);
 
                 #(#validations)*
 

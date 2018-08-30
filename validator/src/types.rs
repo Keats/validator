@@ -8,18 +8,25 @@ use serde::ser::Serialize;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
-  pub code: Cow<'static, str>,
-  pub message: Option<Cow<'static, str>>,
-  pub params: HashMap<Cow<'static, str>, Value>,
+    pub path: Vec<Cow<'static, str>>,
+    pub code: Cow<'static, str>,
+    pub message: Option<Cow<'static, str>>,
+    pub params: HashMap<Cow<'static, str>, Value>,
 }
 
 impl ValidationError {
     pub fn new(code: &'static str) -> ValidationError {
         ValidationError {
+            path: Vec::new(),
             code: Cow::from(code),
             message: None,
             params: HashMap::new(),
         }
+    }
+
+    pub fn set_path(mut self, path: Vec<&'static str>) -> Self {
+        self.path.extend(path.into_iter().map(Cow::from));
+        self
     }
 
     pub fn add_param<T: Serialize>(&mut self, name: Cow<'static, str>, val: &T) {
@@ -39,20 +46,36 @@ impl std::error::Error for ValidationError {
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct ValidationErrors(HashMap<&'static str, Vec<ValidationError>>);
+pub struct ValidationErrors(HashMap<String, Vec<ValidationError>>, Vec<&'static str>);
 
 
 impl ValidationErrors {
-    pub fn new() -> ValidationErrors {
-        ValidationErrors(HashMap::new())
+    pub fn merge_results(a: Result<(), ValidationErrors>, b: Result<(), ValidationErrors>) -> Result<(), ValidationErrors> {
+        match a {
+            Ok(()) => b,
+            Err(a_errors) => match b {
+                Ok(()) => Err(a_errors),
+                Err(b_errors) => Err(b_errors.merge(a_errors))
+            }
+        }
     }
 
-    pub fn inner(self) -> HashMap<&'static str, Vec<ValidationError>> {
+    pub fn new() -> ValidationErrors {
+        ValidationErrors(HashMap::new(), Vec::new())
+    }
+
+    pub fn set_path(mut self, path: &FieldPath) -> Self {
+        self.1.extend(path.to_vec());
+        self
+    }
+
+    pub fn inner(self) -> HashMap<String, Vec<ValidationError>> {
         self.0
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
-        self.0.entry(field).or_insert_with(|| vec![]).push(error);
+        let path = FieldPath::concat(Some(field), Some(&self.1));
+        self.0.entry(path.join(".")).or_insert_with(|| vec![]).push(error.set_path(path));
     }
 
     pub fn merge(mut self, other: ValidationErrors) -> Self {
@@ -73,5 +96,25 @@ impl std::error::Error for ValidationErrors {
 impl fmt::Display for ValidationErrors {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(self, fmt)
+    }
+}
+
+pub struct FieldPath(Vec<&'static str>);
+
+impl FieldPath {
+    pub fn concat(field: Option<&'static str>, path: Option<&Vec<&'static str>>) -> Vec<&'static str> {
+        let mut vec = path.map_or(Vec::new(), |p| p.to_vec());
+        if let Some(f) = field {
+            vec.push(f);
+        }
+        vec
+    }
+
+    pub fn new(field: Option<&'static str>, path: Option<&FieldPath>) -> FieldPath {
+        FieldPath(FieldPath::concat(field, path.map(|p| &p.0)))
+    }
+
+    pub fn to_vec(&self) -> Vec<&'static str> {
+        self.0.to_vec()
     }
 }
