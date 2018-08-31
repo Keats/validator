@@ -358,7 +358,7 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
-    let quoted = quote!(result = ::validator::ValidationErrors::merge_results(result, #validator_field.nested_validate(path.child(#field_name.to_string()))););
+    let quoted = quote!(result = ::validator::ValidationErrors::merge_results(result, #validator_field.validate_path(path.child(#field_name.to_string()))););
     field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 

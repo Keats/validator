@@ -64,7 +64,7 @@ impl ValidationErrors {
         ValidationErrors(HashMap::new(), Vec::new())
     }
 
-    pub fn set_path(mut self, path: &FieldPath) -> Self {
+    pub fn set_path(mut self, path: &ValidationPath) -> Self {
         self.1.extend(path.to_vec());
         self
     }
@@ -74,7 +74,7 @@ impl ValidationErrors {
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
-        let path = FieldPath::concat(String::from(field), &self.1, &None);
+        let path = ValidationPath::concat(String::from(field), &self.1, &None);
         self.0.entry(path.join(".")).or_insert_with(|| vec![]).push(error.set_path(path));
     }
 
@@ -99,9 +99,9 @@ impl fmt::Display for ValidationErrors {
     }
 }
 
-pub struct FieldPath(Vec<String>, Option<usize>);
+pub struct ValidationPath(Vec<String>, Option<usize>);
 
-impl FieldPath {
+impl ValidationPath {
     pub fn concat(field: String, path: &Vec<String>, index: &Option<usize>) -> Vec<String> {
         let mut vec = path.to_vec();
         vec.push(field);
@@ -111,16 +111,16 @@ impl FieldPath {
         vec
     }
 
-    pub fn new() -> FieldPath {
-        FieldPath(Vec::new(), None)
+    pub fn new() -> ValidationPath {
+        ValidationPath(Vec::new(), None)
     }
 
-    pub fn child(&self, field: String) -> FieldPath {
-        FieldPath(FieldPath::concat(field, &self.0, &self.1), None)
+    pub fn child(&self, field: String) -> ValidationPath {
+        ValidationPath(ValidationPath::concat(field, &self.0, &self.1), None)
     }
 
-    pub fn index(&self, i: usize) -> FieldPath {
-        FieldPath(self.to_vec(), Some(i))
+    pub fn index(&self, i: usize) -> ValidationPath {
+        ValidationPath(self.to_vec(), Some(i))
     }
 
     pub fn to_vec(&self) -> Vec<String> {

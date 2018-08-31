@@ -29,5 +29,5 @@ pub use validation::cards::validate_credit_card;
 pub use validation::phone::validate_phone;
 pub use validation::Validator;
 
-pub use types::{FieldPath, ValidationError, ValidationErrors};
+pub use types::{ValidationError, ValidationErrors, ValidationPath};
 pub use traits::{Validate, HasLen, Contains};
