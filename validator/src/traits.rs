@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use types::{ValidationErrors, ValidationPath};
+use types::ValidationErrors;
 
 
 /// Trait to implement if one wants to make the `length` validator
@@ -91,11 +91,5 @@ impl<'a, S> Contains for &'a HashMap<String, S> {
 
 /// The trait that `validator_derive` implements
 pub trait Validate {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        self.validate_path(ValidationPath::new())
-    }
-
-    fn validate_path(&self, _path: ValidationPath) -> Result<(), ValidationErrors> {
-        Ok(())
-    }
+    fn validate(&self) -> Result<(), ValidationErrors>;
 }

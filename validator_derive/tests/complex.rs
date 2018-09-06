@@ -1,3 +1,5 @@
+#![feature(box_patterns)]
+
 #[macro_use]
 extern crate validator_derive;
 extern crate validator;
@@ -9,7 +11,8 @@ extern crate regex;
 extern crate lazy_static;
 
 use regex::Regex;
-use validator::{Validate, ValidationError, ValidationErrors};
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
+use std::collections::HashMap;
 
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
@@ -116,28 +119,67 @@ fn failed_validation_points_to_original_field_name() {
         ]
     };
     let res = signup.validate();
+    // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"].len(), 1);
-    assert_eq!(errs["firstName"][0].code, "length");
-    assert_eq!(errs["firstName"][0].path, vec!["firstName"]);
-    assert!(errs.contains_key("phone.number"));
-    assert_eq!(errs["phone.number"].len(), 1);
-    assert_eq!(errs["phone.number"][0].code, "phone");
-    assert_eq!(errs["phone.number"][0].path, vec!["phone", "number"]);
-    assert!(errs.contains_key("card.number"));
-    assert_eq!(errs["card.number"].len(), 1);
-    assert_eq!(errs["card.number"][0].code, "credit_card");
-    assert_eq!(errs["card.number"][0].path, vec!["card", "number"]);
-    assert!(errs.contains_key("card.cvv"));
-    assert_eq!(errs["card.cvv"].len(), 1);
-    assert_eq!(errs["card.cvv"][0].code, "range");
-    assert_eq!(errs["card.cvv"][0].path, vec!["card", "cvv"]);
-    assert!(errs.contains_key("preferences.0.name"));
-    assert_eq!(errs["preferences.0.name"].len(), 1);
-    assert_eq!(errs["preferences.0.name"][0].code, "length");
-    assert_eq!(errs["preferences.0.name"][0].path, vec!["preferences", "0", "name"]);
+    if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "length");
+    } else {
+        panic!("Expected field validation errors");
+    }
+    assert!(errs.contains_key("phone"));
+    if let ValidationErrorsKind::Struct(ref errs) = errs["phone"] {
+        unwrap_map(errs, |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("number"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["number"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "phone");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected struct validation errors");
+    }
+    assert!(errs.contains_key("card"));
+    if let ValidationErrorsKind::Struct(ref errs) = errs["card"] {
+        unwrap_map(errs, |errs| {
+            assert_eq!(errs.len(), 2);
+            assert!(errs.contains_key("number"));
+            if let ValidationErrorsKind::Field(ref err) = errs["number"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "credit_card");
+            } else {
+                panic!("Expected field validation errors");
+            }
+            assert!(errs.contains_key("cvv"));
+            if let ValidationErrorsKind::Field(ref err) = errs["cvv"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "range");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected struct validation errors");
+    }
+    assert!(errs.contains_key("preferences"));
+    if let ValidationErrorsKind::List(ref errs) = errs["preferences"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("name"));
+            if let ValidationErrorsKind::Field(ref err) = errs["name"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "length");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
 }
 
 #[test]
@@ -290,4 +332,11 @@ fn test_works_with_none_values() {
 
     assert!(p.validate().is_ok());
     assert!(q.validate().is_ok());
+}
+
+fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
+    where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
+{
+    let errors = *errors.clone();
+    f(errors.inner());
 }

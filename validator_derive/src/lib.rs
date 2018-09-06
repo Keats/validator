@@ -29,6 +29,7 @@ use validation::*;
 use asserts::{assert_string_type, assert_type_matches, assert_has_len, assert_has_range};
 use quoting::{FieldQuoter, quote_field_validation, quote_schema_validation};
 
+
 #[proc_macro_derive(Validate, attributes(validate))]
 pub fn derive_validation(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
@@ -73,8 +74,8 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let impl_ast = quote!(
         impl #impl_generics Validate for #ident #ty_generics #where_clause {
             #[allow(unused_mut)]
-            fn validate_path(&self, path: ::validator::ValidationPath) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                let mut errors = ::validator::ValidationErrors::new().set_path(&path);
+            fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                let mut errors = ::validator::ValidationErrors::new();
 
                 #(#validations)*
 

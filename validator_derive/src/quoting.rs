@@ -89,13 +89,17 @@ impl FieldQuoter {
     /// the field type is a vector
     pub fn wrap_if_vector(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
         let field_ident = &self.ident;
+        let field_name = &self.name;
         if self._type.starts_with("Vec<") {
             return quote!(
-                for (i, #field_ident) in self.#field_ident.iter().enumerate() {
-                    let path = path.index(i);
-                    #tokens
-                }
-            )
+                if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                    let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
+                        let mut result = ::std::result::Result::Ok(());
+                        #tokens
+                        result
+                    }).collect();
+                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+                })
         }
 
         tokens
@@ -358,7 +362,7 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
-    let quoted = quote!(result = ::validator::ValidationErrors::merge_results(result, #validator_field.validate_path(path.child(#field_name.to_string()))););
+    let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
     field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 

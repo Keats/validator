@@ -2,7 +2,7 @@
 extern crate validator_derive;
 extern crate validator;
 
-use validator::Validate;
+use validator::{Validate, ValidationErrorsKind};
 
 
 #[test]
@@ -40,10 +40,14 @@ fn not_matching_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "must_match");
-    assert_eq!(errs["val"][0].params["value"], "bob");
-    assert_eq!(errs["val"][0].params["other"], "bobby");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "must_match");
+        assert_eq!(err[0].params["value"], "bob");
+        assert_eq!(err[0].params["other"], "bobby");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -62,8 +66,12 @@ fn can_specify_code_for_must_match() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -82,6 +90,10 @@ fn can_specify_message_for_must_match() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().message.unwrap(), "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }

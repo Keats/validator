@@ -2,7 +2,7 @@
 extern crate validator_derive;
 extern crate validator;
 
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidationError, ValidationErrorsKind};
 
 fn valid_custom_fn(_: &str) -> Result<(), ValidationError> {
     Ok(())
@@ -42,9 +42,13 @@ fn can_fail_custom_fn_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "meh");
-    assert_eq!(errs["val"][0].params["value"], "");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "meh");
+        assert_eq!(err[0].params["value"], "");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -61,6 +65,10 @@ fn can_specify_message_for_custom_fn() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().message.unwrap(), "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }

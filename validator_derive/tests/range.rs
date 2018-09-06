@@ -2,7 +2,7 @@
 extern crate validator_derive;
 extern crate validator;
 
-use validator::Validate;
+use validator::{Validate, ValidationErrorsKind};
 
 #[test]
 fn can_validate_range_ok() {
@@ -34,8 +34,12 @@ fn value_out_of_range_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "range");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "range");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -52,11 +56,15 @@ fn can_specify_code_for_range() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "oops");
-    assert_eq!(errs["val"][0].params["value"], 11);
-    assert_eq!(errs["val"][0].params["min"], 5f64);
-    assert_eq!(errs["val"][0].params["max"], 10f64);
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "oops");
+        assert_eq!(err[0].params["value"], 11);
+        assert_eq!(err[0].params["min"], 5f64);
+        assert_eq!(err[0].params["max"], 10f64);
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -73,6 +81,10 @@ fn can_specify_message_for_range() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().message.unwrap(), "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }

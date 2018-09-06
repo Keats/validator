@@ -5,7 +5,7 @@ extern crate lazy_static;
 extern crate validator_derive;
 extern crate validator;
 
-use validator::Validate;
+use validator::{Validate, ValidationErrorsKind};
 use regex::Regex;
 
 lazy_static! {
@@ -42,9 +42,13 @@ fn bad_value_for_regex_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "regex");
-    assert_eq!(errs["val"][0].params["value"], "2");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "regex");
+        assert_eq!(err[0].params["value"], "2");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -61,8 +65,12 @@ fn can_specify_code_for_regex() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -79,6 +87,10 @@ fn can_specify_message_for_regex() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().message.unwrap(), "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }

@@ -2,7 +2,7 @@
 extern crate validator_derive;
 extern crate validator;
 
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidationError, ValidationErrorsKind};
 
 
 #[test]
@@ -43,8 +43,12 @@ fn can_fail_schema_fn_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    assert_eq!(errs["__all__"].len(), 1);
-    assert_eq!(errs["__all__"][0].code, "meh");
+    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "meh");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -65,8 +69,12 @@ fn can_specify_message_for_schema_fn() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    assert_eq!(errs["__all__"].len(), 1);
-    assert_eq!(errs["__all__"][0].clone().message.unwrap(), "oops");
+    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().message.unwrap(), "oops");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
 
 #[test]
@@ -91,9 +99,17 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    assert_eq!(errs["__all__"].len(), 1);
-    assert_eq!(errs["__all__"][0].clone().code, "meh");
+    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().code, "meh");
+    } else {
+        panic!("Expected field validation errors");
+    }
     assert!(errs.contains_key("num"));
-    assert_eq!(errs["num"].len(), 1);
-    assert_eq!(errs["num"][0].clone().code, "range");
+    if let ValidationErrorsKind::Field(ref err) = errs["num"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].clone().code, "range");
+    } else {
+        panic!("Expected field validation errors");
+    }
 }
