@@ -1,8 +1,10 @@
+#![allow(deprecated)]
+
 #[macro_use]
 extern crate validator_derive;
 extern crate validator;
 
-use validator::{Validate, ValidationErrorsKind};
+use validator::Validate;
 
 
 #[test]
@@ -35,13 +37,9 @@ fn bad_email_fails_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].code, "email");
-        assert_eq!(err[0].params["value"], "bob");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["val"].len(), 1);
+    assert_eq!(errs["val"][0].code, "email");
+    assert_eq!(errs["val"][0].params["value"], "bob");
 }
 
 #[test]
@@ -58,12 +56,8 @@ fn can_specify_code_for_email() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].code, "oops");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["val"].len(), 1);
+    assert_eq!(errs["val"][0].code, "oops");
 }
 
 #[test]
@@ -80,10 +74,6 @@ fn can_specify_message_for_email() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("val"));
-    if let ValidationErrorsKind::Field(ref err) = errs["val"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].clone().message.unwrap(), "oops");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["val"].len(), 1);
+    assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
 }

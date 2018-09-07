@@ -90,8 +90,22 @@ impl ValidationErrors {
         }
     }
 
-    pub fn inner(self) -> HashMap<&'static str, ValidationErrorsKind> {
+    /// Returns a map of field-level validation errors found for the struct that was validated and
+    /// any of it's nested structs that are tagged for validation.
+    pub fn errors(self) -> HashMap<&'static str, ValidationErrorsKind> {
         self.0
+    }
+
+    /// Returns a map of only field-level validation errors found for the struct that was validated.
+    pub fn field_errors(self) -> HashMap<&'static str, Vec<ValidationError>> {
+        self.0.into_iter()
+            .filter_map(|(k, v)| if let ValidationErrorsKind::Field(errors) = v { Some((k, errors)) } else { None })
+            .collect()
+    }
+
+    #[deprecated(since="0.7.3", note="Use `field_errors` instead, or `errors` to also access any errors from nested structs")]
+    pub fn inner(self) -> HashMap<&'static str, Vec<ValidationError>> {
+        self.field_errors()
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {

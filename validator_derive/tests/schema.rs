@@ -1,8 +1,10 @@
+#![allow(deprecated)]
+
 #[macro_use]
 extern crate validator_derive;
 extern crate validator;
 
-use validator::{Validate, ValidationError, ValidationErrorsKind};
+use validator::{Validate, ValidationError};
 
 
 #[test]
@@ -43,12 +45,8 @@ fn can_fail_schema_fn_validation() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].code, "meh");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["__all__"].len(), 1);
+    assert_eq!(errs["__all__"][0].code, "meh");
 }
 
 #[test]
@@ -69,12 +67,8 @@ fn can_specify_message_for_schema_fn() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].clone().message.unwrap(), "oops");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["__all__"].len(), 1);
+    assert_eq!(errs["__all__"][0].clone().message.unwrap(), "oops");
 }
 
 #[test]
@@ -99,17 +93,9 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     assert!(res.is_err());
     let errs = res.unwrap_err().inner();
     assert!(errs.contains_key("__all__"));
-    if let ValidationErrorsKind::Field(ref err) = errs["__all__"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].clone().code, "meh");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["__all__"].len(), 1);
+    assert_eq!(errs["__all__"][0].clone().code, "meh");
     assert!(errs.contains_key("num"));
-    if let ValidationErrorsKind::Field(ref err) = errs["num"] {
-        assert_eq!(err.len(), 1);
-        assert_eq!(err[0].clone().code, "range");
-    } else {
-        panic!("Expected field validation errors");
-    }
+    assert_eq!(errs["num"].len(), 1);
+    assert_eq!(errs["num"][0].clone().code, "range");
 }

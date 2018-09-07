@@ -121,7 +121,7 @@ fn failed_validation_points_to_original_field_name() {
     let res = signup.validate();
     // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert!(errs.contains_key("firstName"));
     if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
         assert_eq!(err.len(), 1);
@@ -338,5 +338,5 @@ fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
     where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
 {
     let errors = *errors.clone();
-    f(errors.inner());
+    f(errors.errors());
 }

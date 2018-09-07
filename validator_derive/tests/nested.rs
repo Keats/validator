@@ -79,7 +79,7 @@ fn failed_validation_points_to_original_field_names() {
 
     let res = root.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert_eq!(errs.len(), 2);
     assert!(errs.contains_key("value"));
     if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
@@ -130,7 +130,7 @@ fn test_can_validate_option_fields_without_lifetime() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
@@ -167,7 +167,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
@@ -217,7 +217,7 @@ fn test_can_validate_vector_fields() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::List(ref errs) = errs["child"] {
@@ -256,7 +256,7 @@ fn test_field_validations_take_priority_over_nested_validations() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Field(ref errs) = errs["child"] {
@@ -366,5 +366,5 @@ fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
     where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
 {
     let errors = *errors.clone();
-    f(errors.inner());
+    f(errors.errors());
 }
