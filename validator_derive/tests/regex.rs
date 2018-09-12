@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
@@ -42,7 +40,7 @@ fn bad_value_for_regex_fails_validation() {
     };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "regex");
@@ -61,7 +59,7 @@ fn can_specify_code_for_regex() {
     };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "oops");
@@ -79,7 +77,7 @@ fn can_specify_message_for_regex() {
     };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
