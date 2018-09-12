@@ -54,6 +54,9 @@ impl ValidationErrors {
         ValidationErrors(HashMap::new())
     }
 
+    /// Returns a boolean indicating whether a validation result includes validation errors for a
+    /// given field. May be used as a condition for performing nested struct validations on a field
+    /// in the absence of field-level validation errors.
     pub fn has_error(result: &Result<(), ValidationErrors>, field: &'static str) -> bool {
         match result {
             Ok(()) => false,
@@ -61,6 +64,8 @@ impl ValidationErrors {
         }
     }
 
+    /// Returns the combined outcome of a struct's validation result along with the nested
+    /// validation result for one of its fields.
     pub fn merge(parent: Result<(), ValidationErrors>, field: &'static str, child: Result<(), ValidationErrors>) -> Result<(), ValidationErrors> {
         match child {
             Ok(()) => parent,
@@ -71,6 +76,8 @@ impl ValidationErrors {
         }
     }
 
+    /// Returns the combined outcome of a struct's validation result along with the nested
+    /// validation result for one of its fields where that field is a vector of validating structs.
     pub fn merge_all(parent: Result<(), ValidationErrors>, field: &'static str, children: Vec<Result<(), ValidationErrors>>) -> Result<(), ValidationErrors> {
         let errors = children.into_iter().enumerate()
             .filter_map(|(i, res)| res.err().map(|mut err| (i, err.remove(field))))
