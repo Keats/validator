@@ -3,15 +3,14 @@ extern crate validator_derive;
 extern crate validator;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate regex;
+extern crate serde_json;
 #[macro_use]
 extern crate lazy_static;
 
 use regex::Regex;
-use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 use std::collections::HashMap;
-
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
     if username == "xXxShad0wxXx" {
@@ -46,13 +45,13 @@ struct SignupData {
     #[validate]
     card: Option<Card>,
     #[validate]
-    preferences: Vec<Preference>
+    preferences: Vec<Preference>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
 struct Phone {
     #[validate(phone)]
-    number: String
+    number: String,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -77,19 +76,9 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
-        phone: Phone {
-            number: "+14152370800".to_string()
-        },
-        card: Some(Card {
-            number: "5236313877109142".to_string(),
-            cvv: 123
-        }),
-        preferences: vec![
-            Preference {
-                name: "marketing".to_string(),
-                value: false
-            },
-        ]
+        phone: Phone { number: "+14152370800".to_string() },
+        card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
+        preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
 
     assert!(signup.validate().is_ok());
@@ -102,19 +91,9 @@ fn failed_validation_points_to_original_field_name() {
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
-        phone: Phone {
-            number: "123 invalid".to_string(),
-        },
-        card: Some(Card {
-            number: "1234567890123456".to_string(),
-            cvv: 1
-        }),
-        preferences: vec![
-            Preference {
-                name: "abc".to_string(),
-                value: true
-            },
-        ]
+        phone: Phone { number: "123 invalid".to_string() },
+        card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
+        preferences: vec![Preference { name: "abc".to_string(), value: true }],
     };
     let res = signup.validate();
     // println!("{}", serde_json::to_string(&res).unwrap());
@@ -286,9 +265,7 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
-            phone: Phone {
-                number: "+14152370800".to_string()
-            },
+            phone: Phone { number: "+14152370800".to_string() },
             card: None,
             preferences: Vec::new(),
         };
@@ -314,26 +291,17 @@ fn test_works_with_none_values() {
         range: Option<usize>,
     }
 
-    let p = PutStruct {
-        name: None,
-        address: None,
-        age: None,
-        range: None,
-    };
+    let p = PutStruct { name: None, address: None, age: None, range: None };
 
-    let q = PutStruct {
-        name: None,
-        address: Some(None),
-        age: Some(None),
-        range: None,
-    };
+    let q = PutStruct { name: None, address: Some(None), age: Some(None), range: None };
 
     assert!(p.validate().is_ok());
     assert!(q.validate().is_ok());
 }
 
 fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
-    where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
+where
+    F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
     let errors = *errors.clone();
     f(errors.errors());

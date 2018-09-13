@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 use url::Url;
 
-
 /// Validates whether the string given is a url
 pub fn validate_url<'a, T>(val: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     match Url::parse(val.into().as_ref()) {
         Ok(_) => true,
@@ -16,8 +16,7 @@ pub fn validate_url<'a, T>(val: T) -> bool
 mod tests {
     use std::borrow::Cow;
 
-    use super::{validate_url};
-
+    use super::validate_url;
 
     #[test]
     fn test_validate_url() {

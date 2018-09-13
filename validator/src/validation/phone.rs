@@ -1,9 +1,9 @@
 use phonenumber;
 use std::borrow::Cow;
 
-
 pub fn validate_phone<'a, T>(phone_number: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     if let Ok(parsed) = phonenumber::parse(None, phone_number.into()) {
         phonenumber::is_valid(&parsed)

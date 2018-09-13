@@ -2,10 +2,10 @@ use std::borrow::Cow;
 use std::net::IpAddr;
 use std::str::FromStr;
 
-
 /// Validates whether the given string is an IP V4
 pub fn validate_ip_v4<'a, T>(val: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     match IpAddr::from_str(val.into().as_ref()) {
         Ok(i) => match i {
@@ -18,7 +18,8 @@ pub fn validate_ip_v4<'a, T>(val: T) -> bool
 
 /// Validates whether the given string is an IP V6
 pub fn validate_ip_v6<'a, T>(val: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     match IpAddr::from_str(val.into().as_ref()) {
         Ok(i) => match i {
@@ -31,7 +32,8 @@ pub fn validate_ip_v6<'a, T>(val: T) -> bool
 
 /// Validates whether the given string is an IP
 pub fn validate_ip<'a, T>(val: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     match IpAddr::from_str(val.into().as_ref()) {
         Ok(_) => true,
@@ -39,12 +41,11 @@ pub fn validate_ip<'a, T>(val: T) -> bool
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
 
-    use super::{validate_ip_v4, validate_ip_v6, validate_ip};
+    use super::{validate_ip, validate_ip_v4, validate_ip_v6};
 
     #[test]
     fn test_validate_ip() {

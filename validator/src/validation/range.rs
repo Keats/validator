@@ -5,10 +5,8 @@ use validation::Validator;
 /// TODO: see if can be generic over the number type
 pub fn validate_range(range: Validator, val: f64) -> bool {
     match range {
-        Validator::Range { min, max } => {
-            val >= min && val <= max
-        },
-        _ => unreachable!()
+        Validator::Range { min, max } => val >= min && val <= max,
+        _ => unreachable!(),
     }
 }
 

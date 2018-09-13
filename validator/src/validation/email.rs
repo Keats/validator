@@ -1,9 +1,8 @@
 use idna::domain_to_ascii;
-use std::borrow::Cow;
 use regex::Regex;
+use std::borrow::Cow;
 
 use validation::ip::validate_ip;
-
 
 lazy_static! {
     // Regex from the specs
@@ -19,7 +18,8 @@ lazy_static! {
 
 /// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
 pub fn validate_email<'a, T>(val: T) -> bool
-    where T: Into<Cow<'a, str>>
+where
+    T: Into<Cow<'a, str>>,
 {
     let val = val.into();
     if val.is_empty() || !val.contains('@') {
@@ -52,16 +52,13 @@ fn validate_domain_part(domain_part: &str) -> bool {
 
     // maybe we have an ip as a domain?
     match EMAIL_LITERAL_RE.captures(domain_part) {
-        Some(caps) => {
-            match caps.get(1) {
-                Some(c) => validate_ip(c.as_str()),
-                None => false,
-            }
-        }
-        None => false
+        Some(caps) => match caps.get(1) {
+            Some(c) => validate_ip(c.as_str()),
+            None => false,
+        },
+        None => false,
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -88,7 +85,10 @@ mod tests {
             // max length for domain name labels is 63 characters per RFC 1034
             ("a@atm.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true),
             ("a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.atm", true),
-            ("a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbb.atm", true),
+            (
+                "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbb.atm",
+                true,
+            ),
             ("a@atm.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true),
             ("", false),
             ("abc", false),

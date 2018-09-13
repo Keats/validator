@@ -4,7 +4,6 @@ extern crate validator;
 
 use validator::Validate;
 
-
 #[test]
 fn can_validate_valid_must_match() {
     #[derive(Debug, Validate)]
@@ -14,10 +13,7 @@ fn can_validate_valid_must_match() {
         val2: String,
     }
 
-    let s = TestStruct {
-        val: "bob".to_string(),
-        val2: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string(), val2: "bob".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -31,10 +27,7 @@ fn not_matching_fails_validation() {
         val2: String,
     }
 
-    let s = TestStruct {
-        val: "bob".to_string(),
-        val2: "bobby".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string(), val2: "bobby".to_string() };
 
     let res = s.validate();
     assert!(res.is_err());
@@ -54,10 +47,7 @@ fn can_specify_code_for_must_match() {
         val: String,
         val2: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-        val2: "bobb".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string(), val2: "bobb".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -74,10 +64,7 @@ fn can_specify_message_for_must_match() {
         val: String,
         val2: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-        val2: "bobb".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string(), val2: "bobb".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

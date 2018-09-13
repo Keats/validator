@@ -20,9 +20,7 @@ fn can_validate_custom_fn_ok() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "hello".to_string(),
-    };
+    let s = TestStruct { val: "hello".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -35,9 +33,7 @@ fn can_fail_custom_fn_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -54,9 +50,7 @@ fn can_specify_message_for_custom_fn() {
         #[validate(custom(function = "invalid_custom_fn", message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

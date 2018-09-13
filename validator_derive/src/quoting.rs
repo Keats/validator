@@ -1,11 +1,10 @@
-use validator::Validator;
-use syn;
 use proc_macro2::{self, Span};
+use syn;
+use validator::Validator;
 
+use asserts::{COW_TYPE, NUMBER_TYPES};
 use lit::option_u64_to_tokens;
 use validation::{FieldValidation, SchemaValidation};
-use asserts::{COW_TYPE, NUMBER_TYPES};
-
 
 /// Pass around all the information needed for creating a validation
 #[derive(Debug)]
@@ -54,8 +53,10 @@ impl FieldQuoter {
 
     pub fn get_optional_validator_param(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
-        if self._type.starts_with("Option<&") || self._type.starts_with("Option<Option<&")
-            || NUMBER_TYPES.contains(&self._type.as_ref()) {
+        if self._type.starts_with("Option<&")
+            || self._type.starts_with("Option<Option<&")
+            || NUMBER_TYPES.contains(&self._type.as_ref())
+        {
             quote!(#ident)
         } else {
             quote!(ref #ident)
@@ -72,18 +73,17 @@ impl FieldQuoter {
                 if let Some(Some(#optional_pattern_matched)) = self.#field_ident {
                     #tokens
                 }
-            )
+            );
         } else if self._type.starts_with("Option<") {
             return quote!(
                 if let Some(#optional_pattern_matched) = self.#field_ident {
                     #tokens
                 }
-            )
+            );
         }
 
         tokens
     }
-
 
     /// Wrap the quoted output of a validation with a for loop if
     /// the field type is a vector
@@ -99,7 +99,7 @@ impl FieldQuoter {
                         result
                     }).collect();
                     result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-                })
+                });
         }
 
         tokens
@@ -121,8 +121,10 @@ fn quote_error(validation: &FieldValidation) -> proc_macro2::TokenStream {
     )
 }
 
-
-pub fn quote_length_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_length_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -173,7 +175,10 @@ pub fn quote_length_validation(field_quoter: &FieldQuoter, validation: &FieldVal
     unreachable!()
 }
 
-pub fn quote_range_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_range_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
@@ -201,7 +206,10 @@ pub fn quote_range_validation(field_quoter: &FieldQuoter, validation: &FieldVali
 }
 
 #[cfg(feature = "card")]
-pub fn quote_credit_card_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_credit_card_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -218,7 +226,10 @@ pub fn quote_credit_card_validation(field_quoter: &FieldQuoter, validation: &Fie
 }
 
 #[cfg(feature = "phone")]
-pub fn quote_phone_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_phone_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -234,7 +245,10 @@ pub fn quote_phone_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     field_quoter.wrap_if_option(quoted)
 }
 
-pub fn quote_url_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_url_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -250,7 +264,10 @@ pub fn quote_url_validation(field_quoter: &FieldQuoter, validation: &FieldValida
     field_quoter.wrap_if_option(quoted)
 }
 
-pub fn quote_email_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_email_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -266,7 +283,10 @@ pub fn quote_email_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     field_quoter.wrap_if_option(quoted)
 }
 
-pub fn quote_must_match_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_must_match_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let ident = &field_quoter.ident;
     let field_name = &field_quoter.name;
 
@@ -288,7 +308,10 @@ pub fn quote_must_match_validation(field_quoter: &FieldQuoter, validation: &Fiel
     unreachable!();
 }
 
-pub fn quote_custom_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_custom_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -317,7 +340,10 @@ pub fn quote_custom_validation(field_quoter: &FieldQuoter, validation: &FieldVal
     unreachable!();
 }
 
-pub fn quote_contains_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_contains_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -338,7 +364,10 @@ pub fn quote_contains_validation(field_quoter: &FieldQuoter, validation: &FieldV
     unreachable!();
 }
 
-pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
+pub fn quote_regex_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -359,27 +388,42 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     unreachable!();
 }
 
-pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
+pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
     let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
     field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 
-pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldValidation,
-                              validations: &mut Vec<proc_macro2::TokenStream>,
-                              nested_validations: &mut Vec<proc_macro2::TokenStream>) {
+pub fn quote_field_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+    validations: &mut Vec<proc_macro2::TokenStream>,
+    nested_validations: &mut Vec<proc_macro2::TokenStream>,
+) {
     match validation.validator {
-        Validator::Length {..} => validations.push(quote_length_validation(&field_quoter, validation)),
-        Validator::Range {..} => validations.push(quote_range_validation(&field_quoter, validation)),
+        Validator::Length { .. } => {
+            validations.push(quote_length_validation(&field_quoter, validation))
+        }
+        Validator::Range { .. } => {
+            validations.push(quote_range_validation(&field_quoter, validation))
+        }
         Validator::Email => validations.push(quote_email_validation(&field_quoter, validation)),
         Validator::Url => validations.push(quote_url_validation(&field_quoter, validation)),
-        Validator::MustMatch(_) => validations.push(quote_must_match_validation(&field_quoter, validation)),
-        Validator::Custom(_) => validations.push(quote_custom_validation(&field_quoter, validation)),
-        Validator::Contains(_) => validations.push(quote_contains_validation(&field_quoter, validation)),
+        Validator::MustMatch(_) => {
+            validations.push(quote_must_match_validation(&field_quoter, validation))
+        }
+        Validator::Custom(_) => {
+            validations.push(quote_custom_validation(&field_quoter, validation))
+        }
+        Validator::Contains(_) => {
+            validations.push(quote_contains_validation(&field_quoter, validation))
+        }
         Validator::Regex(_) => validations.push(quote_regex_validation(&field_quoter, validation)),
         #[cfg(feature = "card")]
-        Validator::CreditCard => validations.push(quote_credit_card_validation(&field_quoter, validation)),
+        Validator::CreditCard => {
+            validations.push(quote_credit_card_validation(&field_quoter, validation))
+        }
         #[cfg(feature = "phone")]
         Validator::Phone => validations.push(quote_phone_validation(&field_quoter, validation)),
         Validator::Nested => nested_validations.push(quote_nested_validation(&field_quoter)),

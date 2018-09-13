@@ -1,14 +1,14 @@
-pub mod ip;
-pub mod email;
-pub mod length;
-pub mod range;
-pub mod urls;
-pub mod must_match;
-pub mod contains;
 #[cfg(feature = "card")]
 pub mod cards;
+pub mod contains;
+pub mod email;
+pub mod ip;
+pub mod length;
+pub mod must_match;
 #[cfg(feature = "phone")]
 pub mod phone;
+pub mod range;
+pub mod urls;
 
 /// Contains all the validators that can be used
 ///
@@ -52,8 +52,8 @@ impl Validator {
             Validator::Custom(_) => "custom",
             Validator::Contains(_) => "contains",
             Validator::Regex(_) => "regex",
-            Validator::Range {..} => "range",
-            Validator::Length {..} => "length",
+            Validator::Range { .. } => "range",
+            Validator::Length { .. } => "length",
             #[cfg(feature = "card")]
             Validator::CreditCard => "credit_card",
             #[cfg(feature = "phone")]

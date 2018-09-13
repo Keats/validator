@@ -1,10 +1,9 @@
-use std::{self, fmt};
 use std::borrow::Cow;
-use std::collections::{BTreeMap, HashMap, hash_map::Entry::Vacant};
+use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
+use std::{self, fmt};
 
-use serde_json::{Value, to_value};
 use serde::ser::Serialize;
-
+use serde_json::{to_value, Value};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
@@ -15,11 +14,7 @@ pub struct ValidationError {
 
 impl ValidationError {
     pub fn new(code: &'static str) -> ValidationError {
-        ValidationError {
-            code: Cow::from(code),
-            message: None,
-            params: HashMap::new(),
-        }
+        ValidationError { code: Cow::from(code), message: None, params: HashMap::new() }
     }
 
     pub fn add_param<T: Serialize>(&mut self, name: Cow<'static, str>, val: &T) {
@@ -34,8 +29,12 @@ impl fmt::Display for ValidationError {
 }
 
 impl std::error::Error for ValidationError {
-  fn description(&self) -> &str { &self.code }
-  fn cause(&self) -> Option<&std::error::Error> { None }
+    fn description(&self) -> &str {
+        &self.code
+    }
+    fn cause(&self) -> Option<&std::error::Error> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -66,26 +65,37 @@ impl ValidationErrors {
 
     /// Returns the combined outcome of a struct's validation result along with the nested
     /// validation result for one of its fields.
-    pub fn merge(parent: Result<(), ValidationErrors>, field: &'static str, child: Result<(), ValidationErrors>) -> Result<(), ValidationErrors> {
+    pub fn merge(
+        parent: Result<(), ValidationErrors>,
+        field: &'static str,
+        child: Result<(), ValidationErrors>,
+    ) -> Result<(), ValidationErrors> {
         match child {
             Ok(()) => parent,
-            Err(errors) => parent.and_then(|_| Err(ValidationErrors::new())).map_err(|mut parent_errors| {
-                parent_errors.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
-                parent_errors
-            })
+            Err(errors) => {
+                parent.and_then(|_| Err(ValidationErrors::new())).map_err(|mut parent_errors| {
+                    parent_errors.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
+                    parent_errors
+                })
+            }
         }
     }
 
     /// Returns the combined outcome of a struct's validation result along with the nested
     /// validation result for one of its fields where that field is a vector of validating structs.
-    pub fn merge_all(parent: Result<(), ValidationErrors>, field: &'static str, children: Vec<Result<(), ValidationErrors>>) -> Result<(), ValidationErrors> {
-        let errors = children.into_iter().enumerate()
+    pub fn merge_all(
+        parent: Result<(), ValidationErrors>,
+        field: &'static str,
+        children: Vec<Result<(), ValidationErrors>>,
+    ) -> Result<(), ValidationErrors> {
+        let errors = children
+            .into_iter()
+            .enumerate()
             .filter_map(|(i, res)| res.err().map(|mut err| (i, err.remove(field))))
             .filter_map(|(i, entry)| match entry {
                 Some(ValidationErrorsKind::Struct(errors)) => Some((i, errors)),
                 _ => None,
-            })
-            .collect::<BTreeMap<_, _>>();
+            }).collect::<BTreeMap<_, _>>();
 
         if errors.is_empty() {
             parent
@@ -105,18 +115,29 @@ impl ValidationErrors {
 
     /// Returns a map of only field-level validation errors found for the struct that was validated.
     pub fn field_errors(self) -> HashMap<&'static str, Vec<ValidationError>> {
-        self.0.into_iter()
-            .filter_map(|(k, v)| if let ValidationErrorsKind::Field(errors) = v { Some((k, errors)) } else { None })
-            .collect()
+        self.0
+            .into_iter()
+            .filter_map(|(k, v)| {
+                if let ValidationErrorsKind::Field(errors) = v {
+                    Some((k, errors))
+                } else {
+                    None
+                }
+            }).collect()
     }
 
-    #[deprecated(since="0.7.3", note="Use `field_errors` instead, or `errors` to also access any errors from nested structs")]
+    #[deprecated(
+        since = "0.7.3",
+        note = "Use `field_errors` instead, or `errors` to also access any errors from nested structs"
+    )]
     pub fn inner(self) -> HashMap<&'static str, Vec<ValidationError>> {
         self.field_errors()
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
-        if let ValidationErrorsKind::Field(ref mut vec) = self.0.entry(field).or_insert(ValidationErrorsKind::Field(vec![])) {
+        if let ValidationErrorsKind::Field(ref mut vec) =
+            self.0.entry(field).or_insert(ValidationErrorsKind::Field(vec![]))
+        {
             vec.push(error);
         } else {
             panic!("Attempt to add field validation to a non-Field ValidationErrorsKind instance");
@@ -145,8 +166,12 @@ impl ValidationErrors {
 }
 
 impl std::error::Error for ValidationErrors {
-    fn description(&self) -> &str { "Validation failed" }
-    fn cause(&self) -> Option<&std::error::Error> { None }
+    fn description(&self) -> &str {
+        "Validation failed"
+    }
+    fn cause(&self) -> Option<&std::error::Error> {
+        None
+    }
 }
 
 impl fmt::Display for ValidationErrors {

@@ -13,9 +13,7 @@ fn can_validate_valid_card_number() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "5236313877109142".to_string(),
-    };
+    let s = TestStruct { val: "5236313877109142".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -29,9 +27,7 @@ fn bad_credit_card_fails_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -49,9 +45,7 @@ fn can_specify_code_for_credit_card() {
         #[validate(credit_card(code = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -68,9 +62,7 @@ fn can_specify_message_for_credit_card() {
         #[validate(credit_card(message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

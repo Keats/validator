@@ -8,7 +8,7 @@ pub fn validate_must_match<T: Eq>(a: T, b: T) -> bool {
 mod tests {
     use std::borrow::Cow;
 
-    use super::{validate_must_match};
+    use super::validate_must_match;
 
     #[test]
     fn test_validate_must_match_strings_valid() {

@@ -1,6 +1,5 @@
-use syn;
 use proc_macro2;
-
+use syn;
 
 pub fn lit_to_string(lit: &syn::Lit) -> Option<String> {
     match *lit {
@@ -32,7 +31,11 @@ pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     match *lit {
         syn::Lit::Bool(ref s) => Some(s.value),
         // TODO: remove when attr_literals is stable
-        syn::Lit::Str(ref s) => if s.value() == "true" { Some(true) } else { Some(false) },
+        syn::Lit::Str(ref s) => if s.value() == "true" {
+            Some(true)
+        } else {
+            Some(false)
+        },
         _ => None,
     }
 }
@@ -40,6 +43,6 @@ pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
 pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
     match opt {
         Some(ref t) => quote!(::std::option::Option::Some(#t)),
-        None => quote!(::std::option::Option::None)
+        None => quote!(::std::option::Option::None),
     }
 }

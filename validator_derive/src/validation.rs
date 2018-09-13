@@ -4,7 +4,6 @@ use validator::Validator;
 
 use lit::*;
 
-
 #[derive(Debug)]
 pub struct SchemaValidation {
     pub function: String,
@@ -12,7 +11,6 @@ pub struct SchemaValidation {
     pub code: Option<String>,
     pub message: Option<String>,
 }
-
 
 #[derive(Debug)]
 pub struct FieldValidation {
@@ -23,15 +21,14 @@ pub struct FieldValidation {
 
 impl FieldValidation {
     pub fn new(validator: Validator) -> FieldValidation {
-        FieldValidation {
-            code: validator.code().to_string(),
-            validator,
-            message: None,
-        }
+        FieldValidation { code: validator.code().to_string(), validator, message: None }
     }
 }
 
-pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
+pub fn extract_length_validation(
+    field: String,
+    meta_items: &Vec<syn::NestedMeta>,
+) -> FieldValidation {
     let mut min = None;
     let mut max = None;
     let mut equal = None;
@@ -71,7 +68,10 @@ pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta
                     ))
                 }
             } else {
-                panic!("unexpected item {:?} while parsing `length` validator of field {}", item, field)
+                panic!(
+                    "unexpected item {:?} while parsing `length` validator of field {}",
+                    item, field
+                )
             }
         }
     }
@@ -91,12 +91,15 @@ pub fn extract_length_validation(field: String, meta_items: &Vec<syn::NestedMeta
     }
 }
 
-pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
+pub fn extract_range_validation(
+    field: String,
+    meta_items: &Vec<syn::NestedMeta>,
+) -> FieldValidation {
     let mut min = 0.0;
     let mut max = 0.0;
 
     let (message, code) = extract_message_and_code("range", &field, meta_items);
-    
+
     let error = |msg: &str| -> ! {
         panic!("Invalid attribute #[validate] on field `{}`: {}", field, msg);
     };
@@ -108,32 +111,33 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMeta>
     for meta_item in meta_items {
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
-                    match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
-                        "min" => {
-                            min = match lit_to_float(lit) {
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => match ident
+                    .to_string()
+                    .as_ref()
+                {
+                    "message" | "code" => continue,
+                    "min" => {
+                        min = match lit_to_float(lit) {
                                 Some(s) => s,
                                 None => error("invalid argument type for `min` of `range` validator: only integers are allowed")
                             };
-                            has_min = true;
-                        },
-                        "max" => {
-                            max = match lit_to_float(lit) {
+                        has_min = true;
+                    }
+                    "max" => {
+                        max = match lit_to_float(lit) {
                                 Some(s) => s,
                                 None => error("invalid argument type for `max` of `range` validator: only integers are allowed")
                             };
-                            has_max = true;
-                        },
-                        v => error(&format!(
-                            "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
-                            v
-                        ))
+                        has_max = true;
                     }
+                    v => error(&format!(
+                        "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
+                        v
+                    )),
                 },
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item)
+                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
-            _=> unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -150,7 +154,11 @@ pub fn extract_range_validation(field: String, meta_items: &Vec<syn::NestedMeta>
 }
 
 /// Extract url/email/phone field validation with a code or a message
-pub fn extract_argless_validation(validator_name: String, field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
+pub fn extract_argless_validation(
+    validator_name: String,
+    field: String,
+    meta_items: &Vec<syn::NestedMeta>,
+) -> FieldValidation {
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
 
     for meta_item in meta_items {
@@ -162,12 +170,12 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
                         v => panic!(
                             "Unknown argument `{}` for validator `{}` on field `{}`",
                             v, validator_name, field
-                        )
+                        ),
                     }
-                },
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item)
+                }
+                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
-            _=> unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -177,7 +185,7 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
         "credit_card" => Validator::CreditCard,
         #[cfg(feature = "phone")]
         "phone" => Validator::Phone,
-        _ => Validator::Url
+        _ => Validator::Url,
     };
 
     FieldValidation {
@@ -188,7 +196,12 @@ pub fn extract_argless_validation(validator_name: String, field: String, meta_it
 }
 
 /// For custom, contains, regex, must_match
-pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field: String, meta_items: &Vec<syn::NestedMeta>) -> FieldValidation {
+pub fn extract_one_arg_validation(
+    val_name: &str,
+    validator_name: String,
+    field: String,
+    meta_items: &Vec<syn::NestedMeta>,
+) -> FieldValidation {
     let mut value = None;
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
 
@@ -206,21 +219,24 @@ pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field:
                                     val_name, validator_name, field
                                 ),
                             };
-                        },
+                        }
                         v => panic!(
                             "Unknown argument `{}` for validator `{}` on field `{}`",
                             v, validator_name, field
-                        )
+                        ),
                     }
-                },
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item)
+                }
+                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
-            _=> unreachable!()
+            _ => unreachable!(),
         }
     }
 
     if value.is_none() {
-        panic!("Missing argument `{}` for validator `{}` on field `{}`", val_name, validator_name, field);
+        panic!(
+            "Missing argument `{}` for validator `{}` on field `{}`",
+            val_name, validator_name, field
+        );
     }
 
     let validator = match validator_name.as_ref() {
@@ -238,12 +254,21 @@ pub fn extract_one_arg_validation(val_name: &str, validator_name: String, field:
     }
 }
 
-fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<syn::NestedMeta>) -> (Option<String>, Option<String>) {
+fn extract_message_and_code(
+    validator_name: &str,
+    field: &str,
+    meta_items: &Vec<syn::NestedMeta>,
+) -> (Option<String>, Option<String>) {
     let mut message = None;
     let mut code = None;
 
     for meta_item in meta_items {
-        if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref ident , ref lit, .. })) = *meta_item {
+        if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
+            ref ident,
+            ref lit,
+            ..
+        })) = *meta_item
+        {
             match ident.to_string().as_ref() {
                 "code" => {
                     code = match lit_to_string(lit) {
@@ -253,7 +278,7 @@ fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<
                             validator_name, field
                         ),
                     };
-                },
+                }
                 "message" => {
                     message = match lit_to_string(lit) {
                         Some(s) => Some(s),
@@ -262,8 +287,8 @@ fn extract_message_and_code(validator_name: &str, field: &str, meta_items: &Vec<
                             validator_name, field
                         ),
                     };
-                },
-                _ => continue
+                }
+                _ => continue,
             }
         }
     }

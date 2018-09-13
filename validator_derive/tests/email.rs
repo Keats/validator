@@ -4,7 +4,6 @@ extern crate validator;
 
 use validator::Validate;
 
-
 #[test]
 fn can_validate_valid_email() {
     #[derive(Debug, Validate)]
@@ -13,9 +12,7 @@ fn can_validate_valid_email() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "bob@bob.com".to_string(),
-    };
+    let s = TestStruct { val: "bob@bob.com".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -28,9 +25,7 @@ fn bad_email_fails_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -47,9 +42,7 @@ fn can_specify_code_for_email() {
         #[validate(email(code = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -65,9 +58,7 @@ fn can_specify_message_for_email() {
         #[validate(email(message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

@@ -4,8 +4,10 @@ extern crate validator;
 #[macro_use]
 extern crate serde_derive;
 
-use validator::{validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind, Validator};
 use std::{borrow::Cow, collections::HashMap};
+use validator::{
+    validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind, Validator,
+};
 
 #[derive(Debug, Validate)]
 struct Root<'a> {
@@ -54,12 +56,7 @@ struct Child {
 fn is_fine_with_nested_validations() {
     let root = Root {
         value: "valid".to_string(),
-        a: &A {
-            value: "valid".to_string(),
-            b: B {
-                value: "valid".to_string(),
-            }
-        }
+        a: &A { value: "valid".to_string(), b: B { value: "valid".to_string() } },
     };
 
     assert!(root.validate().is_ok());
@@ -69,12 +66,7 @@ fn is_fine_with_nested_validations() {
 fn failed_validation_points_to_original_field_names() {
     let root = Root {
         value: String::new(),
-        a: &A {
-            value: String::new(),
-            b: B {
-                value: String::new(),
-            }
-        }
+        a: &A { value: String::new(), b: B { value: String::new() } },
     };
 
     let res = root.validate();
@@ -122,11 +114,7 @@ fn failed_validation_points_to_original_field_names() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    let instance = ParentWithOptionalChild {
-        child: Some(Child {
-            value: String::new(),
-        })
-    };
+    let instance = ParentWithOptionalChild { child: Some(Child { value: String::new() }) };
 
     let res = instance.validate();
     assert!(res.is_err());
@@ -157,13 +145,9 @@ fn test_can_validate_option_fields_with_lifetime() {
         child: Option<&'a Child>,
     }
 
-    let child = Child {
-        value: String::new(),
-    };
+    let child = Child { value: String::new() };
 
-    let instance = ParentWithLifetimeAndOptionalChild {
-        child: Some(&child)
-    };
+    let instance = ParentWithLifetimeAndOptionalChild { child: Some(&child) };
 
     let res = instance.validate();
     assert!(res.is_err());
@@ -188,9 +172,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_works_with_none_values() {
-    let instance = ParentWithOptionalChild {
-        child: None,
-    };
+    let instance = ParentWithOptionalChild { child: None };
 
     let res = instance.validate();
     assert!(res.is_ok());
@@ -200,18 +182,10 @@ fn test_works_with_none_values() {
 fn test_can_validate_vector_fields() {
     let instance = ParentWithVectorOfChildren {
         child: vec![
-            Child {
-                value: "valid".to_string(),
-            },
-            Child {
-                value: String::new(),
-            },
-            Child {
-                value: "valid".to_string(),
-            },
-            Child {
-                value: String::new(),
-            }
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
         ],
     };
 
@@ -250,9 +224,7 @@ fn test_can_validate_vector_fields() {
 
 #[test]
 fn test_field_validations_take_priority_over_nested_validations() {
-    let instance = ParentWithVectorOfChildren {
-        child: Vec::new(),
-    };
+    let instance = ParentWithVectorOfChildren { child: Vec::new() };
 
     let res = instance.validate();
     assert!(res.is_err());
@@ -271,7 +243,6 @@ fn test_field_validations_take_priority_over_nested_validations() {
 #[should_panic(expected = "Attempt to replace non-empty ValidationErrors entry")]
 #[allow(unused)]
 fn test_field_validation_errors_replaced_with_nested_validations_fails() {
-
     #[derive(Debug)]
     struct ParentWithOverridingStructValidations {
         child: Vec<Child>,
@@ -284,7 +255,10 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
         fn validate(&self) -> Result<(), ValidationErrors> {
             // First validate the length of the vector:
             let mut errors = ValidationErrors::new();
-            if !validate_length(Validator::Length { min: Some(2u64), max: None, equal: None }, &self.child) {
+            if !validate_length(
+                Validator::Length { min: Some(2u64), max: None, equal: None },
+                &self.child,
+            ) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);
@@ -294,28 +268,29 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
             // Then validate the nested vector of structs without checking for existing field errors:
             let mut result = if errors.is_empty() { Ok(()) } else { Err(errors) };
             {
-                let results: Vec<_> = self.child.iter().map(|child| {
-                    let mut result = Ok(());
-                    result = ValidationErrors::merge(result, "child", child.validate());
-                    result
-                }).collect();
+                let results: Vec<_> = self
+                    .child
+                    .iter()
+                    .map(|child| {
+                        let mut result = Ok(());
+                        result = ValidationErrors::merge(result, "child", child.validate());
+                        result
+                    }).collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
             result
         }
     }
 
-    let instance = ParentWithOverridingStructValidations {
-        child: vec![
-            Child {
-                value: String::new()
-            }]
-    };
+    let instance =
+        ParentWithOverridingStructValidations { child: vec![Child { value: String::new() }] };
     instance.validate();
 }
 
 #[test]
-#[should_panic(expected = "Attempt to add field validation to a non-Field ValidationErrorsKind instance")]
+#[should_panic(
+    expected = "Attempt to add field validation to a non-Field ValidationErrorsKind instance"
+)]
 #[allow(unused)]
 fn test_field_validations_evaluated_after_nested_validations_fails() {
     #[derive(Debug)]
@@ -331,16 +306,22 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
             // First validate the nested vector of structs:
             let mut result = Ok(());
             if !ValidationErrors::has_error(&result, "child") {
-                let results: Vec<_> = self.child.iter().map(|child| {
-                    let mut result = Ok(());
-                    result = ValidationErrors::merge(result, "child", child.validate());
-                    result
-                }).collect();
+                let results: Vec<_> = self
+                    .child
+                    .iter()
+                    .map(|child| {
+                        let mut result = Ok(());
+                        result = ValidationErrors::merge(result, "child", child.validate());
+                        result
+                    }).collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
 
             // Then validate the length of the vector itself:
-            if !validate_length(Validator::Length { min: Some(2u64), max: None, equal: None }, &self.child) {
+            if !validate_length(
+                Validator::Length { min: Some(2u64), max: None, equal: None },
+                &self.child,
+            ) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);
@@ -353,17 +334,13 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
         }
     }
 
-    let instance = ParentWithStructValidationsFirst {
-        child: vec![
-            Child {
-                value: String::new()
-            }]
-    };
+    let instance = ParentWithStructValidationsFirst { child: vec![Child { value: String::new() }] };
     let res = instance.validate();
 }
 
 fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
-    where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
+where
+    F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
     let errors = *errors.clone();
     f(errors.errors());

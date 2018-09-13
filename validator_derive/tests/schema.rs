@@ -4,12 +4,11 @@ extern crate validator;
 
 use validator::{Validate, ValidationError};
 
-
 #[test]
 fn can_validate_schema_fn_ok() {
     fn valid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
-    Ok(())
-}
+        Ok(())
+    }
 
     #[derive(Debug, Validate)]
     #[validate(schema(function = "valid_schema_fn"))]
@@ -17,9 +16,7 @@ fn can_validate_schema_fn_ok() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "hello".to_string(),
-    };
+    let s = TestStruct { val: "hello".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -36,9 +33,7 @@ fn can_fail_schema_fn_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -58,9 +53,7 @@ fn can_specify_message_for_schema_fn() {
     struct TestStruct {
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -82,10 +75,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
         num: usize,
     }
 
-    let s = TestStruct {
-        val: "hello".to_string(),
-        num: 0,
-    };
+    let s = TestStruct { val: "hello".to_string(), num: 0 };
 
     let res = s.validate();
     assert!(res.is_err());

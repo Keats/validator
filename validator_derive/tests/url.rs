@@ -4,7 +4,6 @@ extern crate validator;
 
 use validator::Validate;
 
-
 #[test]
 fn can_validate_url_ok() {
     #[derive(Debug, Validate)]
@@ -13,9 +12,7 @@ fn can_validate_url_ok() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "https://google.com".to_string(),
-    };
+    let s = TestStruct { val: "https://google.com".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -28,9 +25,7 @@ fn bad_url_fails_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -46,9 +41,7 @@ fn can_specify_code_for_url() {
         #[validate(url(code = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -65,9 +58,7 @@ fn can_specify_message_for_url() {
         #[validate(url(message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: "bob".to_string(),
-    };
+    let s = TestStruct { val: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

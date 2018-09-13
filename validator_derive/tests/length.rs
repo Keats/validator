@@ -12,9 +12,7 @@ fn can_validate_length_ok() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "hello".to_string(),
-    };
+    let s = TestStruct { val: "hello".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -27,9 +25,7 @@ fn value_out_of_length_fails_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -48,9 +44,7 @@ fn can_specify_code_for_length() {
         #[validate(length(min = "5", max = "10", code = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -66,9 +60,7 @@ fn can_specify_message_for_length() {
         #[validate(length(min = "5", max = "10", message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

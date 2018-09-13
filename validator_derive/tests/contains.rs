@@ -12,9 +12,7 @@ fn can_validate_contains_ok() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: "hello".to_string(),
-    };
+    let s = TestStruct { val: "hello".to_string() };
 
     assert!(s.validate().is_ok());
 }
@@ -27,9 +25,7 @@ fn value_not_containing_needle_fails_validation() {
         val: String,
     }
 
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -47,9 +43,7 @@ fn can_specify_code_for_contains() {
         #[validate(contains(pattern = "he", code = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();
@@ -65,9 +59,7 @@ fn can_specify_message_for_contains() {
         #[validate(contains(pattern = "he", message = "oops"))]
         val: String,
     }
-    let s = TestStruct {
-        val: String::new(),
-    };
+    let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
     let errs = res.unwrap_err().field_errors();

@@ -1,5 +1,5 @@
-use validation::Validator;
 use traits::HasLen;
+use validation::Validator;
 
 /// Validates the length of the value given.
 /// If the validator has `equal` set, it will ignore any `min` and `max` value.
@@ -23,8 +23,8 @@ pub fn validate_length<T: HasLen>(length: Validator, val: T) -> bool {
                     return false;
                 }
             }
-        },
-        _ => unreachable!()
+        }
+        _ => unreachable!(),
     }
 
     true

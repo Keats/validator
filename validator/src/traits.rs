@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 use types::ValidationErrors;
 
-
 /// Trait to implement if one wants to make the `length` validator
 /// work for more types
 ///
