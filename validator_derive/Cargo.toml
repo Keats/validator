@@ -16,7 +16,7 @@ phone = ["validator/phone"]
 card = ["validator/card"]
 
 [dependencies]
-syn = { version = "0.14", features = ["extra-traits"] }
+syn = { version = "0.15", features = ["extra-traits"] }
 quote = "0.6"
 proc-macro2 = "0.4"
 if_chain = "0"
