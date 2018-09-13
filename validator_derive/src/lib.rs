@@ -33,9 +33,7 @@ use quoting::{FieldQuoter, quote_field_validation, quote_schema_validation};
 #[proc_macro_derive(Validate, attributes(validate))]
 pub fn derive_validation(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
-
-    let expanded = impl_validate(&ast);
-    expanded.into()
+    impl_validate(&ast).into()
 }
 
 
@@ -52,6 +50,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     };
 
     let mut validations = vec![];
+    let mut nested_validations = vec![];
 
     let field_types = find_fields_type(&fields);
 
@@ -62,7 +61,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         let field_quoter = FieldQuoter::new(field_ident, name, field_type);
 
         for validation in &field_validations {
-            validations.push(quote_field_validation(&field_quoter, validation));
+            quote_field_validation(&field_quoter, validation, &mut validations, &mut nested_validations);
         }
     }
 
@@ -82,11 +81,14 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
 
                 #schema_validation
 
-                if errors.is_empty() {
+                let mut result = if errors.is_empty() {
                     ::std::result::Result::Ok(())
                 } else {
                     ::std::result::Result::Err(errors)
-                }
+                };
+
+                #(#nested_validations)*
+                result
             }
         }
     );
@@ -351,6 +353,9 @@ fn find_validators_for_field(field: &syn::Field, field_types: &HashMap<String, S
                         _ => unreachable!("Found a non Meta while looking for validators")
                     };
                 }
+            },
+            Some(syn::Meta::Word(_)) => {
+                validators.push(FieldValidation::new(Validator::Nested))
             },
             _ => unreachable!("Got something other than a list of attributes while checking field `{}`", field_ident),
         }

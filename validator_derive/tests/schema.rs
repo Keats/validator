@@ -41,7 +41,7 @@ fn can_fail_schema_fn_validation() {
     };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].code, "meh");
@@ -63,7 +63,7 @@ fn can_specify_message_for_schema_fn() {
     };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].clone().message.unwrap(), "oops");
@@ -89,7 +89,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
 
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].clone().code, "meh");

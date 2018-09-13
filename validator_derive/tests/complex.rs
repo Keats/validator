@@ -9,7 +9,8 @@ extern crate regex;
 extern crate lazy_static;
 
 use regex::Regex;
-use validator::{Validate, ValidationError, ValidationErrors};
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
+use std::collections::HashMap;
 
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
@@ -40,8 +41,34 @@ struct SignupData {
     first_name: String,
     #[validate(range(min = "18", max = "20"))]
     age: u32,
+    #[validate]
+    phone: Phone,
+    #[validate]
+    card: Option<Card>,
+    #[validate]
+    preferences: Vec<Preference>
 }
 
+#[derive(Debug, Validate, Deserialize)]
+struct Phone {
+    #[validate(phone)]
+    number: String
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct Card {
+    #[validate(credit_card)]
+    number: String,
+    #[validate(range(min = "100", max = "9999"))]
+    cvv: u32,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct Preference {
+    #[validate(length(min = "4"))]
+    name: String,
+    value: bool,
+}
 
 #[test]
 fn is_fine_with_many_valid_validations() {
@@ -50,6 +77,19 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
+        phone: Phone {
+            number: "+14152370800".to_string()
+        },
+        card: Some(Card {
+            number: "5236313877109142".to_string(),
+            cvv: 123
+        }),
+        preferences: vec![
+            Preference {
+                name: "marketing".to_string(),
+                value: false
+            },
+        ]
     };
 
     assert!(signup.validate().is_ok());
@@ -62,13 +102,82 @@ fn failed_validation_points_to_original_field_name() {
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
+        phone: Phone {
+            number: "123 invalid".to_string(),
+        },
+        card: Some(Card {
+            number: "1234567890123456".to_string(),
+            cvv: 1
+        }),
+        preferences: vec![
+            Preference {
+                name: "abc".to_string(),
+                value: true
+            },
+        ]
     };
     let res = signup.validate();
+    // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
-    let errs = res.unwrap_err().inner();
+    let errs = res.unwrap_err().errors();
     assert!(errs.contains_key("firstName"));
-    assert_eq!(errs["firstName"].len(), 1);
-    assert_eq!(errs["firstName"][0].code, "length");
+    if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
+        assert_eq!(err.len(), 1);
+        assert_eq!(err[0].code, "length");
+    } else {
+        panic!("Expected field validation errors");
+    }
+    assert!(errs.contains_key("phone"));
+    if let ValidationErrorsKind::Struct(ref errs) = errs["phone"] {
+        unwrap_map(errs, |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("number"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["number"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "phone");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected struct validation errors");
+    }
+    assert!(errs.contains_key("card"));
+    if let ValidationErrorsKind::Struct(ref errs) = errs["card"] {
+        unwrap_map(errs, |errs| {
+            assert_eq!(errs.len(), 2);
+            assert!(errs.contains_key("number"));
+            if let ValidationErrorsKind::Field(ref err) = errs["number"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "credit_card");
+            } else {
+                panic!("Expected field validation errors");
+            }
+            assert!(errs.contains_key("cvv"));
+            if let ValidationErrorsKind::Field(ref err) = errs["cvv"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "range");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected struct validation errors");
+    }
+    assert!(errs.contains_key("preferences"));
+    if let ValidationErrorsKind::List(ref errs) = errs["preferences"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("name"));
+            if let ValidationErrorsKind::Field(ref err) = errs["name"] {
+                assert_eq!(err.len(), 1);
+                assert_eq!(err[0].code, "length");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
 }
 
 #[test]
@@ -177,6 +286,11 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
+            phone: Phone {
+                number: "+14152370800".to_string()
+            },
+            card: None,
+            preferences: Vec::new(),
         };
 
         signup.validate()?;
@@ -216,4 +330,11 @@ fn test_works_with_none_values() {
 
     assert!(p.validate().is_ok());
     assert!(q.validate().is_ok());
+}
+
+fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
+    where F: FnOnce(HashMap<&'static str, ValidationErrorsKind>)
+{
+    let errors = *errors.clone();
+    f(errors.errors());
 }

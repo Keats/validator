@@ -53,7 +53,22 @@ match signup_data.validate() {
 };
 ```
 
-An error has the following structure:
+The `validate()` method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the
+`ValidationErrors` instance includes a map of errors keyed against the struct's field names. Errors may be represented
+in three ways, as described by the `ValidationErrorsKind` enum:
+
+```rust
+#[derive(Debug, Serialize, Clone, PartialEq)]
+#[serde(untagged)]
+pub enum ValidationErrorsKind {
+    Struct(Box<ValidationErrors>),
+    List(BTreeMap<usize, Box<ValidationErrors>>),
+    Field(Vec<ValidationError>),
+}
+```
+
+In the simple example above, any errors would be of the `Field(Vec<ValidationError>)` type, where a single
+`ValidationError` has the following structure:
 
 ```rust
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -72,6 +87,57 @@ not `first_name`.
 If you are adding a validation on a `Option<..>` field, it will only be ran if there is a value. The exception
 being `must_match` that doesn't currently work with `Option` due to me not finding a use case for it. If you have one,
 please comment on https://github.com/Keats/validator/issues/7.
+
+The other two `ValidationErrorsKind` types represent errors discovered in nested (vectors of) structs, as described in
+this example:
+
+ ```rust
+#[macro_use]
+extern crate validator_derive;
+extern crate validator;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
+#[derive(Debug, Validate, Deserialize)]
+struct SignupData {
+    #[validate]
+    contact_details: ContactDetails,
+    #[validate]
+    preferences: Vec<Preference>
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct ContactDetails {
+    #[validate(email)]
+    mail: String,
+    #[validate(phone)]
+    phone: String
+}
+
+#[derive(Debug, Validate, Deserialize)]
+struct Preference {
+    #[validate(length(min = "4"))]
+    name: String,
+    value: bool,
+}
+
+match signup_data.validate() {
+  Ok(_) => (),
+  Err(e) => return e;
+};
+ ```
+
+Here, the `ContactDetails` and `Preference` structs are nested within the parent `SignupData` struct. Because
+these child types also derive `Validate`, the fields where they appear can be tagged for inclusion in the parent
+struct's validation method.
+
+Any errors found in a single nested struct (the `contact_details` field in this example) would be returned as a
+`Struct(Box<ValidationErrors>)` type in the parent's `ValidationErrors` result. 
+
+Any errors found in a vector of nested structs (the `preferences` field in this example) would be returned as a
+`List(BTreeMap<usize, Box<ValidationErrors>>)` type in the parent's `ValidationErrors` result, where the map is keyed on
+the index of invalid vector entries.
 
 
 ## Usage
@@ -144,7 +210,7 @@ Examples:
 ```
 
 ### regex
-Tests whether the string matchs the regex given. `regex` takes
+Tests whether the string matches the regex given. `regex` takes
 1 string argument: the path to a static Regex instance.
 
 Examples:
@@ -154,7 +220,7 @@ Examples:
 ```
 
 ### credit\_card
-Test whetever the string is a valid credit card number.
+Test whether the string is a valid credit card number.
 
 Examples:
 
@@ -179,6 +245,15 @@ Examples:
 ```rust
 #[validate(custom = "validate_something")]
 #[validate(custom = "::utils::validate_something")]
+```
+
+### nested
+Performs validation on a field with a type that also implements the Validate trait (or a vector of such types).
+
+Examples:
+
+```rust
+#[validate]
 ```
 
 ## Struct level validation

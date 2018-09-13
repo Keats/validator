@@ -40,13 +40,25 @@ impl FieldQuoter {
         }
     }
 
+    pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
+        let ident = &self.ident;
+
+        if self._type.starts_with("Option<") || self._type.starts_with("Vec<") {
+            quote!(#ident)
+        } else if COW_TYPE.is_match(&self._type.as_ref()) {
+            quote!(self.#ident.as_ref())
+        } else {
+            quote!(self.#ident)
+        }
+    }
+
     pub fn get_optional_validator_param(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
         if self._type.starts_with("Option<&") || self._type.starts_with("Option<Option<&")
             || NUMBER_TYPES.contains(&self._type.as_ref()) {
-          quote!(#ident)
+            quote!(#ident)
         } else {
-          quote!(ref #ident)
+            quote!(ref #ident)
         }
     }
 
@@ -67,6 +79,27 @@ impl FieldQuoter {
                     #tokens
                 }
             )
+        }
+
+        tokens
+    }
+
+
+    /// Wrap the quoted output of a validation with a for loop if
+    /// the field type is a vector
+    pub fn wrap_if_vector(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+        let field_ident = &self.ident;
+        let field_name = &self.name;
+        if self._type.starts_with("Vec<") {
+            return quote!(
+                if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                    let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
+                        let mut result = ::std::result::Result::Ok(());
+                        #tokens
+                        result
+                    }).collect();
+                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+                })
         }
 
         tokens
@@ -326,23 +359,32 @@ pub fn quote_regex_validation(field_quoter: &FieldQuoter, validation: &FieldVali
     unreachable!();
 }
 
-pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldValidation) -> proc_macro2::TokenStream {
-    match validation.validator {
-        Validator::Length {..} => quote_length_validation(&field_quoter, validation),
-        Validator::Range {..} => quote_range_validation(&field_quoter, validation),
-        Validator::Email => quote_email_validation(&field_quoter, validation),
-        Validator::Url => quote_url_validation(&field_quoter, validation),
-        Validator::MustMatch(_) => quote_must_match_validation(&field_quoter, validation),
-        Validator::Custom(_) => quote_custom_validation(&field_quoter, validation),
-        Validator::Contains(_) => quote_contains_validation(&field_quoter, validation),
-        Validator::Regex(_) => quote_regex_validation(&field_quoter, validation),
-        #[cfg(feature = "card")]
-        Validator::CreditCard => quote_credit_card_validation(&field_quoter, validation),
-        #[cfg(feature = "phone")]
-        Validator::Phone => quote_phone_validation(&field_quoter, validation),
-    }
+pub fn quote_nested_validation(field_quoter: &FieldQuoter)  -> proc_macro2::TokenStream {
+    let field_name = &field_quoter.name;
+    let validator_field = field_quoter.quote_validator_field();
+    let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
+    field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 
+pub fn quote_field_validation(field_quoter: &FieldQuoter, validation: &FieldValidation,
+                              validations: &mut Vec<proc_macro2::TokenStream>,
+                              nested_validations: &mut Vec<proc_macro2::TokenStream>) {
+    match validation.validator {
+        Validator::Length {..} => validations.push(quote_length_validation(&field_quoter, validation)),
+        Validator::Range {..} => validations.push(quote_range_validation(&field_quoter, validation)),
+        Validator::Email => validations.push(quote_email_validation(&field_quoter, validation)),
+        Validator::Url => validations.push(quote_url_validation(&field_quoter, validation)),
+        Validator::MustMatch(_) => validations.push(quote_must_match_validation(&field_quoter, validation)),
+        Validator::Custom(_) => validations.push(quote_custom_validation(&field_quoter, validation)),
+        Validator::Contains(_) => validations.push(quote_contains_validation(&field_quoter, validation)),
+        Validator::Regex(_) => validations.push(quote_regex_validation(&field_quoter, validation)),
+        #[cfg(feature = "card")]
+        Validator::CreditCard => validations.push(quote_credit_card_validation(&field_quoter, validation)),
+        #[cfg(feature = "phone")]
+        Validator::Phone => validations.push(quote_phone_validation(&field_quoter, validation)),
+        Validator::Nested => nested_validations.push(quote_nested_validation(&field_quoter)),
+    }
+}
 
 pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_macro2::TokenStream {
     if let Some(v) = validation {

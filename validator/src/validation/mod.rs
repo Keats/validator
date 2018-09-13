@@ -40,6 +40,7 @@ pub enum Validator {
     CreditCard,
     #[cfg(feature = "phone")]
     Phone,
+    Nested,
 }
 
 impl Validator {
@@ -57,6 +58,7 @@ impl Validator {
             Validator::CreditCard => "credit_card",
             #[cfg(feature = "phone")]
             Validator::Phone => "phone",
+            Validator::Nested => "nested",
         }
     }
 }
