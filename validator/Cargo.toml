@@ -1,9 +1,9 @@
 [package]
 name = "validator"
-version = "0.7.1"
-authors = ["Vincent Prouillet <vincent@wearewizards.io>"]
+version = "0.8.0"
+authors = ["Vincent Prouillet <prouillet.vincent@gmail.com"]
 license = "MIT"
-description = "Common validation functions (email, url, length, ...) and trait"
+description = "Common validation functions (email, url, length, ...) and trait - to be used with `validator_derive`"
 homepage = "https://github.com/Keats/validator"
 repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]

@@ -76,13 +76,13 @@ impl<'a> Contains for Cow<'a, str> {
     }
 }
 
-impl<S> Contains for HashMap<String, S> {
+impl<S, H: ::std::hash::BuildHasher> Contains for HashMap<String, S, H> {
     fn has_element(&self, needle: &str) -> bool {
         self.contains_key(needle)
     }
 }
 
-impl<'a, S> Contains for &'a HashMap<String, S> {
+impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> {
     fn has_element(&self, needle: &str) -> bool {
         self.contains_key(needle)
     }

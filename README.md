@@ -133,7 +133,7 @@ these child types also derive `Validate`, the fields where they appear can be ta
 struct's validation method.
 
 Any errors found in a single nested struct (the `contact_details` field in this example) would be returned as a
-`Struct(Box<ValidationErrors>)` type in the parent's `ValidationErrors` result. 
+`Struct(Box<ValidationErrors>)` type in the parent's `ValidationErrors` result.
 
 Any errors found in a vector of nested structs (the `preferences` field in this example) would be returned as a
 `List(BTreeMap<usize, Box<ValidationErrors>>)` type in the parent's `ValidationErrors` result, where the map is keyed on
@@ -298,6 +298,10 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.8.0 (2018/09/19)
+
+- Change error type to allow use with nested validation
+
 #### 0.7.1 (2018/07/27)
 
 - Make validators work on `Cow`
@@ -319,6 +323,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.8.0 (2018/09/19)
+
+- Allow nested validation
 
 #### 0.7.2 (2018/07/27)
 

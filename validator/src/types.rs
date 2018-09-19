@@ -45,7 +45,7 @@ pub enum ValidationErrorsKind {
     Field(Vec<ValidationError>),
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Default, Debug, Serialize, Clone, PartialEq)]
 pub struct ValidationErrors(HashMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
@@ -126,17 +126,9 @@ impl ValidationErrors {
             }).collect()
     }
 
-    #[deprecated(
-        since = "0.7.3",
-        note = "Use `field_errors` instead, or `errors` to also access any errors from nested structs"
-    )]
-    pub fn inner(self) -> HashMap<&'static str, Vec<ValidationError>> {
-        self.field_errors()
-    }
-
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
         if let ValidationErrorsKind::Field(ref mut vec) =
-            self.0.entry(field).or_insert(ValidationErrorsKind::Field(vec![]))
+            self.0.entry(field).or_insert_with(|| ValidationErrorsKind::Field(vec![]))
         {
             vec.push(error);
         } else {
