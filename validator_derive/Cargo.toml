@@ -20,7 +20,7 @@ syn = { version = "0.15", features = ["extra-traits"] }
 quote = "0.6"
 proc-macro2 = "0.4"
 if_chain = "0"
-validator = { version = "0.7", path = "../validator"}
+validator = { version = "0.8", path = "../validator"}
 regex = "1"
 lazy_static = "1"
 
