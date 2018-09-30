@@ -430,7 +430,7 @@ pub fn quote_field_validation(
     }
 }
 
-pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_macro2::TokenStream {
+fn quote_single_schema_validation(validation: &Option<SchemaValidation>) -> proc_macro2::TokenStream {
     if let Some(v) = validation {
         let fn_ident = syn::Ident::new(&v.function, Span::call_site());
 
@@ -445,7 +445,7 @@ pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_mac
                 ::std::result::Result::Ok(()) => (),
                 ::std::result::Result::Err(#mut_err_token err) => {
                     #add_message_quoted
-                    errors.add("__all__", err);
+                    schema_errors.add("__all__", err);
                 },
             };
         );
@@ -462,4 +462,8 @@ pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_mac
     } else {
         quote!()
     }
+}
+
+pub fn quote_schema_validation(ref validation: &Vec<Option<SchemaValidation>>) -> Vec<proc_macro2::TokenStream> {
+    validation.iter().map(quote_single_schema_validation).collect::<Vec<_>>()
 }

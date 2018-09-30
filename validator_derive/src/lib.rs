@@ -67,7 +67,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         }
     }
 
-    let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
+    let schema_validations = quote_schema_validation(&find_struct_validation(&ast.attrs));
 
     let ident = &ast.ident;
 
@@ -78,15 +78,20 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
             #[allow(unused_mut)]
             fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                 let mut errors = ::validator::ValidationErrors::new();
+                let mut schema_errors = ::validator::ValidationErrors::new();
 
                 #(#validations)*
 
-                #schema_validation
+                #(#schema_validations)*
 
-                let mut result = if errors.is_empty() {
+                let mut result = if (errors.is_empty() && schema_errors.is_empty()) {
                     ::std::result::Result::Ok(())
                 } else {
-                    ::std::result::Result::Err(errors)
+                    // TODO: Work out how to combine these errors nicely!
+                    ::std::result::Result::Err(validator::ValidationErrors::merge_all(
+                        errors,
+                        "__all__",
+                        ::validator::ValidationErrorsKind::List(schema_errors)))
                 };
 
                 #(#nested_validations)*
@@ -98,94 +103,99 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     impl_ast
 }
 
-/// Find if a struct has some schema validation and returns the info if so
-fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaValidation> {
+fn handle_single_struct_validation(attr: &syn::Attribute) -> Option<SchemaValidation> {
     let error = |msg: &str| -> ! {
         panic!("Invalid schema level validation: {}", msg);
     };
+
+    if_chain! {
+        if let Some(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.interpret_meta();
+        if let syn::NestedMeta::Meta(ref item) = nested[0];
+        if let &syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) = item;
+
+        then {
+            if ident != "schema" {
+                error("Only `schema` is allowed as validator on a struct")
+            }
+
+            let mut function = String::new();
+            let mut skip_on_field_errors = true;
+            let mut code = None;
+            let mut message = None;
+
+            for arg in nested {
+                if_chain! {
+                    if let syn::NestedMeta::Meta(ref item) = *arg;
+                    if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item;
+
+                    then {
+                        match ident.to_string().as_ref() {
+                            "function" => {
+                                function = match lit_to_string(lit) {
+                                    Some(s) => s,
+                                    None => error("invalid argument type for `function` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            "skip_on_field_errors" => {
+                                skip_on_field_errors = match lit_to_bool(lit) {
+                                    Some(s) => s,
+                                    None => error("invalid argument type for `skip_on_field_errors` \
+                                    : only a bool is allowed"),
+                                };
+                            },
+                            "code" => {
+                                code = match lit_to_string(lit) {
+                                    Some(s) => Some(s),
+                                    None => error("invalid argument type for `code` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            "message" => {
+                                message = match lit_to_string(lit) {
+                                    Some(s) => Some(s),
+                                    None => error("invalid argument type for `message` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            _ => error("Unknown argument")
+                        }
+                    } else {
+                        error("Unexpected args")
+                    }
+                }
+            }
+
+            if function == "" {
+                error("`function` is required");
+            }
+
+            return Some(
+                SchemaValidation {
+                    function,
+                    skip_on_field_errors,
+                    code,
+                    message,
+                }
+            );
+        } else {
+            error("Unexpected struct validator")
+        }
+    }
+}
+
+/// Find if a struct has some schema validation and returns the info if so
+fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Vec<Option<SchemaValidation>> {
+    let mut struct_validations = Vec::new();
 
     for attr in struct_attrs {
         if attr.path != parse_quote!(validate) {
             continue;
         }
-
-        if_chain! {
-            if let Some(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.interpret_meta();
-            if let syn::NestedMeta::Meta(ref item) = nested[0];
-            if let &syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) = item;
-
-            then {
-                if ident != "schema" {
-                    error("Only `schema` is allowed as validator on a struct")
-                }
-
-                let mut function = String::new();
-                let mut skip_on_field_errors = true;
-                let mut code = None;
-                let mut message = None;
-
-                for arg in nested {
-                    if_chain! {
-                        if let syn::NestedMeta::Meta(ref item) = *arg;
-                        if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item;
-
-                        then {
-                            match ident.to_string().as_ref() {
-                                "function" => {
-                                    function = match lit_to_string(lit) {
-                                        Some(s) => s,
-                                        None => error("invalid argument type for `function` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                "skip_on_field_errors" => {
-                                    skip_on_field_errors = match lit_to_bool(lit) {
-                                        Some(s) => s,
-                                        None => error("invalid argument type for `skip_on_field_errors` \
-                                        : only a bool is allowed"),
-                                    };
-                                },
-                                "code" => {
-                                    code = match lit_to_string(lit) {
-                                        Some(s) => Some(s),
-                                        None => error("invalid argument type for `code` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                "message" => {
-                                    message = match lit_to_string(lit) {
-                                        Some(s) => Some(s),
-                                        None => error("invalid argument type for `message` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                _ => error("Unknown argument")
-                            }
-                        } else {
-                            error("Unexpected args")
-                        }
-                    }
-                }
-
-                if function == "" {
-                    error("`function` is required");
-                }
-
-                return Some(
-                    SchemaValidation {
-                        function,
-                        skip_on_field_errors,
-                        code,
-                        message,
-                    }
-                );
-            } else {
-                error("Unexpected struct validator")
-            }
-        }
+        struct_validations.push(handle_single_struct_validation(attr))
     }
 
-    None
+    struct_validations
 }
 
 /// Find the types (as string) for each field of the struct
