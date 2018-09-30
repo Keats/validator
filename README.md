@@ -261,7 +261,7 @@ Often, some error validation can only be applied when looking at the full struct
 
 ```rust
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_category", skip_on_field_errors = "false")]
+#[validate(schema(function = "validate_category", skip_on_field_errors = "false"))]
 struct CategoryData {
     category: String,
     name: String,
