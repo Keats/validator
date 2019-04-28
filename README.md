@@ -179,14 +179,16 @@ Examples:
 ```
 
 ### range
-Tests whether a number is in the given range. `range` takes 2 number arguments: `min` and `max`.
+Tests whether a number is in the given range. `range` takes between 1 and 2 number arguments: `min` and `max`.
 
 Examples:
 
 ```rust
 #[validate(range(min = "1", max = "10"))]
+#[validate(range(min = "1"))]
 #[validate(range(min = "1", max = "10.8"))]
 #[validate(range(min = "1.1", max = "10.8"))]
+#[validate(range(max = "10.8"))]
 ```
 
 ### must_match

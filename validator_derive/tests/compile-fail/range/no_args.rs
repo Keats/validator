@@ -4,7 +4,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 //~^ ERROR: proc-macro derive panicked
-//~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `range` requires 2 arguments: `min` and `max`
+//~^^ HELP: Invalid attribute #[validate] on field `s`: Validator `range` requires at least 1 argument out of `min` and `max`
 struct Test {
     #[validate(range())]
     s: i32,

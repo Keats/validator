@@ -46,3 +46,10 @@ pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
         None => quote!(::std::option::Option::None),
     }
 }
+
+pub fn option_f64_to_tokens(opt: Option<f64>) -> proc_macro2::TokenStream {
+    match opt {
+        Some(ref t) => quote!(::std::option::Option::Some(#t)),
+        None => quote!(::std::option::Option::None),
+    }
+}
