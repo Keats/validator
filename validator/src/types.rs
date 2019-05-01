@@ -113,6 +113,11 @@ impl ValidationErrors {
         &self.0
     }
 
+    /// Consume the struct, returning the validation errors found
+    pub fn into_errors(self) -> HashMap<&'static str, ValidationErrorsKind> {
+        self.0
+    }
+
     /// Returns a map of only field-level validation errors found for the struct that was validated.
     pub fn field_errors(&self) -> HashMap<&str, &Vec<ValidationError>> {
         self.0

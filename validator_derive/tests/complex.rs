@@ -29,16 +29,16 @@ fn validate_signup(data: &SignupData) -> Result<(), ValidationError> {
 }
 
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_signup", skip_on_field_errors = "false"))]
+#[validate(schema(function = "validate_signup", skip_on_field_errors = false))]
 struct SignupData {
     #[validate(email)]
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = "1"), custom = "validate_unique_username")]
+    #[validate(length(min = 1), custom = "validate_unique_username")]
     #[serde(rename = "firstName")]
     first_name: String,
-    #[validate(range(min = "18", max = "20"))]
+    #[validate(range(min = 18, max = 20))]
     age: u32,
     #[validate]
     phone: Phone,
@@ -58,13 +58,13 @@ struct Phone {
 struct Card {
     #[validate(credit_card)]
     number: String,
-    #[validate(range(min = "100", max = "9999"))]
+    #[validate(range(min = 100, max = 9999))]
     cvv: u32,
 }
 
 #[derive(Debug, Validate, Deserialize)]
 struct Preference {
-    #[validate(length(min = "4"))]
+    #[validate(length(min = 4))]
     name: String,
     value: bool,
 }
@@ -98,8 +98,8 @@ fn failed_validation_points_to_original_field_name() {
     let res = signup.validate();
     // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
-    assert!(errs.contains_key("firstName"));
+    let err = res.unwrap_err();
+let errs = err.errors();assert!(errs.contains_key("firstName"));
     if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
         assert_eq!(err.len(), 1);
         assert_eq!(err[0].code, "length");
@@ -167,13 +167,13 @@ fn test_can_validate_option_fields_with_lifetime() {
 
     #[derive(Debug, Validate)]
     struct PutStruct<'a> {
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         name: Option<&'a str>,
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         address: Option<Option<&'a str>>,
-        #[validate(range(min = "1", max = "100"))]
+        #[validate(range(min = 1, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = "1", max = "10"))]
+        #[validate(range(min = 1, max = 10))]
         range: Option<usize>,
         #[validate(email)]
         email: Option<&'a str>,
@@ -213,17 +213,17 @@ fn test_can_validate_option_fields_without_lifetime() {
 
     #[derive(Debug, Validate)]
     struct PutStruct {
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         name: Option<String>,
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         address: Option<Option<String>>,
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         ids: Option<Vec<usize>>,
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         opt_ids: Option<Option<Vec<usize>>>,
-        #[validate(range(min = "1", max = "100"))]
+        #[validate(range(min = 1, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = "1", max = "10"))]
+        #[validate(range(min = 1, max = 10))]
         range: Option<usize>,
         #[validate(email)]
         email: Option<String>,
@@ -281,13 +281,13 @@ fn test_works_with_question_mark_operator() {
 fn test_works_with_none_values() {
     #[derive(Debug, Validate)]
     struct PutStruct {
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         name: Option<String>,
-        #[validate(length(min = "1", max = "10"))]
+        #[validate(length(min = 1, max = 10))]
         address: Option<Option<String>>,
-        #[validate(range(min = "1", max = "100"))]
+        #[validate(range(min = 1, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = "1", max = "10"))]
+        #[validate(range(min = 1, max = 10))]
         range: Option<usize>,
     }
 
@@ -304,5 +304,5 @@ where
     F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
     let errors = *errors.clone();
-    f(errors.errors());
+    f(errors.errors().clone());
 }

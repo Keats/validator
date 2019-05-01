@@ -8,7 +8,7 @@ use validator::Validate;
 fn can_validate_range_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(min = "5", max = "10"))]
+        #[validate(range(min = 5, max = 10))]
         val: usize,
     }
 
@@ -21,14 +21,15 @@ fn can_validate_range_ok() {
 fn value_out_of_range_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(min = "5", max = "10"))]
+        #[validate(range(min = 5, max = 10))]
         val: usize,
     }
 
     let s = TestStruct { val: 11 };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "range");
@@ -38,13 +39,14 @@ fn value_out_of_range_fails_validation() {
 fn can_specify_code_for_range() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(min = "5", max = "10", code = "oops"))]
+        #[validate(range(min = 5, max = 10, code = "oops"))]
         val: usize,
     }
     let s = TestStruct { val: 11 };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "oops");
@@ -57,13 +59,14 @@ fn can_specify_code_for_range() {
 fn can_specify_message_for_range() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(min = "5", max = "10", message = "oops"))]
+        #[validate(range(min = 5, max = 10, message = "oops"))]
         val: usize,
     }
     let s = TestStruct { val: 1 };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
