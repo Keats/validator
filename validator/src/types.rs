@@ -109,21 +109,22 @@ impl ValidationErrors {
 
     /// Returns a map of field-level validation errors found for the struct that was validated and
     /// any of it's nested structs that are tagged for validation.
-    pub fn errors(self) -> HashMap<&'static str, ValidationErrorsKind> {
-        self.0
+    pub fn errors(&self) -> &HashMap<&'static str, ValidationErrorsKind> {
+        &self.0
     }
 
     /// Returns a map of only field-level validation errors found for the struct that was validated.
-    pub fn field_errors(self) -> HashMap<&'static str, Vec<ValidationError>> {
+    pub fn field_errors(&self) -> HashMap<&str, &Vec<ValidationError>> {
         self.0
-            .into_iter()
+            .iter()
             .filter_map(|(k, v)| {
                 if let ValidationErrorsKind::Field(errors) = v {
-                    Some((k, errors))
+                    Some((*k, errors))
                 } else {
                     None
                 }
-            }).collect()
+            })
+            .collect::<HashMap<_,_>>()
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
