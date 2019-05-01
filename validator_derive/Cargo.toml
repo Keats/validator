@@ -1,6 +1,6 @@
 [package]
 name = "validator_derive"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Vincent Prouillet <prouillet.vincent@gmail.com"]
 license = "MIT"
 description = "Macros 1.1 implementation of #[derive(Validate)]"
@@ -20,7 +20,7 @@ syn = { version = "0.15", features = ["extra-traits"] }
 quote = "0.6"
 proc-macro2 = "0.4"
 if_chain = "0"
-validator = { version = "0.8", path = "../validator"}
+validator = { version = "0.9", path = "../validator"}
 regex = "1"
 lazy_static = "1"
 
