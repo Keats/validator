@@ -297,6 +297,7 @@ For example, the following attributes all work:
 #### 0.9.0 (2019/05/xx)
 
 - `ValidationErrors::errors` and `ValidationErrors::field_errors` now use `&self` instead of `self`
+- Move to edition 2018
 
 #### 0.8.0 (2018/09/19)
 

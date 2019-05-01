@@ -6,10 +6,7 @@ pub fn validate_url<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
 {
-    match Url::parse(val.into().as_ref()) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    Url::parse(val.into().as_ref()).is_ok()
 }
 
 #[cfg(test)]

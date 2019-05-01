@@ -99,7 +99,8 @@ fn failed_validation_points_to_original_field_name() {
     // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert!(errs.contains_key("firstName"));
+    let errs = err.errors();
+    assert!(errs.contains_key("firstName"));
     if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
         assert_eq!(err.len(), 1);
         assert_eq!(err[0].code, "length");

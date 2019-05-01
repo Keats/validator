@@ -134,7 +134,7 @@ pub fn extract_range_validation(
         }
     }
 
-    if !min.is_some() && !max.is_some() {
+    if min.is_none() && max.is_none() {
         error("Validator `range` requires at least 1 argument out of `min` and `max`");
     }
 

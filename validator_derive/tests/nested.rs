@@ -72,7 +72,8 @@ fn failed_validation_points_to_original_field_names() {
     let res = root.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert_eq!(errs.len(), 2);
+    let errs = err.errors();
+    assert_eq!(errs.len(), 2);
     assert!(errs.contains_key("value"));
     if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
         assert_eq!(errs.len(), 1);
@@ -119,7 +120,8 @@ fn test_can_validate_option_fields_without_lifetime() {
     let res = instance.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert_eq!(errs.len(), 1);
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
         unwrap_map(errs, |errs| {
@@ -152,7 +154,8 @@ fn test_can_validate_option_fields_with_lifetime() {
     let res = instance.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert_eq!(errs.len(), 1);
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
         unwrap_map(errs, |errs| {
@@ -192,7 +195,8 @@ fn test_can_validate_vector_fields() {
     let res = instance.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert_eq!(errs.len(), 1);
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::List(ref errs) = errs["child"] {
         assert!(errs.contains_key(&1));
@@ -229,7 +233,8 @@ fn test_field_validations_take_priority_over_nested_validations() {
     let res = instance.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
-let errs = err.errors();assert_eq!(errs.len(), 1);
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Field(ref errs) = errs["child"] {
         assert_eq!(errs.len(), 1);
@@ -275,7 +280,8 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
                         let mut result = Ok(());
                         result = ValidationErrors::merge(result, "child", child.validate());
                         result
-                    }).collect();
+                    })
+                    .collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
             result
@@ -313,7 +319,8 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
                         let mut result = Ok(());
                         result = ValidationErrors::merge(result, "child", child.validate());
                         result
-                    }).collect();
+                    })
+                    .collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
 

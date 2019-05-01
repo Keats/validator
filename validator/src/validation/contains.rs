@@ -1,4 +1,4 @@
-use traits::Contains;
+use crate::traits::Contains;
 
 /// Validates whether the value contains the needle
 /// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>

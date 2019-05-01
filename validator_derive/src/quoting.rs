@@ -32,7 +32,7 @@ impl FieldQuoter {
             quote!(#ident)
         } else if COW_TYPE.is_match(&self._type.as_ref()) {
             quote!(self.#ident.as_ref())
-        } else if self._type.starts_with("&") || NUMBER_TYPES.contains(&self._type.as_ref()) {
+        } else if self._type.starts_with('&') || NUMBER_TYPES.contains(&self._type.as_ref()) {
             quote!(self.#ident)
         } else {
             quote!(&self.#ident)
@@ -92,14 +92,14 @@ impl FieldQuoter {
         let field_name = &self.name;
         if self._type.starts_with("Vec<") {
             return quote!(
-                if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                    let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
-                        let mut result = ::std::result::Result::Ok(());
-                        #tokens
-                        result
-                    }).collect();
-                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-                });
+            if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
+                    let mut result = ::std::result::Result::Ok(());
+                    #tokens
+                    result
+                }).collect();
+                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+            });
         }
 
         tokens

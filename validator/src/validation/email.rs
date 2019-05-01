@@ -2,7 +2,7 @@ use idna::domain_to_ascii;
 use regex::Regex;
 use std::borrow::Cow;
 
-use validation::ip::validate_ip;
+use crate::validation::ip::validate_ip;
 
 lazy_static! {
     // Regex from the specs

@@ -1,4 +1,4 @@
-use validation::Validator;
+use crate::validation::Validator;
 
 /// Validates that a number is in the given range
 ///

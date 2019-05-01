@@ -95,7 +95,8 @@ impl ValidationErrors {
             .filter_map(|(i, entry)| match entry {
                 Some(ValidationErrorsKind::Struct(errors)) => Some((i, errors)),
                 _ => None,
-            }).collect::<BTreeMap<_, _>>();
+            })
+            .collect::<BTreeMap<_, _>>();
 
         if errors.is_empty() {
             parent
@@ -129,7 +130,7 @@ impl ValidationErrors {
                     None
                 }
             })
-            .collect::<HashMap<_,_>>()
+            .collect::<HashMap<_, _>>()
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {

@@ -1,5 +1,5 @@
-use traits::HasLen;
-use validation::Validator;
+use crate::traits::HasLen;
+use crate::validation::Validator;
 
 /// Validates the length of the value given.
 /// If the validator has `equal` set, it will ignore any `min` and `max` value.
