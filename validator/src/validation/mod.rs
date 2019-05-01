@@ -27,8 +27,8 @@ pub enum Validator {
     // No implementation in this crate, it's all in validator_derive
     Regex(String),
     Range {
-        min: f64,
-        max: f64,
+        min: Option<f64>,
+        max: Option<f64>,
     },
     // Any value that impl HasLen can be validated with Length
     Length {
