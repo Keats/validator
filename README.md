@@ -4,6 +4,9 @@
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
+
+It requires Rust 1.30.
+
 A short example:
 
 ```rust
@@ -327,7 +330,7 @@ For example, the following attributes all work:
 
 #### 0.9.0 (2019/05/xx)
 
-- Use literals in macros now that it's stable -> bumping minimum Rust version to 1.34
+- Use literals in macros now that it's stable -> bumping minimum Rust version to 1.30
 
 #### 0.8.0 (2018/09/19)
 
