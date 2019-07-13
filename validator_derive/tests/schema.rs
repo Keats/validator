@@ -36,7 +36,8 @@ fn can_fail_schema_fn_validation() {
     let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].code, "meh");
@@ -56,7 +57,8 @@ fn can_specify_message_for_schema_fn() {
     let s = TestStruct { val: String::new() };
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].clone().message.unwrap(), "oops");
@@ -68,10 +70,10 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
         Err(ValidationError::new("meh"))
     }
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "invalid_schema_fn", skip_on_field_errors = "false"))]
+    #[validate(schema(function = "invalid_schema_fn", skip_on_field_errors = false))]
     struct TestStruct {
         val: String,
-        #[validate(range(min = "1", max = "10"))]
+        #[validate(range(min = 1, max = 10))]
         num: usize,
     }
 
@@ -79,7 +81,8 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
 
     let res = s.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().field_errors();
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].clone().code, "meh");

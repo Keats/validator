@@ -3,7 +3,7 @@ use syn;
 use validator::Validator;
 
 use asserts::{COW_TYPE, NUMBER_TYPES};
-use lit::option_u64_to_tokens;
+use lit::{option_f64_to_tokens, option_u64_to_tokens};
 use validation::{FieldValidation, SchemaValidation};
 
 /// Pass around all the information needed for creating a validation
@@ -32,7 +32,7 @@ impl FieldQuoter {
             quote!(#ident)
         } else if COW_TYPE.is_match(&self._type.as_ref()) {
             quote!(self.#ident.as_ref())
-        } else if self._type.starts_with("&") || NUMBER_TYPES.contains(&self._type.as_ref()) {
+        } else if self._type.starts_with('&') || NUMBER_TYPES.contains(&self._type.as_ref()) {
             quote!(self.#ident)
         } else {
             quote!(&self.#ident)
@@ -92,14 +92,14 @@ impl FieldQuoter {
         let field_name = &self.name;
         if self._type.starts_with("Vec<") {
             return quote!(
-                if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                    let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
-                        let mut result = ::std::result::Result::Ok(());
-                        #tokens
-                        result
-                    }).collect();
-                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-                });
+            if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
+                    let mut result = ::std::result::Result::Ok(());
+                    #tokens
+                    result
+                }).collect();
+                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+            });
         }
 
         tokens
@@ -183,12 +183,25 @@ pub fn quote_range_validation(
     let quoted_ident = field_quoter.quote_validator_param();
 
     if let Validator::Range { min, max } = validation.validator {
+        // Can't interpolate None
+        let min_tokens = option_f64_to_tokens(min);
+        let max_tokens = option_f64_to_tokens(max);
+
+        let min_err_param_quoted = if let Some(v) = min {
+            quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
+        } else {
+            quote!()
+        };
+        let max_err_param_quoted = if let Some(v) = max {
+            quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
+        } else {
+            quote!()
+        };
+
         let quoted_error = quote_error(&validation);
-        let min_err_param_quoted = quote!(err.add_param(::std::borrow::Cow::from("min"), &#min););
-        let max_err_param_quoted = quote!(err.add_param(::std::borrow::Cow::from("max"), &#max););
         let quoted = quote!(
             if !::validator::validate_range(
-                ::validator::Validator::Range {min: #min, max: #max},
+                ::validator::Validator::Range {min: #min_tokens, max: #max_tokens},
                 #quoted_ident as f64
             ) {
                 #quoted_error

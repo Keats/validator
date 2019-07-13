@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use types::ValidationErrors;
+use crate::types::ValidationErrors;
 
 /// Trait to implement if one wants to make the `length` validator
 /// work for more types

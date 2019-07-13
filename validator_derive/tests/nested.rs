@@ -11,7 +11,7 @@ use validator::{
 
 #[derive(Debug, Validate)]
 struct Root<'a> {
-    #[validate(length(min = "1"))]
+    #[validate(length(min = 1))]
     value: String,
 
     #[validate]
@@ -20,7 +20,7 @@ struct Root<'a> {
 
 #[derive(Debug, Validate)]
 struct A {
-    #[validate(length(min = "1"))]
+    #[validate(length(min = 1))]
     value: String,
 
     #[validate]
@@ -29,7 +29,7 @@ struct A {
 
 #[derive(Debug, Validate)]
 struct B {
-    #[validate(length(min = "1"))]
+    #[validate(length(min = 1))]
     value: String,
 }
 
@@ -42,13 +42,13 @@ struct ParentWithOptionalChild {
 #[derive(Debug, Validate)]
 struct ParentWithVectorOfChildren {
     #[validate]
-    #[validate(length(min = "1"))]
+    #[validate(length(min = 1))]
     child: Vec<Child>,
 }
 
 #[derive(Debug, Validate, Serialize)]
 struct Child {
-    #[validate(length(min = "1"))]
+    #[validate(length(min = 1))]
     value: String,
 }
 
@@ -71,7 +71,8 @@ fn failed_validation_points_to_original_field_names() {
 
     let res = root.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
+    let err = res.unwrap_err();
+    let errs = err.errors();
     assert_eq!(errs.len(), 2);
     assert!(errs.contains_key("value"));
     if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
@@ -118,7 +119,8 @@ fn test_can_validate_option_fields_without_lifetime() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
+    let err = res.unwrap_err();
+    let errs = err.errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
@@ -151,7 +153,8 @@ fn test_can_validate_option_fields_with_lifetime() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
+    let err = res.unwrap_err();
+    let errs = err.errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["child"] {
@@ -191,7 +194,8 @@ fn test_can_validate_vector_fields() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
+    let err = res.unwrap_err();
+    let errs = err.errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::List(ref errs) = errs["child"] {
@@ -228,7 +232,8 @@ fn test_field_validations_take_priority_over_nested_validations() {
 
     let res = instance.validate();
     assert!(res.is_err());
-    let errs = res.unwrap_err().errors();
+    let err = res.unwrap_err();
+    let errs = err.errors();
     assert_eq!(errs.len(), 1);
     assert!(errs.contains_key("child"));
     if let ValidationErrorsKind::Field(ref errs) = errs["child"] {
@@ -275,7 +280,8 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
                         let mut result = Ok(());
                         result = ValidationErrors::merge(result, "child", child.validate());
                         result
-                    }).collect();
+                    })
+                    .collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
             result
@@ -313,7 +319,8 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
                         let mut result = Ok(());
                         result = ValidationErrors::merge(result, "child", child.validate());
                         result
-                    }).collect();
+                    })
+                    .collect();
                 result = ValidationErrors::merge_all(result, "child", results);
             }
 
@@ -343,5 +350,5 @@ where
     F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
     let errors = *errors.clone();
-    f(errors.errors());
+    f(errors.errors().clone());
 }

@@ -35,10 +35,7 @@ pub fn validate_ip<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
 {
-    match IpAddr::from_str(val.into().as_ref()) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    IpAddr::from_str(val.into().as_ref()).is_ok()
 }
 
 #[cfg(test)]

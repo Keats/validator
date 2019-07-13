@@ -95,8 +95,8 @@ pub fn extract_range_validation(
     field: String,
     meta_items: &Vec<syn::NestedMeta>,
 ) -> FieldValidation {
-    let mut min = 0.0;
-    let mut max = 0.0;
+    let mut min = None;
+    let mut max = None;
 
     let (message, code) = extract_message_and_code("range", &field, meta_items);
 
@@ -104,45 +104,38 @@ pub fn extract_range_validation(
         panic!("Invalid attribute #[validate] on field `{}`: {}", field, msg);
     };
 
-    // whether it has both `min` and `max`
-    let mut has_min = false;
-    let mut has_max = false;
-
     for meta_item in meta_items {
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => match ident
-                    .to_string()
-                    .as_ref()
-                {
-                    "message" | "code" => continue,
-                    "min" => {
-                        min = match lit_to_float(lit) {
-                                Some(s) => s,
+                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                    match ident.to_string().as_ref() {
+                        "message" | "code" => continue,
+                        "min" => {
+                            min = match lit_to_float(lit) {
+                                Some(s) => Some(s),
                                 None => error("invalid argument type for `min` of `range` validator: only integers are allowed")
                             };
-                        has_min = true;
-                    }
-                    "max" => {
-                        max = match lit_to_float(lit) {
-                                Some(s) => s,
+                        }
+                        "max" => {
+                            max = match lit_to_float(lit) {
+                                Some(s) => Some(s),
                                 None => error("invalid argument type for `max` of `range` validator: only integers are allowed")
                             };
-                        has_max = true;
-                    }
-                    v => error(&format!(
+                        }
+                        v => error(&format!(
                         "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
                         v
                     )),
-                },
+                    }
+                }
                 _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
             _ => unreachable!(),
         }
     }
 
-    if !has_min || !has_max {
-        error("Validator `range` requires 2 arguments: `min` and `max`");
+    if min.is_none() && max.is_none() {
+        error("Validator `range` requires at least 1 argument out of `min` and `max`");
     }
 
     let validator = Validator::Range { min, max };

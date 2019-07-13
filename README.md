@@ -4,11 +4,8 @@
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
-It relies on the `proc_macro` feature which is stable since Rust 1.15.
 
-By default all args to a `validate` must be strings if you are using stable.
-However, if you are using nightly, you can also activate the `attr_literals` feature to be able to use int, float and boolean as well.
-
+It requires Rust 1.30.
 
 A short example:
 
@@ -31,10 +28,10 @@ struct SignupData {
     phone: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = "1"), custom = "validate_unique_username")]
+    #[validate(length(min = 1), custom = "validate_unique_username")]
     #[serde(rename = "firstName")]
     first_name: String,
-    #[validate(range(min = "18", max = "20"))]
+    #[validate(range(min = 18, max = 20))]
     age: u32,
 }
 
@@ -117,7 +114,7 @@ struct ContactDetails {
 
 #[derive(Debug, Validate, Deserialize)]
 struct Preference {
-    #[validate(length(min = "4"))]
+    #[validate(length(min = 4))]
     name: String,
     value: bool,
 }
@@ -172,21 +169,23 @@ At least one argument is required with a maximum of 2 (having `min` and `max` at
 Examples:
 
 ```rust
-#[validate(length(min = "1", max = "10"))]
-#[validate(length(min = "1"))]
-#[validate(length(max = "10"))]
-#[validate(length(equal = "10"))]
+#[validate(length(min = 1, max = 10))]
+#[validate(length(min = 1))]
+#[validate(length(max = 10))]
+#[validate(length(equal = 10))]
 ```
 
 ### range
-Tests whether a number is in the given range. `range` takes 2 number arguments: `min` and `max`.
+Tests whether a number is in the given range. `range` takes between 1 and 2 number arguments: `min` and `max`.
 
 Examples:
 
 ```rust
-#[validate(range(min = "1", max = "10"))]
-#[validate(range(min = "1", max = "10.8"))]
-#[validate(range(min = "1.1", max = "10.8"))]
+#[validate(range(min = 1, max = 10))]
+#[validate(range(min = 1))]
+#[validate(range(min = 1, max = 10.8))]
+#[validate(range(min = 1.1, max = 10.8))]
+#[validate(range(max = 10.8))]
 ```
 
 ### must_match
@@ -261,7 +260,7 @@ Often, some error validation can only be applied when looking at the full struct
 
 ```rust
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_category", skip_on_field_errors = "false"))]
+#[validate(schema(function = "validate_category", skip_on_field_errors = false))]
 struct CategoryData {
     category: String,
     name: String,
@@ -298,6 +297,11 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.9.0 (2019/05/xx)
+
+- `ValidationErrors::errors` and `ValidationErrors::field_errors` now use `&self` instead of `self`
+- Move to edition 2018
+
 #### 0.8.0 (2018/09/19)
 
 - Change error type to allow use with nested validation
@@ -323,6 +327,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.9.0 (2019/05/xx)
+
+- Use literals in macros now that it's stable -> bumping minimum Rust version to 1.30
 
 #### 0.8.0 (2018/09/19)
 

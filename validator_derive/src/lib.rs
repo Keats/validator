@@ -420,8 +420,8 @@ fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String
     let mut original_name = None;
 
     for meta_item in meta_items {
-        match *meta_item {
-            &syn::NestedMeta::Meta(ref item) => match *item {
+        match **meta_item {
+            syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::Word(_) => continue,
                 syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
                     if ident == "rename" {
