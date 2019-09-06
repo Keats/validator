@@ -120,7 +120,7 @@ mod tests {
         ];
 
         for (input, expected) in tests {
-            println!("{} - {}", input, expected);
+            // println!("{} - {}", input, expected);
             assert_eq!(validate_email(input), expected);
         }
     }

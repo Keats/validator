@@ -266,7 +266,7 @@ fn find_validators_for_field(
                 for meta_item in meta_items {
                     match *meta_item {
                         syn::NestedMeta::Meta(ref item) => match *item {
-                            // email, url, phone
+                            // email, url, phone, credit_card, non_control_character
                             syn::Meta::Word(ref name) => match name.to_string().as_ref() {
                                 "email" => {
                                     assert_string_type("email", field_type);
@@ -285,6 +285,11 @@ fn find_validators_for_field(
                                 "credit_card" => {
                                     assert_string_type("credit_card", field_type);
                                     validators.push(FieldValidation::new(Validator::CreditCard));
+                                }
+                                #[cfg(feature = "unic")]
+                                "non_control_character" => {
+                                    assert_string_type("non_control_character", field_type);
+                                    validators.push(FieldValidation::new(Validator::NonControlCharacter));
                                 }
                                 _ => panic!("Unexpected validator: {}", name),
                             },
@@ -341,7 +346,7 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
-                                    "email" | "url" | "phone" | "credit_card" => {
+                                    "email" | "url" | "phone" | "credit_card" | "non_control_character" => {
                                         validators.push(extract_argless_validation(
                                             ident.to_string(),
                                             rust_ident.clone(),

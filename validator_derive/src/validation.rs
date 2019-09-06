@@ -146,7 +146,7 @@ pub fn extract_range_validation(
     }
 }
 
-/// Extract url/email/phone field validation with a code or a message
+/// Extract url/email/phone/non_control_character field validation with a code or a message
 pub fn extract_argless_validation(
     validator_name: String,
     field: String,
@@ -178,6 +178,8 @@ pub fn extract_argless_validation(
         "credit_card" => Validator::CreditCard,
         #[cfg(feature = "phone")]
         "phone" => Validator::Phone,
+        #[cfg(feature = "unic")]
+        "non_control_character" => Validator::NonControlCharacter,
         _ => Validator::Url,
     };
 
