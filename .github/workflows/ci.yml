@@ -1,0 +1,48 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  test_validator:
+    name: test validator
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [pinned, stable, nightly]
+        include:
+        - build: pinned
+          os: ubuntu-18.04
+          rust: 1.32.0
+        - build: stable
+          os: ubuntu-18.04
+          rust: stable
+        - build: nightly
+          os: ubuntu-18.04
+          rust: nightly
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+    - name: Build System Info
+      run: rustc --version
+
+    - name: tests validator with all features
+      run: cd validator && cargo test --all-features
+    - name: tests validator with no features
+      run: cd validator && cargo test --no-default-features
+
+  test_validator_derive:
+    name: test validator_derive
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: nightly
+    - name: tests validator_derive with all features
+      run: cd validator_derive && cargo test --all-features
+    - name: tests validator_derive with no features
+      run: cd validator_derive && cargo test --no-default-features
+
