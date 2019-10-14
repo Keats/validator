@@ -19,7 +19,9 @@ serde_derive = "1"
 serde_json = "1"
 card-validate = { version = "2.1", optional = true }
 phonenumber = { version = "0.2.0+8.7.0", optional = true }
+unic-ucd-common = { version = "0.9.0", optional = true }
 
 [features]
 phone = ["phonenumber"]
 card = ["card-validate"]
+unic = ["unic-ucd-common"]

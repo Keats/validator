@@ -5,6 +5,8 @@ pub mod email;
 pub mod ip;
 pub mod length;
 pub mod must_match;
+#[cfg(feature = "unic")]
+pub mod non_control_character;
 #[cfg(feature = "phone")]
 pub mod phone;
 pub mod range;
@@ -41,6 +43,8 @@ pub enum Validator {
     #[cfg(feature = "phone")]
     Phone,
     Nested,
+    #[cfg(feature = "unic")]
+    NonControlCharacter,
 }
 
 impl Validator {
@@ -59,6 +63,8 @@ impl Validator {
             #[cfg(feature = "phone")]
             Validator::Phone => "phone",
             Validator::Nested => "nested",
+            #[cfg(feature = "unic")]
+            Validator::NonControlCharacter => "non_control_character",
         }
     }
 }

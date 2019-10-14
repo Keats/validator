@@ -14,6 +14,7 @@ proc-macro = true
 [features]
 phone = ["validator/phone"]
 card = ["validator/card"]
+unic = ["validator/unic"]
 
 [dependencies]
 syn = { version = "0.15", features = ["extra-traits"] }
