@@ -1,12 +1,13 @@
 [package]
 name = "validator_derive"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Vincent Prouillet <prouillet.vincent@gmail.com"]
 license = "MIT"
 description = "Macros 1.1 implementation of #[derive(Validate)]"
 homepage = "https://github.com/Keats/validator"
 repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]
+edition = "2018"
 
 [lib]
 proc-macro = true
@@ -17,11 +18,11 @@ card = ["validator/card"]
 unic = ["validator/unic"]
 
 [dependencies]
-syn = { version = "0.15", features = ["extra-traits"] }
-quote = "0.6"
-proc-macro2 = "0.4"
+syn = { version = "1", features = ["extra-traits"] }
+quote = "1"
+proc-macro2 = "1"
 if_chain = "1"
-validator = { version = "0.9", path = "../validator"}
+validator = { version = "0.10", path = "../validator"}
 regex = "1"
 lazy_static = "1"
 

@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use lazy_static::lazy_static;
+
 lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
 }

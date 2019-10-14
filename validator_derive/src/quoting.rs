@@ -1,10 +1,11 @@
 use proc_macro2::{self, Span};
 use syn;
 use validator::Validator;
+use quote::quote;
 
-use asserts::{COW_TYPE, NUMBER_TYPES};
-use lit::{option_f64_to_tokens, option_u64_to_tokens};
-use validation::{FieldValidation, SchemaValidation};
+use crate::asserts::{COW_TYPE, NUMBER_TYPES};
+use crate::lit::{option_f64_to_tokens, option_u64_to_tokens};
+use crate::validation::{FieldValidation, SchemaValidation};
 
 /// Pass around all the information needed for creating a validation
 #[derive(Debug)]

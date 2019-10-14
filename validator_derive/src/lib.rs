@@ -1,19 +1,9 @@
 #![recursion_limit = "128"]
-
-#[macro_use]
-extern crate if_chain;
-#[macro_use]
-extern crate lazy_static;
 extern crate proc_macro;
-extern crate proc_macro2;
-#[macro_use]
-extern crate quote;
-extern crate regex;
-#[macro_use]
-extern crate syn;
-extern crate validator;
 
-use proc_macro::TokenStream;
+use if_chain::if_chain;
+use quote::quote;
+use syn::parse_quote;
 use quote::ToTokens;
 use std::collections::HashMap;
 use validator::Validator;
@@ -29,7 +19,7 @@ use quoting::{quote_field_validation, quote_schema_validation, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
-pub fn derive_validation(input: TokenStream) -> TokenStream {
+pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_validate(&ast).into()
 }
@@ -110,11 +100,12 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
         }
 
         if_chain! {
-            if let Some(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.interpret_meta();
+            if let Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.parse_meta();
             if let syn::NestedMeta::Meta(ref item) = nested[0];
-            if let &syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) = item;
+            if let &syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) = item;
 
             then {
+                let ident = path.get_ident().unwrap();
                 if ident != "schema" {
                     error("Only `schema` is allowed as validator on a struct")
                 }
@@ -127,9 +118,10 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
                 for arg in nested {
                     if_chain! {
                         if let syn::NestedMeta::Meta(ref item) = *arg;
-                        if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item;
+                        if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item;
 
                         then {
+                            let ident = path.get_ident().unwrap();
                             match ident.to_string().as_ref() {
                                 "function" => {
                                     function = match lit_to_string(lit) {
@@ -251,8 +243,8 @@ fn find_validators_for_field(
             has_validate = true;
         }
 
-        match attr.interpret_meta() {
-            Some(syn::Meta::List(syn::MetaList { ref nested, .. })) => {
+        match attr.parse_meta() {
+            Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) => {
                 let meta_items = nested.iter().collect();
                 // original name before serde rename
                 if attr.path == parse_quote!(serde) {
@@ -267,7 +259,7 @@ fn find_validators_for_field(
                     match *meta_item {
                         syn::NestedMeta::Meta(ref item) => match *item {
                             // email, url, phone, credit_card, non_control_character
-                            syn::Meta::Word(ref name) => match name.to_string().as_ref() {
+                            syn::Meta::Path(ref name) => match name.get_ident().unwrap().to_string().as_ref() {
                                 "email" => {
                                     assert_string_type("email", field_type);
                                     validators.push(FieldValidation::new(Validator::Email));
@@ -291,12 +283,13 @@ fn find_validators_for_field(
                                     assert_string_type("non_control_character", field_type);
                                     validators.push(FieldValidation::new(Validator::NonControlCharacter));
                                 }
-                                _ => panic!("Unexpected validator: {}", name),
+                                _ => panic!("Unexpected validator: {:?}", name.get_ident()),
                             },
                             // custom, contains, must_match, regex
                             syn::Meta::NameValue(syn::MetaNameValue {
-                                ref ident, ref lit, ..
+                                ref path, ref lit, ..
                             }) => {
+                                let ident = path.get_ident().unwrap();
                                 match ident.to_string().as_ref() {
                                     "custom" => {
                                         match lit_to_string(lit) {
@@ -329,8 +322,9 @@ fn find_validators_for_field(
                                 };
                             }
                             // Validators with several args
-                            syn::Meta::List(syn::MetaList { ref ident, ref nested, .. }) => {
+                            syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) => {
                                 let meta_items = nested.iter().cloned().collect();
+                                let ident = path.get_ident().unwrap();
                                 match ident.to_string().as_ref() {
                                     "length" => {
                                         assert_has_len(rust_ident.clone(), field_type);
@@ -401,10 +395,11 @@ fn find_validators_for_field(
                     };
                 }
             }
-            Some(syn::Meta::Word(_)) => validators.push(FieldValidation::new(Validator::Nested)),
-            _ => unreachable!(
-                "Got something other than a list of attributes while checking field `{}`",
-                field_ident
+            Ok(syn::Meta::Path(_)) => validators.push(FieldValidation::new(Validator::Nested)),
+            Ok(syn::Meta::NameValue(_)) => panic!("Unexpected name=value argument"),
+            Err(e) => unreachable!(
+                "Got something other than a list of attributes while checking field `{}`: {:?}",
+                field_ident, e
             ),
         }
     }
@@ -427,8 +422,9 @@ fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String
     for meta_item in meta_items {
         match **meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::Word(_) => continue,
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                syn::Meta::Path(_) => continue,
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
+                    let ident = path.get_ident().unwrap();
                     if ident == "rename" {
                         original_name = Some(lit_to_string(lit).unwrap());
                     }

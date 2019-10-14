@@ -1,17 +1,3 @@
-extern crate regex;
-extern crate url;
-#[macro_use]
-extern crate lazy_static;
-extern crate idna;
-extern crate serde;
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
-#[cfg(feature = "card")]
-extern crate card_validate;
-#[cfg(feature = "phone")]
-pub extern crate phonenumber;
-
 mod traits;
 mod types;
 mod validation;

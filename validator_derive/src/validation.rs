@@ -2,7 +2,7 @@ use syn;
 
 use validator::Validator;
 
-use lit::*;
+use crate::lit::*;
 
 #[derive(Debug)]
 pub struct SchemaValidation {
@@ -41,32 +41,33 @@ pub fn extract_length_validation(
 
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(ref item) = *meta_item {
-            if let syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) = *item {
-                match ident.to_string().as_ref() {
-                    "message" | "code" => continue,
-                    "min" => {
-                        min = match lit_to_int(lit) {
-                            Some(s) => Some(s),
-                            None => error("invalid argument type for `min` of `length` validator: only integers are allowed"),
-                        };
-                    },
-                    "max" => {
-                        max = match lit_to_int(lit) {
-                            Some(s) => Some(s),
-                            None => error("invalid argument type for `max` of `length` validator: only integers are allowed"),
-                        };
-                    },
-                    "equal" => {
-                        equal = match lit_to_int(lit) {
-                            Some(s) => Some(s),
-                            None => error("invalid argument type for `equal` of `length` validator: only integers are allowed"),
-                        };
-                    },
-                    v => error(&format!(
-                        "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
-                        v
-                    ))
-                }
+            if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item {
+                    let ident = path.get_ident().unwrap();
+                    match ident.to_string().as_ref() {
+                        "message" | "code" => continue,
+                        "min" => {
+                            min = match lit_to_int(lit) {
+                                Some(s) => Some(s),
+                                None => error("invalid argument type for `min` of `length` validator: only integers are allowed"),
+                            };
+                        },
+                        "max" => {
+                            max = match lit_to_int(lit) {
+                                Some(s) => Some(s),
+                                None => error("invalid argument type for `max` of `length` validator: only integers are allowed"),
+                            };
+                        },
+                        "equal" => {
+                            equal = match lit_to_int(lit) {
+                                Some(s) => Some(s),
+                                None => error("invalid argument type for `equal` of `length` validator: only integers are allowed"),
+                            };
+                        },
+                        v => error(&format!(
+                            "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
+                            v
+                        ))
+                    }
             } else {
                 panic!(
                     "unexpected item {:?} while parsing `length` validator of field {}",
@@ -107,7 +108,8 @@ pub fn extract_range_validation(
     for meta_item in meta_items {
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
+                    let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         "min" => {
@@ -123,9 +125,9 @@ pub fn extract_range_validation(
                             };
                         }
                         v => error(&format!(
-                        "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
-                        v
-                    )),
+                            "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
+                            v
+                        )),
                     }
                 }
                 _ => panic!("unexpected item {:?} while parsing `range` validator", item),
@@ -157,15 +159,16 @@ pub fn extract_argless_validation(
     for meta_item in meta_items {
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, .. }) => {
-                    match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
-                        v => panic!(
-                            "Unknown argument `{}` for validator `{}` on field `{}`",
-                            v, validator_name, field
-                        ),
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, .. }) => {
+                        let ident = path.get_ident().unwrap();
+                        match ident.to_string().as_ref() {
+                            "message" | "code" => continue,
+                            v => panic!(
+                                "Unknown argument `{}` for validator `{}` on field `{}`",
+                                v, validator_name, field
+                            ),
+                        }
                     }
-                }
                 _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
             _ => unreachable!(),
@@ -203,7 +206,9 @@ pub fn extract_one_arg_validation(
     for meta_item in meta_items {
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. }) => {
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
+
+                    let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         v if v == val_name => {
@@ -259,32 +264,34 @@ fn extract_message_and_code(
 
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
-            ref ident,
+            ref path,
             ref lit,
             ..
         })) = *meta_item
         {
-            match ident.to_string().as_ref() {
-                "code" => {
-                    code = match lit_to_string(lit) {
-                        Some(s) => Some(s),
-                        None => panic!(
-                            "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
-                            validator_name, field
-                        ),
-                    };
-                }
-                "message" => {
-                    message = match lit_to_string(lit) {
-                        Some(s) => Some(s),
-                        None => panic!(
-                            "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",
-                            validator_name, field
-                        ),
-                    };
-                }
-                _ => continue,
-            }
+                    let ident = path.get_ident().unwrap();
+                    match ident.to_string().as_ref() {
+                        "code" => {
+                            code = match lit_to_string(lit) {
+                                Some(s) => Some(s),
+                                None => panic!(
+                                    "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
+                                    validator_name, field
+                                ),
+                            };
+                        }
+                        "message" => {
+                            message = match lit_to_string(lit) {
+                                Some(s) => Some(s),
+                                None => panic!(
+                                    "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",
+                                    validator_name, field
+                                ),
+                            };
+                        }
+                        _ => continue,
+                    }
+
         }
     }
 
