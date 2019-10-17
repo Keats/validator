@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::card_validate::Validate as CardValidate;
+use card_validate::Validate as CardValidate;
 
 pub fn validate_credit_card<'a, T>(card: T) -> bool
 where
