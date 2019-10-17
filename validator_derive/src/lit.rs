@@ -1,6 +1,6 @@
 use proc_macro2;
-use syn;
 use quote::quote;
+use syn;
 
 pub fn lit_to_string(lit: &syn::Lit) -> Option<String> {
     match *lit {

@@ -3,9 +3,9 @@ extern crate proc_macro;
 
 use if_chain::if_chain;
 use quote::quote;
-use syn::parse_quote;
 use quote::ToTokens;
 use std::collections::HashMap;
+use syn::parse_quote;
 use validator::Validator;
 
 mod asserts;
@@ -259,32 +259,37 @@ fn find_validators_for_field(
                     match *meta_item {
                         syn::NestedMeta::Meta(ref item) => match *item {
                             // email, url, phone, credit_card, non_control_character
-                            syn::Meta::Path(ref name) => match name.get_ident().unwrap().to_string().as_ref() {
-                                "email" => {
-                                    assert_string_type("email", field_type);
-                                    validators.push(FieldValidation::new(Validator::Email));
+                            syn::Meta::Path(ref name) => {
+                                match name.get_ident().unwrap().to_string().as_ref() {
+                                    "email" => {
+                                        assert_string_type("email", field_type);
+                                        validators.push(FieldValidation::new(Validator::Email));
+                                    }
+                                    "url" => {
+                                        assert_string_type("url", field_type);
+                                        validators.push(FieldValidation::new(Validator::Url));
+                                    }
+                                    #[cfg(feature = "phone")]
+                                    "phone" => {
+                                        assert_string_type("phone", field_type);
+                                        validators.push(FieldValidation::new(Validator::Phone));
+                                    }
+                                    #[cfg(feature = "card")]
+                                    "credit_card" => {
+                                        assert_string_type("credit_card", field_type);
+                                        validators
+                                            .push(FieldValidation::new(Validator::CreditCard));
+                                    }
+                                    #[cfg(feature = "unic")]
+                                    "non_control_character" => {
+                                        assert_string_type("non_control_character", field_type);
+                                        validators.push(FieldValidation::new(
+                                            Validator::NonControlCharacter,
+                                        ));
+                                    }
+                                    _ => panic!("Unexpected validator: {:?}", name.get_ident()),
                                 }
-                                "url" => {
-                                    assert_string_type("url", field_type);
-                                    validators.push(FieldValidation::new(Validator::Url));
-                                }
-                                #[cfg(feature = "phone")]
-                                "phone" => {
-                                    assert_string_type("phone", field_type);
-                                    validators.push(FieldValidation::new(Validator::Phone));
-                                }
-                                #[cfg(feature = "card")]
-                                "credit_card" => {
-                                    assert_string_type("credit_card", field_type);
-                                    validators.push(FieldValidation::new(Validator::CreditCard));
-                                }
-                                #[cfg(feature = "unic")]
-                                "non_control_character" => {
-                                    assert_string_type("non_control_character", field_type);
-                                    validators.push(FieldValidation::new(Validator::NonControlCharacter));
-                                }
-                                _ => panic!("Unexpected validator: {:?}", name.get_ident()),
-                            },
+                            }
                             // custom, contains, must_match, regex
                             syn::Meta::NameValue(syn::MetaNameValue {
                                 ref path, ref lit, ..
@@ -340,7 +345,11 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
-                                    "email" | "url" | "phone" | "credit_card" | "non_control_character" => {
+                                    "email"
+                                    | "url"
+                                    | "phone"
+                                    | "credit_card"
+                                    | "non_control_character" => {
                                         validators.push(extract_argless_validation(
                                             ident.to_string(),
                                             rust_ident.clone(),

@@ -16,7 +16,7 @@ lazy_static! {
 fn can_validate_valid_regex() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex = "RE2")]
+        #[validate(regex = "crate::RE2")]
         val: String,
     }
 
@@ -29,7 +29,7 @@ fn can_validate_valid_regex() {
 fn bad_value_for_regex_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex = "RE2")]
+        #[validate(regex = "crate::RE2")]
         val: String,
     }
 
@@ -48,7 +48,7 @@ fn bad_value_for_regex_fails_validation() {
 fn can_specify_code_for_regex() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex(path = "RE2", code = "oops"))]
+        #[validate(regex(path = "crate::RE2", code = "oops"))]
         val: String,
     }
     let s = TestStruct { val: "2".to_string() };
@@ -65,7 +65,7 @@ fn can_specify_code_for_regex() {
 fn can_specify_message_for_regex() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex(path = "RE2", message = "oops"))]
+        #[validate(regex(path = "crate::RE2", message = "oops"))]
         val: String,
     }
     let s = TestStruct { val: "2".to_string() };

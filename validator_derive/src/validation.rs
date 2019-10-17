@@ -42,8 +42,8 @@ pub fn extract_length_validation(
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(ref item) = *meta_item {
             if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item {
-                    let ident = path.get_ident().unwrap();
-                    match ident.to_string().as_ref() {
+                let ident = path.get_ident().unwrap();
+                match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         "min" => {
                             min = match lit_to_int(lit) {
@@ -160,15 +160,15 @@ pub fn extract_argless_validation(
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, .. }) => {
-                        let ident = path.get_ident().unwrap();
-                        match ident.to_string().as_ref() {
-                            "message" | "code" => continue,
-                            v => panic!(
-                                "Unknown argument `{}` for validator `{}` on field `{}`",
-                                v, validator_name, field
-                            ),
-                        }
+                    let ident = path.get_ident().unwrap();
+                    match ident.to_string().as_ref() {
+                        "message" | "code" => continue,
+                        v => panic!(
+                            "Unknown argument `{}` for validator `{}` on field `{}`",
+                            v, validator_name, field
+                        ),
                     }
+                }
                 _ => panic!("unexpected item {:?} while parsing `range` validator", item),
             },
             _ => unreachable!(),
@@ -207,7 +207,6 @@ pub fn extract_one_arg_validation(
         match *meta_item {
             syn::NestedMeta::Meta(ref item) => match *item {
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
-
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
@@ -269,29 +268,28 @@ fn extract_message_and_code(
             ..
         })) = *meta_item
         {
-                    let ident = path.get_ident().unwrap();
-                    match ident.to_string().as_ref() {
-                        "code" => {
-                            code = match lit_to_string(lit) {
+            let ident = path.get_ident().unwrap();
+            match ident.to_string().as_ref() {
+                "code" => {
+                    code = match lit_to_string(lit) {
                                 Some(s) => Some(s),
                                 None => panic!(
                                     "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),
                             };
-                        }
-                        "message" => {
-                            message = match lit_to_string(lit) {
+                }
+                "message" => {
+                    message = match lit_to_string(lit) {
                                 Some(s) => Some(s),
                                 None => panic!(
                                     "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),
                             };
-                        }
-                        _ => continue,
-                    }
-
+                }
+                _ => continue,
+            }
         }
     }
 

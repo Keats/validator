@@ -302,6 +302,10 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.10.0 (2019/10/18)
+
+- Add `non_control_characters` validation
+
 #### 0.9.0 (2019/05/xx)
 
 - `ValidationErrors::errors` and `ValidationErrors::field_errors` now use `&self` instead of `self`
@@ -332,6 +336,12 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+
+#### 0.10.0 (2019/10/18)
+
+- Update syn & quote
+- Move to edition 2018
 
 #### 0.9.0 (2019/05/xx)
 
