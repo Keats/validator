@@ -5,7 +5,7 @@
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 
-It requires Rust 1.30.
+It requires Rust 1.33.
 
 A short example:
 
@@ -255,6 +255,11 @@ Examples:
 #[validate]
 ```
 
+### non_control_character
+Tests whether the String has any utf-8 control caracters, fails validation if it does.
+To use this validator, you must enable the `unic` feature for the `validator_derive` crate.
+This validator doesn't take any arguments: `#[validate(non_control_character)]`;
+
 ## Struct level validation
 Often, some error validation can only be applied when looking at the full struct, here's how it works here:
 
@@ -297,6 +302,10 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.10.0 (2019/10/18)
+
+- Add `non_control_characters` validation
+
 #### 0.9.0 (2019/05/xx)
 
 - `ValidationErrors::errors` and `ValidationErrors::field_errors` now use `&self` instead of `self`
@@ -327,6 +336,12 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+
+#### 0.10.0 (2019/10/18)
+
+- Update syn & quote
+- Move to edition 2018
 
 #### 0.9.0 (2019/05/xx)
 

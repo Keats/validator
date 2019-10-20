@@ -3,6 +3,7 @@ use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
 use std::{self, fmt};
 
 use serde::ser::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -32,7 +33,7 @@ impl std::error::Error for ValidationError {
     fn description(&self) -> &str {
         &self.code
     }
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         None
     }
 }
@@ -168,7 +169,7 @@ impl std::error::Error for ValidationErrors {
     fn description(&self) -> &str {
         "Validation failed"
     }
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         None
     }
 }

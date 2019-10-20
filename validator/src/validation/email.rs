@@ -1,4 +1,5 @@
 use idna::domain_to_ascii;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
 
@@ -120,7 +121,7 @@ mod tests {
         ];
 
         for (input, expected) in tests {
-            println!("{} - {}", input, expected);
+            // println!("{} - {}", input, expected);
             assert_eq!(validate_email(input), expected);
         }
     }

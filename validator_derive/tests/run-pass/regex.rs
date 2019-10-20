@@ -14,13 +14,13 @@ lazy_static! {
 
 #[derive(Validate)]
 struct Test {
-    #[validate(regex = "RE2")]
+    #[validate(regex = "crate::RE2")]
     s: String,
 }
 
 #[derive(Validate)]
 struct TestPath {
-    #[validate(regex = "::RE2")]
+    #[validate(regex = "crate::RE2")]
     s: String,
 }
 
