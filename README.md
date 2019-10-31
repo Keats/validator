@@ -7,6 +7,14 @@ Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow]
 
 It requires Rust 1.33.
 
+Installation:
+
+```toml
+[dependencies]
+validator = "0.10"
+validator_derive = "0.10"
+```
+
 A short example:
 
 ```rust
