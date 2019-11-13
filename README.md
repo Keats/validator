@@ -280,14 +280,12 @@ struct CategoryData {
 }
 ```
 
-The function mentioned should return a `Option<(String, String)>` where the tuple is (key error, error code)
-and will be called after validation is done for all fields.
-This means that the error can be reported on an existing field or on a new key.
+The function mentioned should return a `Result<(), ValidationError>` and will be called after validation is done for all fields.
 
 The `skip_on_field_errors` defaults to `true` if not present and will ensure that the function is not called
 if an error happened while validating the struct fields.
 
-Any error on the schema level validation will appear in the key `__all__` of the hashmap of errors.
+Any error on the struct level validation will appear in the key `__all__` of the hashmap of errors.
 
 ## Message and code
 
