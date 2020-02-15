@@ -18,6 +18,7 @@ lazy_static! {
 }
 
 /// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
+#[must_use]
 pub fn validate_email<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
@@ -46,6 +47,7 @@ where
 }
 
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
+#[must_use]
 fn validate_domain_part(domain_part: &str) -> bool {
     if EMAIL_DOMAIN_RE.is_match(domain_part) {
         return true;

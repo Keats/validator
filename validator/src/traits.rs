@@ -49,6 +49,7 @@ impl<'a, T> HasLen for &'a Vec<T> {
 /// Trait to implement if one wants to make the `contains` validator
 /// work for more types
 pub trait Contains {
+    #[must_use]
     fn has_element(&self, needle: &str) -> bool;
 }
 

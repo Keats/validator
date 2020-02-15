@@ -3,6 +3,7 @@ use crate::validation::Validator;
 /// Validates that a number is in the given range
 ///
 /// TODO: see if can be generic over the number type
+#[must_use]
 pub fn validate_range(range: Validator, val: f64) -> bool {
     match range {
         Validator::Range { min, max } => {

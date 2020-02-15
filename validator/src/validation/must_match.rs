@@ -1,5 +1,6 @@
 /// Validates that the 2 given fields match.
 /// Both fields are optionals
+#[must_use]
 pub fn validate_must_match<T: Eq>(a: T, b: T) -> bool {
     a == b
 }

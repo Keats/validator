@@ -6,6 +6,7 @@ use crate::validation::Validator;
 ///
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
+#[must_use]
 pub fn validate_length<T: HasLen>(length: Validator, val: T) -> bool {
     match length {
         Validator::Length { min, max, equal } => {

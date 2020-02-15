@@ -57,6 +57,7 @@ impl ValidationErrors {
     /// Returns a boolean indicating whether a validation result includes validation errors for a
     /// given field. May be used as a condition for performing nested struct validations on a field
     /// in the absence of field-level validation errors.
+    #[must_use]
     pub fn has_error(result: &Result<(), ValidationErrors>, field: &'static str) -> bool {
         match result {
             Ok(()) => false,
@@ -144,6 +145,7 @@ impl ValidationErrors {
         }
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -156,6 +158,7 @@ impl ValidationErrors {
         }
     }
 
+    #[must_use]
     fn contains_key(&self, field: &'static str) -> bool {
         self.0.contains_key(field)
     }
