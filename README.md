@@ -1,11 +1,11 @@
 # validator
 
-[![Build Status](https://travis-ci.org/Keats/validator.svg)](https://travis-ci.org/Keats/validator)
+![Build](https://github.com/Keats/validator/workflows/ci/badge.svg)
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 
-It requires Rust 1.33.
+It requires Rust 1.36.
 
 Installation:
 
