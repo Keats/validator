@@ -3,6 +3,7 @@ use std::net::IpAddr;
 use std::str::FromStr;
 
 /// Validates whether the given string is an IP V4
+#[must_use]
 pub fn validate_ip_v4<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
@@ -17,6 +18,7 @@ where
 }
 
 /// Validates whether the given string is an IP V6
+#[must_use]
 pub fn validate_ip_v6<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
@@ -31,6 +33,7 @@ where
 }
 
 /// Validates whether the given string is an IP
+#[must_use]
 pub fn validate_ip<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,

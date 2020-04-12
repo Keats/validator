@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use unic_ucd_common::control;
 
+#[must_use]
 pub fn validate_non_control_character<'a, T>(alphabetic: T) -> bool
 where
     T: Into<Cow<'a, str>> + Clone,

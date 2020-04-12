@@ -1,6 +1,7 @@
 use phonenumber;
 use std::borrow::Cow;
 
+#[must_use]
 pub fn validate_phone<'a, T>(phone_number: T) -> bool
 where
     T: Into<Cow<'a, str>>,

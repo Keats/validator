@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use card_validate::Validate as CardValidate;
 
+#[must_use]
 pub fn validate_credit_card<'a, T>(card: T) -> bool
 where
     T: Into<Cow<'a, str>>,

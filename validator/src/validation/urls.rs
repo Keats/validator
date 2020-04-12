@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use url::Url;
 
 /// Validates whether the string given is a url
+#[must_use]
 pub fn validate_url<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
