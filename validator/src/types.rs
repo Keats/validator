@@ -122,7 +122,7 @@ impl ValidationErrors {
     }
 
     /// Returns a map of only field-level validation errors found for the struct that was validated.
-    pub fn field_errors(&self) -> HashMap<&str, &Vec<ValidationError>> {
+    pub fn field_errors(&self) -> HashMap<&'static str, &Vec<ValidationError>> {
         self.0
             .iter()
             .filter_map(|(k, v)| {
