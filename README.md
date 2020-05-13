@@ -204,6 +204,7 @@ Examples:
 
 ```rust
 #[validate(must_match = "password2")]
+#[validate(must_match(other = "password2"))]
 ```
 
 ### contains
@@ -214,6 +215,7 @@ Examples:
 
 ```rust
 #[validate(contains = "gmail")]
+#[validate(contains(pattern = "gmail"))]
 ```
 
 ### regex
@@ -223,7 +225,12 @@ Tests whether the string matches the regex given. `regex` takes
 Examples:
 
 ```rust
-#[validate(regex = "ALLOWED_USERNAMES_RE")]
+lazy_static! {
+    static ref RE_TWO_CHARS: Regex = Regex::new(r"[a-z]{2}$").unwrap();
+}
+
+#[validate(regex = "RE_TWO_CHARS")]
+#[validate(regex(path = "RE_TWO_CHARS"))]
 ```
 
 ### credit\_card
@@ -252,6 +259,7 @@ Examples:
 ```rust
 #[validate(custom = "validate_something")]
 #[validate(custom = "::utils::validate_something")]
+#[validate(custom(function = "validate_something"))]
 ```
 
 ### nested
@@ -295,13 +303,35 @@ Each validator can take 2 optional arguments in addition to their own arguments:
 - `code`: each validator has a default error code (for example the `regex` validator code is `regex`) but it can be overriden
 if necessary, mainly needed for the `custom` validator
 
+Note that these arguments can't be applied to nested validation calls with `#[validate]`.
+
 For example, the following attributes all work:
 
 ```rust
-#[validate(email)]
-#[validate(email(code="mail"))]
-#[validate(email(message="Email %s is not valid"))]
-#[validate(email(code="mail", message="Email %s is not valid"))]
+// code attribute
+#[validate(email(code = "code_str"))]
+#[validate(credit_card(code = "code_str"))]
+#[validate(length(min = 5, max = 10, code = "code_str"))]
+
+#[validate(regex(path = "static_regex", code = "code_str"))]
+#[validate(custom(function = "custom_fn", code = "code_str"))]
+#[validate(contains(pattern = "pattern_str", code = "code_str"))]
+#[validate(must_match(other = "match_value", code = "code_str"))]
+
+// message attribute
+#[validate(url(message = "message_str"))]
+#[validate(length(min = 5, max = 10, message = "message_str"))]
+
+#[validate(regex(path = "static_regex", message = "message_str"))]
+#[validate(custom(function = "custom_fn", message = "message_str"))]
+#[validate(contains(pattern = "pattern_str", message = "message_str"))]
+#[validate(must_match(other = "match_value", message = "message_str"))]
+
+// both attributes
+#[validate(url(message = "message", code = "code_str"))]
+#[validate(email(code = "code_str", message = "message"))]
+#[validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
+
 ```
 
 ## Changelogs
