@@ -276,6 +276,9 @@ Tests whether the String has any utf-8 control caracters, fails validation if it
 To use this validator, you must enable the `unic` feature for the `validator_derive` crate.
 This validator doesn't take any arguments: `#[validate(non_control_character)]`;
 
+### required
+Tests whether the `Option<T>` field is `Some`;
+
 ## Struct level validation
 Often, some error validation can only be applied when looking at the full struct, here's how it works here:
 

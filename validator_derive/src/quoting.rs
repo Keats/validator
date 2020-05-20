@@ -465,6 +465,9 @@ pub fn quote_field_validation(
         Validator::NonControlCharacter => {
             validations.push(quote_non_control_character_validation(&field_quoter, validation))
         }
+        Validator::Required => {
+            validations.push(quote_required_validation(&field_quoter, validation))
+        }
     }
 }
 
@@ -500,4 +503,24 @@ pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_mac
     } else {
         quote!()
     }
+}
+
+pub fn quote_required_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
+    let field_name = &field_quoter.name;
+    let ident = &field_quoter.ident;
+    let validator_param = quote!(&self.#ident);
+
+    let quoted_error = quote_error(&validation);
+    let quoted = quote!(
+        if !::validator::validate_required(#validator_param) {
+            #quoted_error
+            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            errors.add(#field_name, err);
+        }
+    );
+
+    quoted
 }

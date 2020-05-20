@@ -10,6 +10,7 @@ pub mod non_control_character;
 #[cfg(feature = "phone")]
 pub mod phone;
 pub mod range;
+pub mod required;
 pub mod urls;
 
 /// Contains all the validators that can be used
@@ -45,6 +46,7 @@ pub enum Validator {
     Nested,
     #[cfg(feature = "unic")]
     NonControlCharacter,
+    Required,
 }
 
 impl Validator {
@@ -65,6 +67,7 @@ impl Validator {
             Validator::Nested => "nested",
             #[cfg(feature = "unic")]
             Validator::NonControlCharacter => "non_control_character",
+            Validator::Required => "required",
         }
     }
 }

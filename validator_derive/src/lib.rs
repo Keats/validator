@@ -287,6 +287,9 @@ fn find_validators_for_field(
                                             Validator::NonControlCharacter,
                                         ));
                                     }
+                                    "required" => {
+                                        validators.push(FieldValidation::new(Validator::Required));
+                                    }
                                     _ => panic!("Unexpected validator: {:?}", name.get_ident()),
                                 }
                             }
