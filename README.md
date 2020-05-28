@@ -279,6 +279,9 @@ This validator doesn't take any arguments: `#[validate(non_control_character)]`;
 ### required
 Tests whether the `Option<T>` field is `Some`;
 
+### required_nested
+Tests whether the `Option<T>` field is `Some` and performs validation as `nested` do;
+
 ## Struct level validation
 Often, some error validation can only be applied when looking at the full struct, here's how it works here:
 

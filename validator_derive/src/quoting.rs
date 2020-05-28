@@ -465,7 +465,7 @@ pub fn quote_field_validation(
         Validator::NonControlCharacter => {
             validations.push(quote_non_control_character_validation(&field_quoter, validation))
         }
-        Validator::Required => {
+        Validator::Required | Validator::RequiredNested => {
             validations.push(quote_required_validation(&field_quoter, validation))
         }
     }

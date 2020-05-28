@@ -47,6 +47,7 @@ pub enum Validator {
     #[cfg(feature = "unic")]
     NonControlCharacter,
     Required,
+    RequiredNested,
 }
 
 impl Validator {
@@ -68,6 +69,7 @@ impl Validator {
             #[cfg(feature = "unic")]
             Validator::NonControlCharacter => "non_control_character",
             Validator::Required => "required",
+            Validator::RequiredNested => "required_nested",
         }
     }
 }

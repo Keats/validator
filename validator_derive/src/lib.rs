@@ -290,6 +290,10 @@ fn find_validators_for_field(
                                     "required" => {
                                         validators.push(FieldValidation::new(Validator::Required));
                                     }
+                                    "required_nested" => {
+                                        validators.push(FieldValidation::new(Validator::Required));
+                                        validators.push(FieldValidation::new(Validator::Nested));
+                                    }
                                     _ => panic!("Unexpected validator: {:?}", name.get_ident()),
                                 }
                             }
