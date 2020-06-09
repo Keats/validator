@@ -2,7 +2,7 @@
 extern crate validator_derive;
 extern crate validator;
 
-use validator::Validate;
+use validator::{Validate, ValidationErrors};
 
 #[test]
 fn can_validate_range_ok() {
@@ -70,4 +70,23 @@ fn can_specify_message_for_range() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+}
+
+#[test]
+fn can_pass_reference_as_validate() {
+    // This tests that the blanket Validate implementation on
+    // `&T where T:Validate` works properly
+
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(range(min = 100))]
+        num_field: u32,
+    }
+
+    fn validate<T: Validate>(value: T) -> Result<(), ValidationErrors> {
+        value.validate()
+    }
+
+    let val = TestStruct { num_field: 10 };
+    validate(&val).unwrap_err();
 }

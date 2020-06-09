@@ -93,3 +93,9 @@ impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> 
 pub trait Validate {
     fn validate(&self) -> Result<(), ValidationErrors>;
 }
+
+impl<T: Validate> Validate for &T {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        T::validate(*self)
+    }
+}
