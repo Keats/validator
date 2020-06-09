@@ -89,4 +89,5 @@ fn can_pass_reference_as_validate() {
 
     let val = TestStruct { num_field: 10 };
     validate(&val).unwrap_err();
+    assert_eq!(val.num_field, 10);
 }
