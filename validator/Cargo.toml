@@ -1,6 +1,6 @@
 [package]
 name = "validator"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Vincent Prouillet <prouillet.vincent@gmail.com"]
 license = "MIT"
 description = "Common validation functions (email, url, length, ...) and trait - to be used with `validator_derive`"
