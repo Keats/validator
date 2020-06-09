@@ -109,7 +109,9 @@ struct SignupData {
     #[validate]
     contact_details: ContactDetails,
     #[validate]
-    preferences: Vec<Preference>
+    preferences: Vec<Preference>,
+    #[validate(required)]
+    allow_cookies: Option<bool>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -344,6 +346,11 @@ For example, the following attributes all work:
 
 ### validator
 
+#### 0.10.1 (2020/06/09)
+
+- Add a blanket Validate implementation for references
+- Add `Required` and `RequiredNested` validators
+
 #### 0.10.0 (2019/10/18)
 
 - Add `non_control_characters` validation
@@ -379,6 +386,9 @@ For example, the following attributes all work:
 
 ### validator_derive
 
+#### 0.10.1 (2020/06/09)
+
+- Handle `Required` and `RequiredNested` validators
 
 #### 0.10.0 (2019/10/18)
 
