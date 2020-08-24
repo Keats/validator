@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "validator",
+    "validator_derive",
+    "validator_types"
+]

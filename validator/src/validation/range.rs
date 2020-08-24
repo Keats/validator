@@ -32,13 +32,13 @@ mod tests {
     #[test]
     fn test_validate_range_ok() {
         let validator = Validator::Range { min: Some(0.0), max: Some(10.0) };
-        assert_eq!(validate_range(validator, 1 as f64), true);
+        assert_eq!(validate_range(validator, 1_f64), true);
     }
 
     #[test]
     fn test_validate_range_fail() {
         let validator = Validator::Range { min: Some(0.0), max: Some(10.0) };
-        assert_eq!(validate_range(validator, 20 as f64), false);
+        assert_eq!(validate_range(validator, 20_f64), false);
     }
 
     #[test]

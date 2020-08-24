@@ -1,7 +1,3 @@
-#![feature(attr_literals)]
-
-#[macro_use] extern crate validator_derive;
-extern crate validator;
 use validator::{Validate, ValidationError};
 
 #[derive(Validate)]
@@ -23,6 +19,5 @@ struct Test2 {
 fn hey2(_: &Test2) -> Result<(), ValidationError> {
     Ok(())
 }
-
 
 fn main() {}

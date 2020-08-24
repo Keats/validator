@@ -1,12 +1,6 @@
-extern crate regex;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-
-use validator::Validate;
+use lazy_static::lazy_static;
 use regex::Regex;
+use validator::Validate;
 
 lazy_static! {
     static ref RE2: Regex = Regex::new(r"^[a-z]{2}$").unwrap();

@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-
 use validator::{Validate, ValidationErrors};
 
 #[test]
@@ -51,8 +47,8 @@ fn can_specify_code_for_range() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "oops");
     assert_eq!(errs["val"][0].params["value"], 11);
-    assert_eq!(errs["val"][0].params["min"], 5f64);
-    assert_eq!(errs["val"][0].params["max"], 10f64);
+    assert_eq!(errs["val"][0].params["min"], 5.0);
+    assert_eq!(errs["val"][0].params["max"], 10.0);
 }
 
 #[test]

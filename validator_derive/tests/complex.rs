@@ -1,14 +1,6 @@
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-extern crate regex;
-extern crate serde_json;
-#[macro_use]
-extern crate lazy_static;
-
+use lazy_static::lazy_static;
 use regex::Regex;
+use serde::Deserialize;
 use std::collections::HashMap;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
@@ -300,10 +292,10 @@ fn test_works_with_none_values() {
     assert!(q.validate().is_ok());
 }
 
-fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
+fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
     F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
-    let errors = *errors.clone();
+    let errors = errors.clone();
     f(errors.errors().clone());
 }

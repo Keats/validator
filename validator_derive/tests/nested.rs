@@ -1,9 +1,4 @@
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-
+use serde::Serialize;
 use std::{borrow::Cow, collections::HashMap};
 use validator::{
     validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind, Validator,
@@ -345,10 +340,10 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
     let res = instance.validate();
 }
 
-fn unwrap_map<F>(errors: &Box<ValidationErrors>, f: F)
+fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
     F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
 {
-    let errors = *errors.clone();
+    let errors = errors.clone();
     f(errors.errors().clone());
 }

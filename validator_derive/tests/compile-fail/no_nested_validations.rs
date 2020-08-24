@@ -1,5 +1,3 @@
-#[macro_use] extern crate validator_derive;
-extern crate validator;
 use validator::Validate;
 
 #[derive(Validate)]
@@ -11,7 +9,7 @@ struct Test {
 }
 
 struct Nested {
-    value: String
+    value: String,
 }
 
 fn main() {}

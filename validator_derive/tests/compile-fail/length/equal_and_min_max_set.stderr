@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> $DIR/equal_and_min_max_set.rs:3:10
+  |
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |
+  = help: message: Invalid attribute #[validate] on field `s`: both `equal` and `min` or `max` have been set in `length` validator: probably a mistake
