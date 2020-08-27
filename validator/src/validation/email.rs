@@ -18,6 +18,9 @@ lazy_static! {
 }
 
 /// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
+///
+/// Quoted email addresses are not accepted as valid (eg. `"John..Doe"@example.com`).
+/// invalid.
 #[must_use]
 pub fn validate_email<'a, T>(val: T) -> bool
 where
