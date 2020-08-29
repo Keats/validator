@@ -9,7 +9,7 @@ lazy_static! {
     // Regex from the specs
     // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
     // It will mark esoteric email addresses like quoted string as invalid
-    static ref EMAIL_USER_RE: Regex = Regex::new(r"^(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*\z").unwrap();
+    static ref EMAIL_USER_RE: Regex = Regex::new(r"^(?i)[a-z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap();
     static ref EMAIL_DOMAIN_RE: Regex = Regex::new(
         r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
     ).unwrap();
@@ -17,10 +17,9 @@ lazy_static! {
     static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"(?i)\[([A-f0-9:\.]+)\]\z").unwrap();
 }
 
-/// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
-///
-/// Quoted email addresses are not accepted as valid (eg. `"John..Doe"@example.com`).
-/// invalid.
+/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
+/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
+/// that are unfamiliar to most users.
 #[must_use]
 pub fn validate_email<'a, T>(val: T) -> bool
 where
@@ -125,14 +124,6 @@ mod tests {
             ("a@[127.0.0.1]\n", false),
             // underscores are not allowed
             ("John.Doe@exam_ple.com", false),
-            // dots not as first or last char and not followed by dots
-            ("John..Doe@example.com", false),
-            (".John.Doe@example.com", false),
-            ("John.Doe.@example.com", false),
-            // Wikipedia lists them as as valid. https://en.wikipedia.org/wiki/Email_address
-            // (r#""John..Doe"@example.com"#, true),
-            // (r#"".John.Doe"@example.com"#, true),
-            // (r#""John.Doe."@example.com"#, true),
         ];
 
         for (input, expected) in tests {
