@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/no_validations.rs:3:10
+error: Invalid attribute #[validate] on field `s`: it needs at least one validator
+ --> $DIR/no_validations.rs:5:5
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Invalid attribute #[validate] on field `s`: it needs at least one validator
+5 |     #[validate()]
+  |     ^^^^^^^^^^^^^

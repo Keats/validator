@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/wrong_type.rs:3:10
+error: Validator `range` can only be used on number types but found `String` for field `s`
+ --> $DIR/wrong_type.rs:6:8
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Validator `range` can only be used on number types but found `String` for field `s`
+6 |     s: String,
+  |        ^^^^^^

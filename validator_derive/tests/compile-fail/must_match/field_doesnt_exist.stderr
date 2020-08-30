@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/field_doesnt_exist.rs:3:10
+error: Invalid argument for `must_match` validator of field `password`: the other field doesn't exist in struct
+ --> $DIR/field_doesnt_exist.rs:5:5
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Invalid argument for `must_match` validator of field `password`: the other field doesn't exist in struct
+5 |     #[validate(must_match = "password2")]
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

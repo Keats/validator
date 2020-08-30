@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/field_type_doesnt_match.rs:3:10
+error: Invalid argument for `must_match` validator of field `password`: types of field can't match
+ --> $DIR/field_type_doesnt_match.rs:5:5
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Invalid argument for `must_match` validator of field `password`: types of field can't match
+5 |     #[validate(must_match = "password2")]
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
