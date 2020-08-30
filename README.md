@@ -11,8 +11,7 @@ Installation:
 
 ```toml
 [dependencies]
-validator = "0.10"
-validator_derive = "0.10"
+validator = { version = "0.10", feature = ["derive"] }
 ```
 
 A short example:
