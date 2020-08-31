@@ -30,7 +30,11 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let fields = match ast.data {
         syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
             if fields.iter().any(|field| field.ident.is_none()) {
-                abort!(fields.span(), "struct has unnamed fields");
+                abort!(
+                    fields.span(),
+                    "struct has unnamed fields";
+                    help = "#[derive(Validate)] can only be used on structs with named fields";
+                );
             }
             fields.iter().cloned().collect::<Vec<_>>()
         }
@@ -203,12 +207,16 @@ fn find_fields_type(fields: &[syn::Field]) -> HashMap<String, String> {
                 }
                 name
             }
-            _ => abort!(
-                field.ty.span(),
-                "Type `{:?}` of field `{}` not supported",
-                field.ty,
-                field_ident
-            ),
+            _ => {
+                let mut field_type = proc_macro2::TokenStream::new();
+                field.ty.to_tokens(&mut field_type);
+                abort!(
+                    field.ty.span(),
+                    "Type `{}` of field `{}` not supported",
+                    field_type,
+                    field_ident
+                )
+            }
         };
 
         //println!("{:?}", field_type);
@@ -305,11 +313,11 @@ fn find_validators_for_field(
                                         validators.push(FieldValidation::new(Validator::Required));
                                         validators.push(FieldValidation::new(Validator::Nested));
                                     }
-                                    _ => abort!(
-                                        name.span(),
-                                        "Unexpected validator: {:?}",
-                                        name.get_ident()
-                                    ),
+                                    _ => {
+                                        let mut ident = proc_macro2::TokenStream::new();
+                                        name.to_tokens(&mut ident);
+                                        abort!(name.span(), "Unexpected validator: {}", ident)
+                                    }
                                 }
                             }
                             // custom, contains, must_match, regex
@@ -346,7 +354,7 @@ fn find_validators_for_field(
                                         };
                                     }
                                     v => abort!(
-                                        item.span(),
+                                        path.span(),
                                         "unexpected name value validator: {:?}",
                                         v
                                     ),
@@ -425,7 +433,7 @@ fn find_validators_for_field(
                                         }
                                         validators.push(validation);
                                     }
-                                    v => abort!(item.span(), "unexpected list validator: {:?}", v),
+                                    v => abort!(path.span(), "unexpected list validator: {:?}", v),
                                 }
                             }
                         },

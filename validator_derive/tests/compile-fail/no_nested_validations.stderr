@@ -9,5 +9,5 @@ error[E0599]: no method named `validate` found for struct `Nested` in the curren
   |
   = help: items from traits can only be used if the trait is implemented and in scope
   = note: the following trait defines an item `validate`, perhaps you need to implement it:
-          candidate #1: `validator::Validate`
+          candidate #1: `Validate`
   = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)

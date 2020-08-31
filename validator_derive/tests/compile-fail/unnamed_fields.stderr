@@ -1,0 +1,7 @@
+error: struct has unnamed fields
+ --> $DIR/unnamed_fields.rs:4:19
+  |
+4 | struct TupleStruct(String);
+  |                   ^^^^^^^^
+  |
+  = help: #[derive(Validate)] can only be used on structs with named fields

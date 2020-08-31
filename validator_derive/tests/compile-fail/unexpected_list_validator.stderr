@@ -1,0 +1,5 @@
+error: unexpected list validator: "not_a_list"
+ --> $DIR/unexpected_list_validator.rs:5:16
+  |
+5 |     #[validate(not_a_list(a, b, c))]
+  |                ^^^^^^^^^^
