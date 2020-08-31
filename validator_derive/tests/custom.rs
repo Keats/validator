@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-
 use validator::{Validate, ValidationError};
 
 fn valid_custom_fn(_: &str) -> Result<(), ValidationError> {

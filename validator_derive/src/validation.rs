@@ -1,6 +1,4 @@
-use syn;
-
-use validator::Validator;
+use validator_types::Validator;
 
 use crate::lit::*;
 
@@ -25,10 +23,7 @@ impl FieldValidation {
     }
 }
 
-pub fn extract_length_validation(
-    field: String,
-    meta_items: &Vec<syn::NestedMeta>,
-) -> FieldValidation {
+pub fn extract_length_validation(field: String, meta_items: &[syn::NestedMeta]) -> FieldValidation {
     let mut min = None;
     let mut max = None;
     let mut equal = None;
@@ -92,10 +87,7 @@ pub fn extract_length_validation(
     }
 }
 
-pub fn extract_range_validation(
-    field: String,
-    meta_items: &Vec<syn::NestedMeta>,
-) -> FieldValidation {
+pub fn extract_range_validation(field: String, meta_items: &[syn::NestedMeta]) -> FieldValidation {
     let mut min = None;
     let mut max = None;
 
@@ -152,7 +144,7 @@ pub fn extract_range_validation(
 pub fn extract_argless_validation(
     validator_name: String,
     field: String,
-    meta_items: &Vec<syn::NestedMeta>,
+    meta_items: &[syn::NestedMeta],
 ) -> FieldValidation {
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
 
@@ -198,7 +190,7 @@ pub fn extract_one_arg_validation(
     val_name: &str,
     validator_name: String,
     field: String,
-    meta_items: &Vec<syn::NestedMeta>,
+    meta_items: &[syn::NestedMeta],
 ) -> FieldValidation {
     let mut value = None;
     let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
@@ -256,7 +248,7 @@ pub fn extract_one_arg_validation(
 fn extract_message_and_code(
     validator_name: &str,
     field: &str,
-    meta_items: &Vec<syn::NestedMeta>,
+    meta_items: &[syn::NestedMeta],
 ) -> (Option<String>, Option<String>) {
     let mut message = None;
     let mut code = None;

@@ -1,12 +1,10 @@
 #![recursion_limit = "128"]
-extern crate proc_macro;
-
 use if_chain::if_chain;
 use quote::quote;
 use quote::ToTokens;
 use std::collections::HashMap;
 use syn::parse_quote;
-use validator::Validator;
+use validator_types::Validator;
 
 mod asserts;
 mod lit;
@@ -31,7 +29,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
             if fields.iter().any(|field| field.ident.is_none()) {
                 panic!("struct has unnamed fields");
             }
-            fields.iter().cloned().collect()
+            fields.iter().cloned().collect::<Vec<_>>()
         }
         _ => panic!("#[derive(Validate)] can only be used with structs"),
     };
@@ -89,7 +87,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
 }
 
 /// Find if a struct has some schema validation and returns the info if so
-fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaValidation> {
+fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValidation> {
     let error = |msg: &str| -> ! {
         panic!("Invalid schema level validation: {}", msg);
     };
@@ -182,7 +180,7 @@ fn find_struct_validation(struct_attrs: &Vec<syn::Attribute>) -> Option<SchemaVa
 
 /// Find the types (as string) for each field of the struct
 /// Needed for the `must_match` filter
-fn find_fields_type(fields: &Vec<syn::Field>) -> HashMap<String, String> {
+fn find_fields_type(fields: &[syn::Field]) -> HashMap<String, String> {
     let mut types = HashMap::new();
 
     for field in fields {
@@ -245,7 +243,7 @@ fn find_validators_for_field(
 
         match attr.parse_meta() {
             Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) => {
-                let meta_items = nested.iter().collect();
+                let meta_items = nested.iter().collect::<Vec<_>>();
                 // original name before serde rename
                 if attr.path == parse_quote!(serde) {
                     if let Some(s) = find_original_field_name(&meta_items) {
@@ -335,7 +333,7 @@ fn find_validators_for_field(
                             }
                             // Validators with several args
                             syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) => {
-                                let meta_items = nested.iter().cloned().collect();
+                                let meta_items = nested.iter().cloned().collect::<Vec<_>>();
                                 let ident = path.get_ident().unwrap();
                                 match ident.to_string().as_ref() {
                                     "length" => {
@@ -432,7 +430,7 @@ fn find_validators_for_field(
 ///
 /// For example a JS frontend might send camelCase fields and Rust converts them to snake_case
 /// but we want to send the errors back with the original name
-fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String> {
+fn find_original_field_name(meta_items: &[&syn::NestedMeta]) -> Option<String> {
     let mut original_name = None;
 
     for meta_item in meta_items {
@@ -446,7 +444,7 @@ fn find_original_field_name(meta_items: &Vec<&syn::NestedMeta>) -> Option<String
                     }
                 }
                 syn::Meta::List(syn::MetaList { ref nested, .. }) => {
-                    return find_original_field_name(&nested.iter().collect());
+                    return find_original_field_name(&nested.iter().collect::<Vec<_>>());
                 }
             },
             _ => unreachable!(),

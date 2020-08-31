@@ -24,7 +24,7 @@ impl ValidationError {
 }
 
 impl fmt::Display for ValidationError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "Validation error: {} [{:?}]", self.code, self.params)
     }
 }
@@ -178,7 +178,7 @@ impl std::error::Error for ValidationErrors {
 }
 
 impl fmt::Display for ValidationErrors {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, fmt)
     }
 }

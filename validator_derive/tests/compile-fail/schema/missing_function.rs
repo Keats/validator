@@ -1,5 +1,3 @@
-#[macro_use] extern crate validator_derive;
-extern crate validator;
 use validator::Validate;
 
 #[derive(Validate)]
@@ -13,6 +11,5 @@ struct Test {
 fn hey(_: &Test) -> Option<(String, String)> {
     None
 }
-
 
 fn main() {}

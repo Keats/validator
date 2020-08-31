@@ -20,3 +20,6 @@ pub use validation::Validator;
 
 pub use traits::{Contains, HasLen, Validate};
 pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
+
+#[cfg(feature = "derive")]
+pub use validator_derive::Validate;

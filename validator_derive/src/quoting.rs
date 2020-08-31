@@ -1,7 +1,6 @@
 use proc_macro2::{self, Span};
 use quote::quote;
-use syn;
-use validator::Validator;
+use validator_types::Validator;
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
 use crate::lit::{option_f64_to_tokens, option_u64_to_tokens};

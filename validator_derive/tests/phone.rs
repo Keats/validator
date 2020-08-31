@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate validator_derive;
-extern crate validator;
-
 use validator::Validate;
 
 #[cfg(feature = "phone")]

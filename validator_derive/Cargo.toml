@@ -13,23 +13,23 @@ edition = "2018"
 proc-macro = true
 
 [features]
-phone = ["validator/phone"]
-card = ["validator/card"]
-unic = ["validator/unic"]
+phone = ["validator_types/phone"]
+card = ["validator_types/card"]
+unic = ["validator_types/unic"]
 
 [dependencies]
 syn = { version = "1", features = ["extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
 if_chain = "1"
-validator = { version = "0.10", path = "../validator"}
+validator_types = { version = "0.10", path = "../validator_types" }
 regex = "1"
 lazy_static = "1"
 
 [dev-dependencies]
-serde = "1.0"
-serde_derive = "1.0"
+validator = { version = "0.10.1", path = "../validator", features = ["phone", "card", "unic", "derive"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-compiletest_rs = "0.5"
+trybuild = "1.0"
 
 

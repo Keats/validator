@@ -1,0 +1,19 @@
+[package]
+name = "validator_types"
+version = "0.10.1"
+authors = ["Vincent Prouillet <prouillet.vincent@gmail.com"]
+license = "MIT"
+description = "Basic type for validator and validator_derive"
+homepage = "https://github.com/Keats/validator"
+repository = "https://github.com/Keats/validator"
+keywords = ["validation", "api", "validator"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+phone = []
+card = []
+unic = []
+
+[dependencies]

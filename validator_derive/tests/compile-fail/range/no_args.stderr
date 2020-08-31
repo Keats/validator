@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> $DIR/no_args.rs:3:10
+  |
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |
+  = help: message: Invalid attribute #[validate] on field `s`: Validator `range` requires at least 1 argument out of `min` and `max`

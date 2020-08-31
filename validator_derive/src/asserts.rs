@@ -6,7 +6,7 @@ lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
 }
 
-pub static NUMBER_TYPES: [&'static str; 36] = [
+pub static NUMBER_TYPES: [&str; 36] = [
     "usize",
     "u8",
     "u16",

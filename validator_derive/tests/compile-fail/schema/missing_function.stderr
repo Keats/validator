@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> $DIR/missing_function.rs:3:10
+  |
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |
+  = help: message: Invalid schema level validation: `function` is required
