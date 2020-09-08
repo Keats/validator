@@ -21,6 +21,7 @@ unic = ["validator_types/unic"]
 syn = { version = "1", features = ["extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
+proc-macro-error = "1"
 if_chain = "1"
 validator_types = { version = "0.10", path = "../validator_types" }
 regex = "1"

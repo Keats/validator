@@ -1,6 +1,9 @@
+use proc_macro_error::abort;
 use validator_types::Validator;
 
 use crate::lit::*;
+use proc_macro2::Span;
+use syn::spanned::Spanned;
 
 #[derive(Debug)]
 pub struct SchemaValidation {
@@ -23,15 +26,19 @@ impl FieldValidation {
     }
 }
 
-pub fn extract_length_validation(field: String, meta_items: &[syn::NestedMeta]) -> FieldValidation {
+pub fn extract_length_validation(
+    field: String,
+    attr: &syn::Attribute,
+    meta_items: &[syn::NestedMeta],
+) -> FieldValidation {
     let mut min = None;
     let mut max = None;
     let mut equal = None;
 
     let (message, code) = extract_message_and_code("length", &field, meta_items);
 
-    let error = |msg: &str| -> ! {
-        panic!("Invalid attribute #[validate] on field `{}`: {}", field, msg);
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
     };
 
     for meta_item in meta_items {
@@ -43,40 +50,47 @@ pub fn extract_length_validation(field: String, meta_items: &[syn::NestedMeta]) 
                         "min" => {
                             min = match lit_to_int(lit) {
                                 Some(s) => Some(s),
-                                None => error("invalid argument type for `min` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `min` of `length` validator: only integers are allowed"),
                             };
                         },
                         "max" => {
                             max = match lit_to_int(lit) {
                                 Some(s) => Some(s),
-                                None => error("invalid argument type for `max` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `max` of `length` validator: only integers are allowed"),
                             };
                         },
                         "equal" => {
                             equal = match lit_to_int(lit) {
                                 Some(s) => Some(s),
-                                None => error("invalid argument type for `equal` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `equal` of `length` validator: only integers are allowed"),
                             };
                         },
-                        v => error(&format!(
+                        v => error(path.span(), &format!(
                             "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
                             v
                         ))
                     }
             } else {
-                panic!(
-                    "unexpected item {:?} while parsing `length` validator of field {}",
-                    item, field
+                error(
+                    item.span(),
+                    &format!(
+                        "unexpected item {:?} while parsing `length` validator of field {}",
+                        item, field
+                    ),
                 )
             }
         }
+
+        if equal.is_some() && (min.is_some() || max.is_some()) {
+            error(meta_item.span(), "both `equal` and `min` or `max` have been set in `length` validator: probably a mistake");
+        }
     }
 
-    if equal.is_some() && (min.is_some() || max.is_some()) {
-        error("both `equal` and `min` or `max` have been set in `length` validator: probably a mistake");
-    }
     if min.is_none() && max.is_none() && equal.is_none() {
-        error("Validator `length` requires at least 1 argument out of `min`, `max` and `equal`");
+        error(
+            attr.span(),
+            "Validator `length` requires at least 1 argument out of `min`, `max` and `equal`",
+        );
     }
 
     let validator = Validator::Length { min, max, equal };
@@ -87,14 +101,18 @@ pub fn extract_length_validation(field: String, meta_items: &[syn::NestedMeta]) 
     }
 }
 
-pub fn extract_range_validation(field: String, meta_items: &[syn::NestedMeta]) -> FieldValidation {
+pub fn extract_range_validation(
+    field: String,
+    attr: &syn::Attribute,
+    meta_items: &[syn::NestedMeta],
+) -> FieldValidation {
     let mut min = None;
     let mut max = None;
 
     let (message, code) = extract_message_and_code("range", &field, meta_items);
 
-    let error = |msg: &str| -> ! {
-        panic!("Invalid attribute #[validate] on field `{}`: {}", field, msg);
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
     };
 
     for meta_item in meta_items {
@@ -107,29 +125,33 @@ pub fn extract_range_validation(field: String, meta_items: &[syn::NestedMeta]) -
                         "min" => {
                             min = match lit_to_float(lit) {
                                 Some(s) => Some(s),
-                                None => error("invalid argument type for `min` of `range` validator: only integers are allowed")
+                                None => error(lit.span(), "invalid argument type for `min` of `range` validator: only integers are allowed")
                             };
                         }
                         "max" => {
                             max = match lit_to_float(lit) {
                                 Some(s) => Some(s),
-                                None => error("invalid argument type for `max` of `range` validator: only integers are allowed")
+                                None => error(lit.span(), "invalid argument type for `max` of `range` validator: only integers are allowed")
                             };
                         }
-                        v => error(&format!(
+                        v => error(path.span(), &format!(
                             "unknown argument `{}` for validator `range` (it only has `min`, `max`)",
                             v
                         )),
                     }
                 }
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
+                _ => abort!(
+                    item.span(),
+                    "unexpected item {:?} while parsing `range` validator",
+                    item
+                ),
             },
             _ => unreachable!(),
         }
     }
 
     if min.is_none() && max.is_none() {
-        error("Validator `range` requires at least 1 argument out of `min` and `max`");
+        error(attr.span(), "Validator `range` requires at least 1 argument out of `min` and `max`");
     }
 
     let validator = Validator::Range { min, max };
@@ -155,13 +177,20 @@ pub fn extract_argless_validation(
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
-                        v => panic!(
+                        v => abort!(
+                            meta_item.span(),
                             "Unknown argument `{}` for validator `{}` on field `{}`",
-                            v, validator_name, field
+                            v,
+                            validator_name,
+                            field
                         ),
                     }
                 }
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
+                _ => abort!(
+                    meta_item.span(),
+                    "unexpected item {:?} while parsing `range` validator",
+                    item
+                ),
             },
             _ => unreachable!(),
         }
@@ -205,29 +234,40 @@ pub fn extract_one_arg_validation(
                         v if v == val_name => {
                             value = match lit_to_string(lit) {
                                 Some(s) => Some(s),
-                                None => panic!(
+                                None => abort!(
+                                    item.span(),
                                     "Invalid argument type for `{}` for validator `{}` on field `{}`: only a string is allowed",
                                     val_name, validator_name, field
                                 ),
                             };
                         }
-                        v => panic!(
+                        v => abort!(
+                            path.span(),
                             "Unknown argument `{}` for validator `{}` on field `{}`",
-                            v, validator_name, field
+                            v,
+                            validator_name,
+                            field
                         ),
                     }
                 }
-                _ => panic!("unexpected item {:?} while parsing `range` validator", item),
+                _ => abort!(
+                    item.span(),
+                    "unexpected item {:?} while parsing `range` validator",
+                    item
+                ),
             },
             _ => unreachable!(),
         }
-    }
 
-    if value.is_none() {
-        panic!(
-            "Missing argument `{}` for validator `{}` on field `{}`",
-            val_name, validator_name, field
-        );
+        if value.is_none() {
+            abort!(
+                meta_item.span(),
+                "Missing argument `{}` for validator `{}` on field `{}`",
+                val_name,
+                validator_name,
+                field
+            );
+        }
     }
 
     let validator = match validator_name.as_ref() {
@@ -265,7 +305,8 @@ fn extract_message_and_code(
                 "code" => {
                     code = match lit_to_string(lit) {
                                 Some(s) => Some(s),
-                                None => panic!(
+                                None => abort!(
+                                    meta_item.span(),
                                     "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),
@@ -274,7 +315,8 @@ fn extract_message_and_code(
                 "message" => {
                     message = match lit_to_string(lit) {
                                 Some(s) => Some(s),
-                                None => panic!(
+                                None => abort!(
+                                    meta_item.span(),
                                     "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),

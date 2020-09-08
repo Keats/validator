@@ -1,9 +1,8 @@
 use validator::Validate;
 
 #[derive(Validate)]
-struct Test {
-    #[validate(length())]
-    s: usize,
+struct Values {
+    values: [u8; 10],
 }
 
 fn main() {}

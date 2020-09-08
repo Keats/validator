@@ -1,5 +1,12 @@
 use validator::{Validate, ValidationErrors};
 
+// Loose floating point comparison using EPSILON error bound
+macro_rules! assert_float {
+    ($e1:expr, $e2:expr) => {
+        assert!(($e2 - $e1).abs() < f64::EPSILON);
+    };
+}
+
 #[test]
 fn can_validate_range_ok() {
     #[derive(Debug, Validate)]
@@ -47,8 +54,8 @@ fn can_specify_code_for_range() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "oops");
     assert_eq!(errs["val"][0].params["value"], 11);
-    assert_eq!(errs["val"][0].params["min"], 5.0);
-    assert_eq!(errs["val"][0].params["max"], 10.0);
+    assert_float!(errs["val"][0].params["min"].as_f64().unwrap(), 5.0);
+    assert_float!(errs["val"][0].params["max"].as_f64().unwrap(), 10.0);
 }
 
 #[test]

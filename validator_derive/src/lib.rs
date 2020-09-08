@@ -1,9 +1,11 @@
 #![recursion_limit = "128"]
 use if_chain::if_chain;
+use proc_macro2::Span;
+use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use quote::ToTokens;
 use std::collections::HashMap;
-use syn::parse_quote;
+use syn::{parse_quote, spanned::Spanned};
 use validator_types::Validator;
 
 mod asserts;
@@ -17,6 +19,7 @@ use quoting::{quote_field_validation, quote_schema_validation, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
+#[proc_macro_error]
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_validate(&ast).into()
@@ -27,11 +30,15 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let fields = match ast.data {
         syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
             if fields.iter().any(|field| field.ident.is_none()) {
-                panic!("struct has unnamed fields");
+                abort!(
+                    fields.span(),
+                    "struct has unnamed fields";
+                    help = "#[derive(Validate)] can only be used on structs with named fields";
+                );
             }
             fields.iter().cloned().collect::<Vec<_>>()
         }
-        _ => panic!("#[derive(Validate)] can only be used with structs"),
+        _ => abort!(ast.span(), "#[derive(Validate)] can only be used with structs"),
     };
 
     let mut validations = vec![];
@@ -88,8 +95,8 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
 
 /// Find if a struct has some schema validation and returns the info if so
 fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValidation> {
-    let error = |msg: &str| -> ! {
-        panic!("Invalid schema level validation: {}", msg);
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(span, "Invalid schema level validation: {}", msg);
     };
 
     for attr in struct_attrs {
@@ -105,7 +112,7 @@ fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValid
             then {
                 let ident = path.get_ident().unwrap();
                 if ident != "schema" {
-                    error("Only `schema` is allowed as validator on a struct")
+                    error(attr.span(), "Only `schema` is allowed as validator on a struct")
                 }
 
                 let mut function = String::new();
@@ -124,41 +131,41 @@ fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValid
                                 "function" => {
                                     function = match lit_to_string(lit) {
                                         Some(s) => s,
-                                        None => error("invalid argument type for `function` \
+                                        None => error(lit.span(), "invalid argument type for `function` \
                                         : only a string is allowed"),
                                     };
                                 },
                                 "skip_on_field_errors" => {
                                     skip_on_field_errors = match lit_to_bool(lit) {
                                         Some(s) => s,
-                                        None => error("invalid argument type for `skip_on_field_errors` \
+                                        None => error(lit.span(), "invalid argument type for `skip_on_field_errors` \
                                         : only a bool is allowed"),
                                     };
                                 },
                                 "code" => {
                                     code = match lit_to_string(lit) {
                                         Some(s) => Some(s),
-                                        None => error("invalid argument type for `code` \
+                                        None => error(lit.span(), "invalid argument type for `code` \
                                         : only a string is allowed"),
                                     };
                                 },
                                 "message" => {
                                     message = match lit_to_string(lit) {
                                         Some(s) => Some(s),
-                                        None => error("invalid argument type for `message` \
+                                        None => error(lit.span(), "invalid argument type for `message` \
                                         : only a string is allowed"),
                                     };
                                 },
-                                _ => error("Unknown argument")
+                                _ => error(lit.span(), "Unknown argument")
                             }
                         } else {
-                            error("Unexpected args")
+                            error(arg.span(), "Unexpected args")
                         }
                     }
                 }
 
                 if function == "" {
-                    error("`function` is required");
+                    error(path.span(), "`function` is required");
                 }
 
                 return Some(
@@ -170,7 +177,7 @@ fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValid
                     }
                 );
             } else {
-                error("Unexpected struct validator")
+                error(attr.span(), "Unexpected struct validator")
             }
         }
     }
@@ -200,7 +207,16 @@ fn find_fields_type(fields: &[syn::Field]) -> HashMap<String, String> {
                 }
                 name
             }
-            _ => panic!("Type `{:?}` of field `{}` not supported", field.ty, field_ident),
+            _ => {
+                let mut field_type = proc_macro2::TokenStream::new();
+                field.ty.to_tokens(&mut field_type);
+                abort!(
+                    field.ty.span(),
+                    "Type `{}` of field `{}` not supported",
+                    field_type,
+                    field_ident
+                )
+            }
         };
 
         //println!("{:?}", field_type);
@@ -219,8 +235,9 @@ fn find_validators_for_field(
     let rust_ident = field.ident.clone().unwrap().to_string();
     let mut field_ident = field.ident.clone().unwrap().to_string();
 
-    let error = |msg: &str| -> ! {
-        panic!(
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(
+            span,
             "Invalid attribute #[validate] on field `{}`: {}",
             field.ident.clone().unwrap().to_string(),
             msg
@@ -260,27 +277,31 @@ fn find_validators_for_field(
                             syn::Meta::Path(ref name) => {
                                 match name.get_ident().unwrap().to_string().as_ref() {
                                     "email" => {
-                                        assert_string_type("email", field_type);
+                                        assert_string_type("email", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Email));
                                     }
                                     "url" => {
-                                        assert_string_type("url", field_type);
+                                        assert_string_type("url", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Url));
                                     }
                                     #[cfg(feature = "phone")]
                                     "phone" => {
-                                        assert_string_type("phone", field_type);
+                                        assert_string_type("phone", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Phone));
                                     }
                                     #[cfg(feature = "card")]
                                     "credit_card" => {
-                                        assert_string_type("credit_card", field_type);
+                                        assert_string_type("credit_card", field_type, &field.ty);
                                         validators
                                             .push(FieldValidation::new(Validator::CreditCard));
                                     }
                                     #[cfg(feature = "unic")]
                                     "non_control_character" => {
-                                        assert_string_type("non_control_character", field_type);
+                                        assert_string_type(
+                                            "non_control_character",
+                                            field_type,
+                                            &field.ty,
+                                        );
                                         validators.push(FieldValidation::new(
                                             Validator::NonControlCharacter,
                                         ));
@@ -292,7 +313,11 @@ fn find_validators_for_field(
                                         validators.push(FieldValidation::new(Validator::Required));
                                         validators.push(FieldValidation::new(Validator::Nested));
                                     }
-                                    _ => panic!("Unexpected validator: {:?}", name.get_ident()),
+                                    _ => {
+                                        let mut ident = proc_macro2::TokenStream::new();
+                                        name.to_tokens(&mut ident);
+                                        abort!(name.span(), "Unexpected validator: {}", ident)
+                                    }
                                 }
                             }
                             // custom, contains, must_match, regex
@@ -304,31 +329,35 @@ fn find_validators_for_field(
                                     "custom" => {
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom(s))),
-                                            None => error("invalid argument for `custom` validator: only strings are allowed"),
+                                            None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };
                                     }
                                     "contains" => {
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Contains(s))),
-                                            None => error("invalid argument for `contains` validator: only strings are allowed"),
+                                            None => error(lit.span(), "invalid argument for `contains` validator: only strings are allowed"),
                                         };
                                     }
                                     "regex" => {
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Regex(s))),
-                                            None => error("invalid argument for `regex` validator: only strings are allowed"),
+                                            None => error(lit.span(), "invalid argument for `regex` validator: only strings are allowed"),
                                         };
                                     }
                                     "must_match" => {
                                         match lit_to_string(lit) {
                                             Some(s) => {
-                                                assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s));
+                                                assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s), &attr);
                                                 validators.push(FieldValidation::new(Validator::MustMatch(s)));
                                             },
-                                            None => error("invalid argument for `must_match` validator: only strings are allowed"),
+                                            None => error(lit.span(), "invalid argument for `must_match` validator: only strings are allowed"),
                                         };
                                     }
-                                    v => panic!("unexpected name value validator: {:?}", v),
+                                    v => abort!(
+                                        path.span(),
+                                        "unexpected name value validator: {:?}",
+                                        v
+                                    ),
                                 };
                             }
                             // Validators with several args
@@ -337,16 +366,18 @@ fn find_validators_for_field(
                                 let ident = path.get_ident().unwrap();
                                 match ident.to_string().as_ref() {
                                     "length" => {
-                                        assert_has_len(rust_ident.clone(), field_type);
+                                        assert_has_len(rust_ident.clone(), field_type, &field.ty);
                                         validators.push(extract_length_validation(
                                             rust_ident.clone(),
+                                            attr,
                                             &meta_items,
                                         ));
                                     }
                                     "range" => {
-                                        assert_has_range(rust_ident.clone(), field_type);
+                                        assert_has_range(rust_ident.clone(), field_type, &field.ty);
                                         validators.push(extract_range_validation(
                                             rust_ident.clone(),
+                                            attr,
                                             &meta_items,
                                         ));
                                     }
@@ -397,11 +428,12 @@ fn find_validators_for_field(
                                                 rust_ident.clone(),
                                                 field_type,
                                                 field_types.get(t2),
+                                                &attr,
                                             );
                                         }
                                         validators.push(validation);
                                     }
-                                    v => panic!("unexpected list validator: {:?}", v),
+                                    v => abort!(path.span(), "unexpected list validator: {:?}", v),
                                 }
                             }
                         },
@@ -410,16 +442,16 @@ fn find_validators_for_field(
                 }
             }
             Ok(syn::Meta::Path(_)) => validators.push(FieldValidation::new(Validator::Nested)),
-            Ok(syn::Meta::NameValue(_)) => panic!("Unexpected name=value argument"),
+            Ok(syn::Meta::NameValue(_)) => abort!(attr.span(), "Unexpected name=value argument"),
             Err(e) => unreachable!(
                 "Got something other than a list of attributes while checking field `{}`: {:?}",
                 field_ident, e
             ),
         }
-    }
 
-    if has_validate && validators.is_empty() {
-        error("it needs at least one validator");
+        if has_validate && validators.is_empty() {
+            error(attr.span(), "it needs at least one validator");
+        }
     }
 
     (field_ident, validators)

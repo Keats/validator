@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/custom_not_string.rs:3:10
+error: Invalid attribute #[validate] on field `s`: invalid argument for `custom` validator: only strings are allowed
+ --> $DIR/custom_not_string.rs:5:25
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Invalid attribute #[validate] on field `s`: invalid argument for `custom` validator: only strings are allowed
+5 |     #[validate(custom = 2)]
+  |                         ^

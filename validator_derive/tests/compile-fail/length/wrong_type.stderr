@@ -1,7 +1,5 @@
-error: proc-macro derive panicked
- --> $DIR/wrong_type.rs:3:10
+error: Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `usize` for field `s`
+ --> $DIR/wrong_type.rs:6:8
   |
-3 | #[derive(Validate)]
-  |          ^^^^^^^^
-  |
-  = help: message: Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `usize` for field `s`
+6 |     s: usize,
+  |        ^^^^^

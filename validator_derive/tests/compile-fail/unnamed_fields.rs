@@ -1,9 +1,6 @@
 use validator::Validate;
 
 #[derive(Validate)]
-struct Test {
-    #[validate(length())]
-    s: usize,
-}
+struct TupleStruct(String);
 
 fn main() {}

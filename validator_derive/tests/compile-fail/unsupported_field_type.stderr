@@ -1,0 +1,5 @@
+error: Type `[u8 ; 10]` of field `values` not supported
+ --> $DIR/unsupported_field_type.rs:5:13
+  |
+5 |     values: [u8; 10],
+  |             ^^^^^^^^
