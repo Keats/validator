@@ -344,6 +344,10 @@ For example, the following attributes all work:
 
 ### validator
 
+## 0.11.0 (unreleased)
+
+- Add a `derive` feature so you don't need to add `validator_derive` to your `Cargo.toml`
+
 #### 0.10.1 (2020/06/09)
 
 - Add a blanket Validate implementation for references
@@ -383,6 +387,10 @@ For example, the following attributes all work:
 - Re-design `ValidationError` and `Validate` trait
 
 ### validator_derive
+
+#### 0.11.0 (unreleased)
+
+- Errors in the proc macro attributes will now point to the exact place the error is
 
 #### 0.10.1 (2020/06/09)
 

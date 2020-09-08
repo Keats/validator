@@ -6,7 +6,7 @@ pub fn validate_non_control_character<'a, T>(alphabetic: T) -> bool
 where
     T: Into<Cow<'a, str>> + Clone,
 {
-    alphabetic.into().chars().into_iter().all(|code| !control::is_control(code))
+    alphabetic.into().chars().all(|code| !control::is_control(code))
 }
 
 #[cfg(test)]
