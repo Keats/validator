@@ -11,13 +11,15 @@ lazy_static! {
     // It will mark esoteric email addresses like quoted string as invalid
     static ref EMAIL_USER_RE: Regex = Regex::new(r"^(?i)[a-z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap();
     static ref EMAIL_DOMAIN_RE: Regex = Regex::new(
-        r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
+        r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
     ).unwrap();
     // literal form, ipv4 or ipv6 address (SMTP 4.1.3)
     static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"(?i)\[([A-f0-9:\.]+)\]\z").unwrap();
 }
 
-/// Validates whether the given string is an email based on Django `EmailValidator` and HTML5 specs
+/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
+/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
+/// that are unfamiliar to most users.
 #[must_use]
 pub fn validate_email<'a, T>(val: T) -> bool
 where
@@ -92,14 +94,14 @@ mod tests {
                 "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbb.atm",
                 true,
             ),
-            ("a@atm.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true),
+            // 64 * a
+            ("a@atm.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false),
             ("", false),
             ("abc", false),
             ("abc@", false),
             ("abc@bar", true),
             ("a @x.cz", false),
-            // TODO: make that one below fail
-            // ("abc@.com", false),
+            ("abc@.com", false),
             ("something@@somewhere.com", false),
             ("email@127.0.0.1", true),
             ("email@[127.0.0.256]", false),
@@ -120,11 +122,18 @@ mod tests {
             ("a\n@b.com", false),
             (r#""test@test"\n@example.com"#, false),
             ("a@[127.0.0.1]\n", false),
+            // underscores are not allowed
+            ("John.Doe@exam_ple.com", false),
         ];
 
         for (input, expected) in tests {
             // println!("{} - {}", input, expected);
-            assert_eq!(validate_email(input), expected);
+            assert_eq!(
+                validate_email(input),
+                expected,
+                "Email `{}` was not classified correctly",
+                input
+            );
         }
     }
 
