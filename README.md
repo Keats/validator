@@ -344,7 +344,7 @@ For example, the following attributes all work:
 
 ### validator
 
-## 0.11.0 (unreleased)
+## 0.11.0 (2020/09/09)
 
 - Add a `derive` feature so you don't need to add `validator_derive` to your `Cargo.toml`
 
@@ -388,7 +388,7 @@ For example, the following attributes all work:
 
 ### validator_derive
 
-#### 0.11.0 (unreleased)
+#### 0.11.0 (2020/09/09)
 
 - Errors in the proc macro attributes will now point to the exact place the error is
 
