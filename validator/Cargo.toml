@@ -20,7 +20,7 @@ serde_json = "1"
 validator_types = { version = "0.11", path = "../validator_types" }
 validator_derive = { version = "0.11", path = "../validator_derive", optional = true }
 card-validate = { version = "2.2", optional = true }
-phonenumber = { version = "0.2", optional = true }
+phonenumber = { version = "0.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
 
 [features]
