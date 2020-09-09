@@ -69,7 +69,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Helper is provided for handling complex generic types correctly and effortlessly
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     let impl_ast = quote!(
-        impl #impl_generics Validate for #ident #ty_generics #where_clause {
+        impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
             #[allow(unused_mut)]
             fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                 let mut errors = ::validator::ValidationErrors::new();
