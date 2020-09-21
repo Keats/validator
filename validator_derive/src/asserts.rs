@@ -80,6 +80,15 @@ pub fn assert_type_matches(
 }
 
 pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Type) {
+    if let syn::Type::Reference(ref tref) = field_type {
+        let elem = &tref.elem;
+        let type_name = format!("{}", quote::quote!{ #elem }).replace(' ', "");
+
+        if type_name == "str" { return }
+        assert_has_len(field_name, &type_name, elem);
+        return;
+    }
+
     if type_name != "String"
         && !type_name.starts_with("Vec<")
         && !type_name.starts_with("Option<Vec<")
