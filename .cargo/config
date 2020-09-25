@@ -1,0 +1,3 @@
+[registries.wg]
+index = "https://stash.wargaming.net/scm/agate/wg-index.git"
+token = "dummy_token"
