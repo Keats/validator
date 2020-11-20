@@ -32,4 +32,32 @@ mod tests {
     fn test_validate_must_match_numbers_false() {
         assert_eq!(false, validate_must_match(2, 3));
     }
+
+    #[test]
+    fn test_validate_must_match_numbers_option_false() {
+        assert_eq!(false, validate_must_match(Some(2), Some(3)));
+    }
+    
+    #[test]
+    fn test_validate_must_match_numbers_option_true() {
+        assert!(validate_must_match(Some(6), Some(6)));
+    }
+    
+    #[test]
+    fn test_validate_must_match_none_some_false() {
+        assert_eq!(false, validate_must_match(None, Some(3)));
+    }
+
+    #[test]
+    fn test_validate_must_match_some_none_false() {
+        assert_eq!(false, validate_must_match(Some(3), None));
+    }
+
+    #[test]
+    fn test_validate_must_match_none_none_true() {
+        // We need to define one of the values here as rust
+        // can not infer the generic type from None and None
+        let a: Option<u64> = None;
+        assert!(validate_must_match(a, None));
+    }
 }
