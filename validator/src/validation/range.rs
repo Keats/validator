@@ -6,6 +6,7 @@ use crate::validation::Validator;
 #[must_use]
 pub fn validate_range(range: Validator, val: f64) -> bool {
     match range {
+        #![allow(deprecated)]
         Validator::Range { min, max } => validate_range_generic(val, min, max),
         _ => unreachable!(),
     }
@@ -14,6 +15,7 @@ pub fn validate_range(range: Validator, val: f64) -> bool {
 /// Validates that the given `value` is inside the defined range. The `max` and `min` parameters are
 /// optional and will only be validated if they are not `None`
 ///
+#[must_use]
 pub fn validate_range_generic<T>(value: T, min: Option<T>, max: Option<T>) -> bool
 where
     T: PartialOrd + PartialEq,

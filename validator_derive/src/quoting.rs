@@ -3,7 +3,7 @@ use quote::quote;
 use validator_types::Validator;
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
-use crate::lit::{option_f64_to_tokens, option_u64_to_tokens};
+use crate::lit::{option_to_tokens, option_u64_to_tokens, value_or_path_to_tokens};
 use crate::validation::{FieldValidation, SchemaValidation};
 
 /// Pass around all the information needed for creating a validation
@@ -182,27 +182,30 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::Range { min, max } = validation.validator {
-        // Can't interpolate None
-        let min_tokens = option_f64_to_tokens(min);
-        let max_tokens = option_f64_to_tokens(max);
-
+    if let Validator::RangeRef { ref min, ref max } = validation.validator {
         let min_err_param_quoted = if let Some(v) = min {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
         } else {
             quote!()
         };
         let max_err_param_quoted = if let Some(v) = max {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
         } else {
             quote!()
         };
 
+        // Can't interpolate None
+        let min_tokens = option_to_tokens(&(min.clone().map(|x| value_or_path_to_tokens(&x))));
+        let max_tokens = option_to_tokens(&(max.clone().map(|x| value_or_path_to_tokens(&x))));
+
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
-            if !::validator::validate_range(
-                ::validator::Validator::Range {min: #min_tokens, max: #max_tokens},
-                #quoted_ident as f64
+            if !::validator::validate_range_generic(
+                #quoted_ident as f64,
+                #min_tokens,
+                #max_tokens
             ) {
                 #quoted_error
                 #min_err_param_quoted
@@ -438,7 +441,7 @@ pub fn quote_field_validation(
         Validator::Length { .. } => {
             validations.push(quote_length_validation(&field_quoter, validation))
         }
-        Validator::Range { .. } => {
+        Validator::RangeRef { .. } => {
             validations.push(quote_range_validation(&field_quoter, validation))
         }
         Validator::Email => validations.push(quote_email_validation(&field_quoter, validation)),
@@ -467,6 +470,7 @@ pub fn quote_field_validation(
         Validator::Required | Validator::RequiredNested => {
             validations.push(quote_required_validation(&field_quoter, validation))
         }
+        _ => unreachable!(),
     }
 }
 

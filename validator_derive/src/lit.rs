@@ -1,4 +1,6 @@
+use proc_macro2::Span;
 use quote::quote;
+use validator_types::ValueOrPath;
 
 pub fn lit_to_string(lit: &syn::Lit) -> Option<String> {
     match *lit {
@@ -22,6 +24,20 @@ pub fn lit_to_float(lit: &syn::Lit) -> Option<f64> {
     }
 }
 
+pub fn lit_to_float_or_path(lit: &syn::Lit) -> Option<ValueOrPath<f64>> {
+    let number = lit_to_float(lit);
+    if let Some(number) = number {
+        return Some(ValueOrPath::Value(number));
+    }
+
+    let path = lit_to_string(lit);
+    if let Some(path) = path {
+        return Some(ValueOrPath::Path(path));
+    }
+
+    None
+}
+
 pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     match *lit {
         syn::Lit::Bool(ref s) => Some(s.value),
@@ -29,14 +45,27 @@ pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
     }
 }
 
-pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
+pub fn option_to_tokens<T: quote::ToTokens>(opt: &Option<T>) -> proc_macro2::TokenStream {
     match opt {
         Some(ref t) => quote!(::std::option::Option::Some(#t)),
         None => quote!(::std::option::Option::None),
     }
 }
 
-pub fn option_f64_to_tokens(opt: Option<f64>) -> proc_macro2::TokenStream {
+pub fn value_or_path_to_tokens<T>(value: &ValueOrPath<T>) -> proc_macro2::TokenStream
+where
+    T: quote::ToTokens + std::clone::Clone + std::cmp::PartialEq + std::fmt::Debug,
+{
+    match value {
+        ValueOrPath::Value(ref t) => quote!(#t),
+        ValueOrPath::Path(ref path) => {
+            let ident = syn::Ident::new(&path.to_string(), Span::call_site());
+            quote!(self.#ident)
+        }
+    }
+}
+
+pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
     match opt {
         Some(ref t) => quote!(::std::option::Option::Some(#t)),
         None => quote!(::std::option::Option::None),
