@@ -120,13 +120,11 @@ fn value_out_of_range_fails_validation_with_self_path() {
 fn value_out_of_range_fails_validation_with_crate_path() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        max: usize,
-        min: usize,
         #[validate(range(min = "MIN_CONST", max = "MAX_CONST"))]
         val: usize,
     }
 
-    let s = TestStruct { min: 4, max: 5, val: 6 };
+    let s = TestStruct { val: 16 };
 
     let res = s.validate();
     assert!(res.is_err());
