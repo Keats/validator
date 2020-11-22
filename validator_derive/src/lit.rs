@@ -59,8 +59,15 @@ where
     match value {
         ValueOrPath::Value(ref t) => quote!(#t),
         ValueOrPath::Path(ref path) => {
-            let ident = syn::Ident::new(&path.to_string(), Span::call_site());
-            quote!(self.#ident)
+            if path.starts_with("self.") {
+                // Self value
+                let ident = syn::Ident::new(path.trim_start_matches("self."), Span::call_site());
+                quote!(self.#ident)
+            } else {
+                // Global space
+                let ident: syn::Path = syn::parse_str(&path.to_string()).unwrap();
+                quote!(#ident)
+            }
         }
     }
 }
