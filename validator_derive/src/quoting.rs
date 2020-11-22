@@ -197,8 +197,13 @@ pub fn quote_range_validation(
         };
 
         // Can't interpolate None
-        let min_tokens = option_to_tokens(&(min.clone().map(|x| value_or_path_to_tokens(&x))));
-        let max_tokens = option_to_tokens(&(max.clone().map(|x| value_or_path_to_tokens(&x))));
+        let min_tokens =
+            min.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
+        let min_tokens = option_to_tokens(&min_tokens);
+
+        let max_tokens =
+            max.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
+        let max_tokens = option_to_tokens(&max_tokens);
 
         let quoted_error = quote_error(&validation);
         let quoted = quote!(

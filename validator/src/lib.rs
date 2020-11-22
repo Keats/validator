@@ -15,7 +15,10 @@ pub use validation::non_control_character::validate_non_control_character;
 pub use validation::phone::validate_phone;
 pub use validation::range::validate_range_generic;
 
-#[deprecated(since = "0.12.0", note = "Please use the validate_range_generic function instead")]
+#[deprecated(
+    since = "0.12.0",
+    note = "Please use the validate_range_generic function instead"
+)]
 #[allow(deprecated)]
 pub use validation::range::validate_range;
 
