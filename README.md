@@ -56,9 +56,10 @@ match signup_data.validate() {
 };
 ```
 
-The `validate()` method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the
-`ValidationErrors` instance includes a map of errors keyed against the struct's field names. Errors may be represented
-in three ways, as described by the `ValidationErrorsKind` enum:
+A validation on an `Option<_>` field will be executed on the contained type if the option is `Some`. The `validate()`
+ method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the `ValidationErrors` instance includes
+a map of errors keyed against the struct's field names. Errors may be represented in three ways, as described by the 
+`ValidationErrorsKind` enum:
 
 ```rust
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -86,10 +87,6 @@ The value of the field will automatically be added to the params with a key of `
 Note that `validator` works in conjunction with serde: in the example we can see that the `first_name`
 field is renamed from/to `firstName`. Any error on that field will be in the `firstName` key of the hashmap,
 not `first_name`.
-
-If you are adding a validation on a `Option<..>` field, it will only be ran if there is a value. The exception
-being `must_match` that doesn't currently work with `Option` due to me not finding a use case for it. If you have one,
-please comment on https://github.com/Keats/validator/issues/7.
 
 The other two `ValidationErrorsKind` types represent errors discovered in nested (vectors of) structs, as described in
 this example:
@@ -183,16 +180,23 @@ Examples:
 ```
 
 ### range
-Tests whether a number is in the given range. `range` takes between 1 and 2 number arguments: `min` and `max`.
+Tests whether a number is in the given range. `range` takes 1 or 2 arguments `min` and `max` that can be a number or a value path.
+The range validation can also reference struct values by using `self.` as a value prefix.
 
 Examples:
 
 ```rust
-#[validate(range(min = 1, max = 10))]
+const MAX_CONSTANT: i32 = 10;
+const MIN_CONSTANT: i32 = 0;
+
 #[validate(range(min = 1))]
-#[validate(range(min = 1, max = 10.8))]
+#[validate(range(min = "MIN_CONSTANT"))]
+#[validate(range(min = 1, max = 10))]
 #[validate(range(min = 1.1, max = 10.8))]
 #[validate(range(max = 10.8))]
+#[validate(range(min = "MAX_CONSTANT"))]
+#[validate(range(min = "crate::MAX_CONSTANT"))]
+#[validate(range(min = "self.max"))] // <- References the value max from the struct
 ```
 
 ### must_match
