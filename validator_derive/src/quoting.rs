@@ -182,7 +182,7 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::RangeRef { ref min, ref max } = validation.validator {
+    if let Validator::Range { ref min, ref max } = validation.validator {
         let min_err_param_quoted = if let Some(v) = min {
             let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
@@ -207,7 +207,7 @@ pub fn quote_range_validation(
 
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
-            if !::validator::validate_range_generic(
+            if !::validator::validate_range(
                 #quoted_ident as f64,
                 #min_tokens,
                 #max_tokens
@@ -446,7 +446,7 @@ pub fn quote_field_validation(
         Validator::Length { .. } => {
             validations.push(quote_length_validation(&field_quoter, validation))
         }
-        Validator::RangeRef { .. } => {
+        Validator::Range { .. } => {
             validations.push(quote_range_validation(&field_quoter, validation))
         }
         Validator::Email => validations.push(quote_email_validation(&field_quoter, validation)),
@@ -475,7 +475,6 @@ pub fn quote_field_validation(
         Validator::Required | Validator::RequiredNested => {
             validations.push(quote_required_validation(&field_quoter, validation))
         }
-        _ => unreachable!(),
     }
 }
 

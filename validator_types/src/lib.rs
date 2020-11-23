@@ -14,12 +14,7 @@ pub enum Validator {
     Contains(String),
     // No implementation in this crate, it's all in validator_derive
     Regex(String),
-    #[deprecated(since = "0.12.0", note = "Please use the RangeRef instead instead")]
     Range {
-        min: Option<f64>,
-        max: Option<f64>,
-    },
-    RangeRef {
         min: Option<ValueOrPath<f64>>,
         max: Option<ValueOrPath<f64>>,
     },
@@ -55,9 +50,7 @@ impl Validator {
             Validator::Custom(_) => "custom",
             Validator::Contains(_) => "contains",
             Validator::Regex(_) => "regex",
-            #[allow(deprecated)]
             Validator::Range { .. } => "range",
-            Validator::RangeRef { .. } => "range",
             Validator::Length { .. } => "length",
             #[cfg(feature = "card")]
             Validator::CreditCard => "credit_card",

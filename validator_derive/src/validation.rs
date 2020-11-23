@@ -125,13 +125,13 @@ pub fn extract_range_validation(
                         "min" => {
                             min = match lit_to_float_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `min` of `range` validator: only integers are allowed")
+                                None => error(lit.span(), "invalid argument type for `min` of `range` validator: only number literals or value paths are allowed")
                             };
                         }
                         "max" => {
                             max = match lit_to_float_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `max` of `range` validator: only integers are allowed")
+                                None => error(lit.span(), "invalid argument type for `max` of `range` validator: only number literals or value paths are allowed")
                             };
                         }
                         v => error(path.span(), &format!(
@@ -154,7 +154,7 @@ pub fn extract_range_validation(
         error(attr.span(), "Validator `range` requires at least 1 argument out of `min` and `max`");
     }
 
-    let validator = Validator::RangeRef { min, max };
+    let validator = Validator::Range { min, max };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
