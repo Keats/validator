@@ -148,9 +148,15 @@ pub fn quote_length_validation(
             quote!()
         };
 
-        let min_tokens = option_to_tokens(&min.clone().map(|ref x| value_or_path_to_tokens(x)));
-        let max_tokens = option_to_tokens(&max.clone().map(|ref x| value_or_path_to_tokens(x)));
-        let equal_tokens = option_to_tokens(&equal.clone().map(|ref x| value_or_path_to_tokens(x)));
+        let min_tokens = option_to_tokens(
+            &min.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
+        let max_tokens = option_to_tokens(
+            &max.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
+        let equal_tokens = option_to_tokens(
+            &equal.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
 
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
