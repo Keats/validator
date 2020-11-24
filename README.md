@@ -167,15 +167,18 @@ At least one argument is required with a maximum of 2 (having `min` and `max` at
 Examples:
 
 ```rust
+const MIN_CONST: u64 = 1;
+const MAX_CONST: u64 = 10;
+
 #[validate(length(min = 1, max = 10))]
 #[validate(length(min = 1))]
 #[validate(length(max = 10))]
 #[validate(length(equal = 10))]
+#[validate(length(min = "MIN_CONST", max = "MAX_CONST"))]
 ```
 
 ### range
 Tests whether a number is in the given range. `range` takes 1 or 2 arguments `min` and `max` that can be a number or a value path.
-The range validation can also reference struct values by using `self.` as a value prefix.
 
 Examples:
 
@@ -190,7 +193,6 @@ const MIN_CONSTANT: i32 = 0;
 #[validate(range(max = 10.8))]
 #[validate(range(min = "MAX_CONSTANT"))]
 #[validate(range(min = "crate::MAX_CONSTANT"))]
-#[validate(range(min = "self.max"))] // <- References the value max from the struct
 ```
 
 ### must_match
