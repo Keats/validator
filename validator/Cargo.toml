@@ -24,7 +24,7 @@ phonenumber = { version = "0.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
 
 [features]
-phone = ["phonenumber"]
-card = ["card-validate"]
-unic = ["unic-ucd-common"]
+phone = ["phonenumber", "validator_derive/phone", "validator_types/phone"]
+card = ["card-validate", "validator_derive/card", "validator_types/card"]
+unic = ["unic-ucd-common", "validator_derive/unic", "validator_types/unic"]
 derive = ["validator_derive"]
