@@ -18,6 +18,7 @@ A short example:
 
 ```rust
 use serde::Deserialize;
+
 // A trait that the Validate derive will impl
 use validator::{Validate, ValidationError};
 
@@ -138,7 +139,7 @@ the index of invalid vector entries.
 
 
 ## Usage
-You will need to import the `Validate` trait, and optionally use the `attr_literals` feature.
+You will need to import the `Validate` trait.
 
 The `validator` crate can also be used without the custom derive as it exposes all the
 validation functions and types.
@@ -238,7 +239,7 @@ Examples:
 Tests whether the String is a valid phone number (in international format, ie.
 containing the country indicator like `+14152370800` for an US number — where `4152370800`
 is the national number equivalent, which is seen as invalid).
-To use this validator, you must enable the `phone` feature for the `validator_derive` crate.
+To use this validator, you must enable the `phone` feature for the `validator` crate.
 This validator doesn't take any arguments: `#[validate(phone)]`;
 
 ### custom
@@ -264,7 +265,7 @@ Examples:
 
 ### non_control_character
 Tests whether the String has any utf-8 control caracters, fails validation if it does.
-To use this validator, you must enable the `unic` feature for the `validator_derive` crate.
+To use this validator, you must enable the `unic` feature for the `validor` crate.
 This validator doesn't take any arguments: `#[validate(non_control_character)]`;
 
 ### required
