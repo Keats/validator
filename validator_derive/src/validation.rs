@@ -48,21 +48,21 @@ pub fn extract_length_validation(
                 match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         "min" => {
-                            min = match lit_to_int(lit) {
+                            min = match lit_to_u64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `min` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `min` of `length` validator: only number literals or value paths are allowed"),
                             };
                         },
                         "max" => {
-                            max = match lit_to_int(lit) {
+                            max = match lit_to_u64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `max` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `max` of `length` validator: only number literals or value paths are allowed"),
                             };
                         },
                         "equal" => {
-                            equal = match lit_to_int(lit) {
+                            equal = match lit_to_u64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `equal` of `length` validator: only integers are allowed"),
+                                None => error(lit.span(), "invalid argument type for `equal` of `length` validator: only number literals or value paths are allowed"),
                             };
                         },
                         v => error(path.span(), &format!(

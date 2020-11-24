@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::{borrow::Cow, collections::HashMap};
 use validator::{
-    validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind, Validator,
+    validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind,
 };
 
 #[derive(Debug, Validate)]
@@ -255,10 +255,7 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
         fn validate(&self) -> Result<(), ValidationErrors> {
             // First validate the length of the vector:
             let mut errors = ValidationErrors::new();
-            if !validate_length(
-                Validator::Length { min: Some(2u64), max: None, equal: None },
-                &self.child,
-            ) {
+            if !validate_length(&self.child, Some(2u64), None, None) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);
@@ -320,10 +317,7 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
             }
 
             // Then validate the length of the vector itself:
-            if !validate_length(
-                Validator::Length { min: Some(2u64), max: None, equal: None },
-                &self.child,
-            ) {
+            if !validate_length(&self.child, Some(2u64), None, None) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);

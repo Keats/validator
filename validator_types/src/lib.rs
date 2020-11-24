@@ -20,9 +20,9 @@ pub enum Validator {
     },
     // Any value that impl HasLen can be validated with Length
     Length {
-        min: Option<u64>,
-        max: Option<u64>,
-        equal: Option<u64>,
+        min: Option<ValueOrPath<u64>>,
+        max: Option<ValueOrPath<u64>>,
+        equal: Option<ValueOrPath<u64>>,
     },
     #[cfg(feature = "card")]
     CreditCard,

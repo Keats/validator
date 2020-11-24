@@ -1,4 +1,3 @@
-use proc_macro2::Span;
 use quote::quote;
 use validator_types::ValueOrPath;
 
@@ -22,6 +21,20 @@ pub fn lit_to_float(lit: &syn::Lit) -> Option<f64> {
         syn::Lit::Int(ref s) => Some(s.base10_parse::<f64>().unwrap()),
         _ => None,
     }
+}
+
+pub fn lit_to_u64_or_path(lit: &syn::Lit) -> Option<ValueOrPath<u64>> {
+    let number = lit_to_int(lit);
+    if let Some(number) = number {
+        return Some(ValueOrPath::Value(number));
+    }
+
+    let path = lit_to_string(lit);
+    if let Some(path) = path {
+        return Some(ValueOrPath::Path(path));
+    }
+
+    None
 }
 
 pub fn lit_to_float_or_path(lit: &syn::Lit) -> Option<ValueOrPath<f64>> {
@@ -59,22 +72,9 @@ where
     match value {
         ValueOrPath::Value(ref t) => quote!(#t),
         ValueOrPath::Path(ref path) => {
-            if path.starts_with("self.") {
-                // Self value
-                let ident = syn::Ident::new(path.trim_start_matches("self."), Span::call_site());
-                quote!(self.#ident)
-            } else {
-                // Global space
-                let ident: syn::Path = syn::parse_str(&path.to_string()).unwrap();
-                quote!(#ident)
-            }
+            // Global space
+            let ident: syn::Path = syn::parse_str(&path.to_string()).unwrap();
+            quote!(#ident)
         }
-    }
-}
-
-pub fn option_u64_to_tokens(opt: Option<u64>) -> proc_macro2::TokenStream {
-    match opt {
-        Some(ref t) => quote!(::std::option::Option::Some(#t)),
-        None => quote!(::std::option::Option::None),
     }
 }

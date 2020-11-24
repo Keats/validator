@@ -3,7 +3,7 @@ use quote::quote;
 use validator_types::Validator;
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
-use crate::lit::{option_to_tokens, option_u64_to_tokens, value_or_path_to_tokens};
+use crate::lit::{option_to_tokens, value_or_path_to_tokens};
 use crate::validation::{FieldValidation, SchemaValidation};
 
 /// Pass around all the information needed for creating a validation
@@ -128,37 +128,37 @@ pub fn quote_length_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    if let Validator::Length { min, max, equal } = validation.validator {
-        // Can't interpolate None
-        let min_tokens = option_u64_to_tokens(min);
-        let max_tokens = option_u64_to_tokens(max);
-        let equal_tokens = option_u64_to_tokens(equal);
-
+    if let Validator::Length { min, max, equal } = &validation.validator {
         let min_err_param_quoted = if let Some(v) = min {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
         } else {
             quote!()
         };
         let max_err_param_quoted = if let Some(v) = max {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
         } else {
             quote!()
         };
         let equal_err_param_quoted = if let Some(v) = equal {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("equal"), &#v);)
         } else {
             quote!()
         };
 
+        let min_tokens = option_to_tokens(&min.clone().map(|ref x| value_or_path_to_tokens(x)));
+        let max_tokens = option_to_tokens(&max.clone().map(|ref x| value_or_path_to_tokens(x)));
+        let equal_tokens = option_to_tokens(&equal.clone().map(|ref x| value_or_path_to_tokens(x)));
+
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !::validator::validate_length(
-                ::validator::Validator::Length {
-                    min: #min_tokens,
-                    max: #max_tokens,
-                    equal: #equal_tokens
-                },
-                #validator_param
+                #validator_param,
+                #min_tokens,
+                #max_tokens,
+                #equal_tokens
             ) {
                 #quoted_error
                 #min_err_param_quoted

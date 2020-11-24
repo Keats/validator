@@ -63,21 +63,6 @@ fn can_validate_range_value_crate_path_ok() {
 }
 
 #[test]
-fn can_validate_range_value_self_path_ok() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        max: usize,
-        min: usize,
-        #[validate(range(min = "self.min", max = "self.max"))]
-        val: usize,
-    }
-
-    let s = TestStruct { max: 8, min: 4, val: 6 };
-
-    assert!(s.validate().is_ok());
-}
-
-#[test]
 fn value_out_of_range_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
@@ -86,27 +71,6 @@ fn value_out_of_range_fails_validation() {
     }
 
     let s = TestStruct { val: 11 };
-    let res = s.validate();
-    assert!(res.is_err());
-    let err = res.unwrap_err();
-    let errs = err.field_errors();
-    assert!(errs.contains_key("val"));
-    assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "range");
-}
-
-#[test]
-fn value_out_of_range_fails_validation_with_self_path() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        max: usize,
-        min: usize,
-        #[validate(range(min = "self.min", max = "self.max"))]
-        val: usize,
-    }
-
-    let s = TestStruct { min: 4, max: 5, val: 6 };
-
     let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
