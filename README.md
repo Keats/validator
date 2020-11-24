@@ -17,11 +17,7 @@ validator = { version = "0.11", features = ["derive"] }
 A short example:
 
 ```rust
-#[macro_use]
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::Deserialize;
 
 // A trait that the Validate derive will impl
 use validator::{Validate, ValidationError};
@@ -95,11 +91,9 @@ The other two `ValidationErrorsKind` types represent errors discovered in nested
 this example:
 
  ```rust
-#[macro_use]
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::Deserialize;
+// A trait that the Validate derive will impl
+use validator::Validate;
 
 #[derive(Debug, Validate, Deserialize)]
 struct SignupData {
