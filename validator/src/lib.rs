@@ -1,6 +1,6 @@
 //! # Example:
 //!
-//! ```rust
+//! ```no_run
 //! use serde::Deserialize;
 //!
 //! // A trait that the Validate derive will impl
