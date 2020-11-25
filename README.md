@@ -342,6 +342,11 @@ For example, the following attributes all work:
 
 ### validator
 
+## 0.12.0 (unreleased)
+
+- Allow `length` and `range` validators to take a reference to a variable
+- Make validator work with `Option<Vec<_>>`
+
 ## 0.11.0 (2020/09/09)
 
 - Add a `derive` feature so you don't need to add `validator_derive` to your `Cargo.toml`
