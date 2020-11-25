@@ -100,6 +100,16 @@ impl FieldQuoter {
                 }).collect();
                 result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
             });
+        } else if self._type.starts_with("Option<Vec<") {
+            return quote!(
+            if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                let results: Vec<_> = #field_ident.iter().map(|#field_ident| {
+                    let mut result = ::std::result::Result::Ok(());
+                    #tokens
+                    result
+                }).collect();
+                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+            });
         }
 
         tokens
