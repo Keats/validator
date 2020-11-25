@@ -347,6 +347,7 @@ For example, the following attributes all work:
 - Allow `length` and `range` validators to take a reference to a variable
 - Make validator work with `Option<Vec<_>>`
 - Support reference for length types
+- Fix `phone`, `unic` and `card` feature to actually work
 
 ## 0.11.0 (2020/09/09)
 
