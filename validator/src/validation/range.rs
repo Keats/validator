@@ -23,8 +23,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    // This is needed to suppress the `validate_range` depreciation notice
-    // We want to keep the tests to make sure that this function will remain valid
     use super::validate_range;
 
     #[test]
