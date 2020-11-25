@@ -123,13 +123,13 @@ pub fn extract_range_validation(
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
                         "min" => {
-                            min = match lit_to_float_or_path(lit) {
+                            min = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
                                 None => error(lit.span(), "invalid argument type for `min` of `range` validator: only number literals or value paths are allowed")
                             };
                         }
                         "max" => {
-                            max = match lit_to_float_or_path(lit) {
+                            max = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
                                 None => error(lit.span(), "invalid argument type for `max` of `range` validator: only number literals or value paths are allowed")
                             };

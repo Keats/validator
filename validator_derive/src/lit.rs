@@ -37,7 +37,7 @@ pub fn lit_to_u64_or_path(lit: &syn::Lit) -> Option<ValueOrPath<u64>> {
     None
 }
 
-pub fn lit_to_float_or_path(lit: &syn::Lit) -> Option<ValueOrPath<f64>> {
+pub fn lit_to_f64_or_path(lit: &syn::Lit) -> Option<ValueOrPath<f64>> {
     let number = lit_to_float(lit);
     if let Some(number) = number {
         return Some(ValueOrPath::Value(number));
