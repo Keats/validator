@@ -15,14 +15,14 @@ pub enum Validator {
     // No implementation in this crate, it's all in validator_derive
     Regex(String),
     Range {
-        min: Option<f64>,
-        max: Option<f64>,
+        min: Option<ValueOrPath<f64>>,
+        max: Option<ValueOrPath<f64>>,
     },
     // Any value that impl HasLen can be validated with Length
     Length {
-        min: Option<u64>,
-        max: Option<u64>,
-        equal: Option<u64>,
+        min: Option<ValueOrPath<u64>>,
+        max: Option<ValueOrPath<u64>>,
+        equal: Option<ValueOrPath<u64>>,
     },
     #[cfg(feature = "card")]
     CreditCard,
@@ -33,6 +33,12 @@ pub enum Validator {
     NonControlCharacter,
     Required,
     RequiredNested,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueOrPath<T: std::fmt::Debug + Clone + PartialEq> {
+    Value(T),
+    Path(String),
 }
 
 impl Validator {

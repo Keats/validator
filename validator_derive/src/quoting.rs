@@ -3,7 +3,7 @@ use quote::quote;
 use validator_types::Validator;
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
-use crate::lit::{option_f64_to_tokens, option_u64_to_tokens};
+use crate::lit::{option_to_tokens, value_or_path_to_tokens};
 use crate::validation::{FieldValidation, SchemaValidation};
 
 /// Pass around all the information needed for creating a validation
@@ -128,37 +128,43 @@ pub fn quote_length_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    if let Validator::Length { min, max, equal } = validation.validator {
-        // Can't interpolate None
-        let min_tokens = option_u64_to_tokens(min);
-        let max_tokens = option_u64_to_tokens(max);
-        let equal_tokens = option_u64_to_tokens(equal);
-
+    if let Validator::Length { min, max, equal } = &validation.validator {
         let min_err_param_quoted = if let Some(v) = min {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
         } else {
             quote!()
         };
         let max_err_param_quoted = if let Some(v) = max {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
         } else {
             quote!()
         };
         let equal_err_param_quoted = if let Some(v) = equal {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("equal"), &#v);)
         } else {
             quote!()
         };
 
+        let min_tokens = option_to_tokens(
+            &min.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
+        let max_tokens = option_to_tokens(
+            &max.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
+        let equal_tokens = option_to_tokens(
+            &equal.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+        );
+
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !::validator::validate_length(
-                ::validator::Validator::Length {
-                    min: #min_tokens,
-                    max: #max_tokens,
-                    equal: #equal_tokens
-                },
-                #validator_param
+                #validator_param,
+                #min_tokens,
+                #max_tokens,
+                #equal_tokens
             ) {
                 #quoted_error
                 #min_err_param_quoted
@@ -182,27 +188,35 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::Range { min, max } = validation.validator {
-        // Can't interpolate None
-        let min_tokens = option_f64_to_tokens(min);
-        let max_tokens = option_f64_to_tokens(max);
-
+    if let Validator::Range { ref min, ref max } = validation.validator {
         let min_err_param_quoted = if let Some(v) = min {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
         } else {
             quote!()
         };
         let max_err_param_quoted = if let Some(v) = max {
+            let v = value_or_path_to_tokens(v);
             quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
         } else {
             quote!()
         };
 
+        // Can't interpolate None
+        let min_tokens =
+            min.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
+        let min_tokens = option_to_tokens(&min_tokens);
+
+        let max_tokens =
+            max.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
+        let max_tokens = option_to_tokens(&max_tokens);
+
         let quoted_error = quote_error(&validation);
         let quoted = quote!(
             if !::validator::validate_range(
-                ::validator::Validator::Range {min: #min_tokens, max: #max_tokens},
-                #quoted_ident as f64
+                #quoted_ident as f64,
+                #min_tokens,
+                #max_tokens
             ) {
                 #quoted_error
                 #min_err_param_quoted
