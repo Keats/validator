@@ -342,7 +342,7 @@ For example, the following attributes all work:
 
 ### validator
 
-## 0.12.0 (unreleased)
+## 0.12.0 (2020/11/26)
 
 - Allow `length` and `range` validators to take a reference to a variable
 - Make validator work with `Option<Vec<_>>`
