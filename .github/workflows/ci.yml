@@ -42,4 +42,4 @@ jobs:
         with:
           rust-version: nightly
       - name: tests validator_derive with all features
-        run: cd validator_derive && cargo test --all-features
+        run: cd validator_derive_tests && cargo test --all-features
