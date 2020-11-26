@@ -37,12 +37,12 @@ mod tests {
     fn test_validate_must_match_numbers_option_false() {
         assert_eq!(false, validate_must_match(Some(2), Some(3)));
     }
-    
+
     #[test]
     fn test_validate_must_match_numbers_option_true() {
         assert!(validate_must_match(Some(6), Some(6)));
     }
-    
+
     #[test]
     fn test_validate_must_match_none_some_false() {
         assert_eq!(false, validate_must_match(None, Some(3)));

@@ -1,6 +1,6 @@
 [package]
 name = "validator_derive"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com"]
 license = "MIT"
 description = "Macros 1.1 implementation of #[derive(Validate)]"
@@ -23,12 +23,12 @@ quote = "1"
 proc-macro2 = "1"
 proc-macro-error = "1"
 if_chain = "1"
-validator_types = { version = "0.11", path = "../validator_types" }
+validator_types = { version = "0.12", path = "../validator_types" }
 regex = "1"
 lazy_static = "1"
 
 [dev-dependencies]
-validator = { version = "0.11.0", path = "../validator", features = ["phone", "card", "unic", "derive"] }
+validator = { version = "0.12.0", path = "../validator", features = ["phone", "card", "unic", "derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 trybuild = "1.0"

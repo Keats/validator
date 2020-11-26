@@ -11,17 +11,13 @@ Installation:
 
 ```toml
 [dependencies]
-validator = { version = "0.11", features = ["derive"] }
+validator = { version = "0.12", features = ["derive"] }
 ```
 
 A short example:
 
 ```rust
-#[macro_use]
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::Deserialize;
 
 // A trait that the Validate derive will impl
 use validator::{Validate, ValidationError};
@@ -56,9 +52,10 @@ match signup_data.validate() {
 };
 ```
 
-The `validate()` method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the
-`ValidationErrors` instance includes a map of errors keyed against the struct's field names. Errors may be represented
-in three ways, as described by the `ValidationErrorsKind` enum:
+A validation on an `Option<_>` field will be executed on the contained type if the option is `Some`. The `validate()`
+ method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the `ValidationErrors` instance includes
+a map of errors keyed against the struct's field names. Errors may be represented in three ways, as described by the 
+`ValidationErrorsKind` enum:
 
 ```rust
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -87,19 +84,13 @@ Note that `validator` works in conjunction with serde: in the example we can see
 field is renamed from/to `firstName`. Any error on that field will be in the `firstName` key of the hashmap,
 not `first_name`.
 
-If you are adding a validation on a `Option<..>` field, it will only be ran if there is a value. The exception
-being `must_match` that doesn't currently work with `Option` due to me not finding a use case for it. If you have one,
-please comment on https://github.com/Keats/validator/issues/7.
-
 The other two `ValidationErrorsKind` types represent errors discovered in nested (vectors of) structs, as described in
 this example:
 
  ```rust
-#[macro_use]
-extern crate validator;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::Deserialize;
+// A trait that the Validate derive will impl
+use validator::Validate;
 
 #[derive(Debug, Validate, Deserialize)]
 struct SignupData {
@@ -176,23 +167,32 @@ At least one argument is required with a maximum of 2 (having `min` and `max` at
 Examples:
 
 ```rust
+const MIN_CONST: u64 = 1;
+const MAX_CONST: u64 = 10;
+
 #[validate(length(min = 1, max = 10))]
 #[validate(length(min = 1))]
 #[validate(length(max = 10))]
 #[validate(length(equal = 10))]
+#[validate(length(min = "MIN_CONST", max = "MAX_CONST"))]
 ```
 
 ### range
-Tests whether a number is in the given range. `range` takes between 1 and 2 number arguments: `min` and `max`.
+Tests whether a number is in the given range. `range` takes 1 or 2 arguments `min` and `max` that can be a number or a value path.
 
 Examples:
 
 ```rust
-#[validate(range(min = 1, max = 10))]
+const MAX_CONSTANT: i32 = 10;
+const MIN_CONSTANT: i32 = 0;
+
 #[validate(range(min = 1))]
-#[validate(range(min = 1, max = 10.8))]
+#[validate(range(min = "MIN_CONSTANT"))]
+#[validate(range(min = 1, max = 10))]
 #[validate(range(min = 1.1, max = 10.8))]
 #[validate(range(max = 10.8))]
+#[validate(range(min = "MAX_CONSTANT"))]
+#[validate(range(min = "crate::MAX_CONSTANT"))]
 ```
 
 ### must_match
@@ -341,6 +341,13 @@ For example, the following attributes all work:
 ## Changelogs
 
 ### validator
+
+## 0.12.0 (2020/11/26)
+
+- Allow `length` and `range` validators to take a reference to a variable
+- Make validator work with `Option<Vec<_>>`
+- Support reference for length types
+- Fix `phone`, `unic` and `card` feature to actually work
 
 ## 0.11.0 (2020/09/09)
 

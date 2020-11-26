@@ -1,5 +1,8 @@
 use validator::{Validate, ValidationErrors};
 
+const MAX_CONST: usize = 10;
+const MIN_CONST: usize = 0;
+
 // Loose floating point comparison using EPSILON error bound
 macro_rules! assert_float {
     ($e1:expr, $e2:expr) => {
@@ -21,6 +24,45 @@ fn can_validate_range_ok() {
 }
 
 #[test]
+fn can_validate_only_min_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = 5))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_only_max_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(max = 50))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_range_value_crate_path_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = "MIN_CONST", max = "MAX_CONST"))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
 fn value_out_of_range_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
@@ -32,6 +74,26 @@ fn value_out_of_range_fails_validation() {
     let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
+    let errs = err.field_errors();
+    assert!(errs.contains_key("val"));
+    assert_eq!(errs["val"].len(), 1);
+    assert_eq!(errs["val"][0].code, "range");
+}
+
+#[test]
+fn value_out_of_range_fails_validation_with_crate_path() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = "MIN_CONST", max = "MAX_CONST"))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 16 };
+
+    let res = s.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    println!("{}", err);
     let errs = err.field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
