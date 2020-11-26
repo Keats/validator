@@ -1,6 +1,5 @@
 use validator::Validate;
 
-#[cfg(feature = "unic")]
 #[test]
 fn can_validate_utf8_ok() {
     #[derive(Debug, Validate)]
@@ -14,7 +13,7 @@ fn can_validate_utf8_ok() {
     assert!(s.validate().is_ok());
 }
 
-#[cfg(feature = "unic")]
+
 #[test]
 fn utf8_with_control_fails_validation() {
     #[derive(Debug, Validate)]
@@ -33,7 +32,7 @@ fn utf8_with_control_fails_validation() {
     assert_eq!(errs["val"][0].code, "non_control_character");
 }
 
-#[cfg(feature = "unic")]
+
 #[test]
 fn can_specify_code_for_non_control_character() {
     #[derive(Debug, Validate)]
@@ -52,7 +51,7 @@ fn can_specify_code_for_non_control_character() {
     assert_eq!(errs["val"][0].params["value"], "\u{9F}하늘");
 }
 
-#[cfg(feature = "unic")]
+
 #[test]
 fn can_specify_message_for_non_control_character() {
     #[derive(Debug, Validate)]

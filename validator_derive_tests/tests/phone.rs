@@ -1,6 +1,6 @@
 use validator::Validate;
 
-#[cfg(feature = "phone")]
+
 #[test]
 fn can_validate_phone_ok() {
     #[derive(Debug, Validate)]
@@ -14,7 +14,7 @@ fn can_validate_phone_ok() {
     assert!(s.validate().is_ok());
 }
 
-#[cfg(feature = "phone")]
+
 #[test]
 fn bad_phone_fails_validation() {
     #[derive(Debug, Validate)]
@@ -33,7 +33,7 @@ fn bad_phone_fails_validation() {
     assert_eq!(errs["val"][0].code, "phone");
 }
 
-#[cfg(feature = "phone")]
+
 #[test]
 fn can_specify_code_for_phone() {
     #[derive(Debug, Validate)]
@@ -52,7 +52,6 @@ fn can_specify_code_for_phone() {
     assert_eq!(errs["val"][0].params["value"], "bob");
 }
 
-#[cfg(feature = "phone")]
 #[test]
 fn can_specify_message_for_phone() {
     #[derive(Debug, Validate)]
