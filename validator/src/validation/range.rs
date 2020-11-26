@@ -1,67 +1,57 @@
-use crate::validation::Validator;
-
-/// Validates that a number is in the given range
+/// Validates that the given `value` is inside the defined range. The `max` and `min` parameters are
+/// optional and will only be validated if they are not `None`
 ///
-/// TODO: see if can be generic over the number type
 #[must_use]
-pub fn validate_range(range: Validator, val: f64) -> bool {
-    match range {
-        Validator::Range { min, max } => {
-            if let Some(m) = min {
-                if val < m {
-                    return false;
-                }
-            }
-
-            if let Some(m) = max {
-                if val > m {
-                    return false;
-                }
-            }
-
-            true
+pub fn validate_range<T>(value: T, min: Option<T>, max: Option<T>) -> bool
+where
+    T: PartialOrd + PartialEq,
+{
+    if let Some(max) = max {
+        if value > max {
+            return false;
         }
-        _ => unreachable!(),
     }
+
+    if let Some(min) = min {
+        if value < min {
+            return false;
+        }
+    }
+
+    true
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_range, Validator};
+    use super::validate_range;
 
     #[test]
-    fn test_validate_range_ok() {
-        let validator = Validator::Range { min: Some(0.0), max: Some(10.0) };
-        assert_eq!(validate_range(validator, 1_f64), true);
+    fn test_validate_range_generic_ok() {
+        // Unspecified generic type:
+        assert_eq!(true, validate_range(10, Some(-10), Some(10)));
+        assert_eq!(true, validate_range(0.0, Some(0.0), Some(10.0)));
+
+        // Specified type:
+        assert_eq!(true, validate_range(5u8, Some(0), Some(255)));
+        assert_eq!(true, validate_range(4u16, Some(0), Some(16)));
+        assert_eq!(true, validate_range(6u32, Some(0), Some(23)));
     }
 
     #[test]
-    fn test_validate_range_fail() {
-        let validator = Validator::Range { min: Some(0.0), max: Some(10.0) };
-        assert_eq!(validate_range(validator, 20_f64), false);
+    fn test_validate_range_generic_fail() {
+        assert_eq!(false, validate_range(5, Some(17), Some(19)));
+        assert_eq!(false, validate_range(-1.0, Some(0.0), Some(10.0)));
     }
 
     #[test]
-    fn test_validate_range_min_only_valid() {
-        let validator = Validator::Range { min: Some(10.0), max: None };
-        assert_eq!(validate_range(validator, 10.0), true);
+    fn test_validate_range_generic_min_only() {
+        assert_eq!(false, validate_range(5, Some(10), None));
+        assert_eq!(true, validate_range(15, Some(10), None));
     }
 
     #[test]
-    fn test_validate_range_min_only_invalid() {
-        let validator = Validator::Range { min: Some(10.0), max: None };
-        assert_eq!(validate_range(validator, 9.0), false);
-    }
-
-    #[test]
-    fn test_validate_range_max_only_valid() {
-        let validator = Validator::Range { min: None, max: Some(10.0) };
-        assert_eq!(validate_range(validator, 10.0), true);
-    }
-
-    #[test]
-    fn test_validate_range_max_only_invalid() {
-        let validator = Validator::Range { min: None, max: Some(10.0) };
-        assert_eq!(validate_range(validator, 11.0), false);
+    fn test_validate_range_generic_max_only() {
+        assert_eq!(true, validate_range(5, None, Some(10)));
+        assert_eq!(false, validate_range(15, None, Some(10)));
     }
 }

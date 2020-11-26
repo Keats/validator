@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::{borrow::Cow, collections::HashMap};
 use validator::{
-    validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind, Validator,
+    validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind,
 };
 
 #[derive(Debug, Validate)]
@@ -39,6 +39,13 @@ struct ParentWithVectorOfChildren {
     #[validate]
     #[validate(length(min = 1))]
     child: Vec<Child>,
+}
+
+#[derive(Debug, Validate)]
+struct ParentWithOptionVectorOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: Option<Vec<Child>>,
 }
 
 #[derive(Debug, Validate, Serialize)]
@@ -222,6 +229,51 @@ fn test_can_validate_vector_fields() {
 }
 
 #[test]
+fn test_can_validate_option_vector_fields() {
+    let instance = ParentWithOptionVectorOfChildren {
+        child: Some(vec![
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
+        ]),
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&1));
+        unwrap_map(&errs[&1], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+        assert!(errs.contains_key(&3));
+        unwrap_map(&errs[&3], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
 fn test_field_validations_take_priority_over_nested_validations() {
     let instance = ParentWithVectorOfChildren { child: Vec::new() };
 
@@ -255,10 +307,7 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
         fn validate(&self) -> Result<(), ValidationErrors> {
             // First validate the length of the vector:
             let mut errors = ValidationErrors::new();
-            if !validate_length(
-                Validator::Length { min: Some(2u64), max: None, equal: None },
-                &self.child,
-            ) {
+            if !validate_length(&self.child, Some(2u64), None, None) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);
@@ -320,10 +369,7 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
             }
 
             // Then validate the length of the vector itself:
-            if !validate_length(
-                Validator::Length { min: Some(2u64), max: None, equal: None },
-                &self.child,
-            ) {
+            if !validate_length(&self.child, Some(2u64), None, None) {
                 let mut err = ValidationError::new("length");
                 err.add_param(Cow::from("min"), &2u64);
                 err.add_param(Cow::from("value"), &&self.child);
