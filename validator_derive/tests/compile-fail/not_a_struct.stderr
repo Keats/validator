@@ -1,9 +1,0 @@
-error: #[derive(Validate)] can only be used with structs
- --> $DIR/not_a_struct.rs:4:1
-  |
-4 | / pub enum NotAStruct {
-5 | |     VariantA(i32),
-6 | |     VariantB(String),
-7 | |     VariantC(Vec<String>),
-8 | | }
-  | |_^

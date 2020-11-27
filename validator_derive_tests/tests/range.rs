@@ -6,7 +6,7 @@ const MIN_CONST: usize = 0;
 // Loose floating point comparison using EPSILON error bound
 macro_rules! assert_float {
     ($e1:expr, $e2:expr) => {
-        assert!(($e2 - $e1).abs() < f64::EPSILON);
+        assert!(($e2 - $e1).abs() < std::f64::EPSILON);
     };
 }
 

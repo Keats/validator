@@ -1,48 +1,46 @@
 use validator::Validate;
 
-#[cfg(feature = "card")]
 #[test]
-fn can_validate_valid_card_number() {
+fn can_validate_utf8_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(credit_card)]
+        #[validate(non_control_character)]
         val: String,
     }
 
-    let s = TestStruct { val: "5236313877109142".to_string() };
+    let s = TestStruct { val: "하늘".to_string() };
 
     assert!(s.validate().is_ok());
 }
 
-#[cfg(feature = "card")]
+
 #[test]
-fn bad_credit_card_fails_validation() {
+fn utf8_with_control_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(credit_card)]
+        #[validate(non_control_character)]
         val: String,
     }
 
-    let s = TestStruct { val: "bob".to_string() };
+    let s = TestStruct { val: "\u{009F}하늘".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
-    assert_eq!(errs["val"][0].code, "credit_card");
-    assert_eq!(errs["val"][0].params["value"], "bob");
+    assert_eq!(errs["val"][0].code, "non_control_character");
 }
 
-#[cfg(feature = "card")]
+
 #[test]
-fn can_specify_code_for_credit_card() {
+fn can_specify_code_for_non_control_character() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(credit_card(code = "oops"))]
+        #[validate(non_control_character(code = "oops"))]
         val: String,
     }
-    let s = TestStruct { val: "bob".to_string() };
+    let s = TestStruct { val: "\u{009F}하늘".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
@@ -50,17 +48,18 @@ fn can_specify_code_for_credit_card() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "oops");
+    assert_eq!(errs["val"][0].params["value"], "\u{9F}하늘");
 }
 
-#[cfg(feature = "card")]
+
 #[test]
-fn can_specify_message_for_credit_card() {
+fn can_specify_message_for_non_control_character() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(credit_card(message = "oops"))]
+        #[validate(non_control_character(message = "oops"))]
         val: String,
     }
-    let s = TestStruct { val: "bob".to_string() };
+    let s = TestStruct { val: "\u{009F}하늘".to_string() };
     let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();

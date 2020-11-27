@@ -1,3 +1,5 @@
+use validator::Validate;
+
 #[derive(
     Clone,
     Debug,
@@ -5,7 +7,7 @@
     PartialEq,
     ::serde::Serialize,
     ::serde::Deserialize,
-    ::validator_derive::Validate,
+    Validate,
 )]
 pub struct Message {
     #[validate(length(min = 1i64, max = 2048i64))]

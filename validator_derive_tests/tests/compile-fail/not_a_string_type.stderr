@@ -2,4 +2,4 @@ error: `email` validator can only be used on String, &str, Cow<'_,str> or an Opt
  --> $DIR/not_a_string_type.rs:6:12
   |
 6 |     email: Vec<u8>,
-  |            ^^^^^^^
+  |            ^^^

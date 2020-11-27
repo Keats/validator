@@ -2,5 +2,6 @@
 members = [
     "validator",
     "validator_derive",
-    "validator_types"
+    "validator_types",
+    "validator_derive_tests"
 ]
