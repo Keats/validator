@@ -15,7 +15,7 @@ mod validation;
 
 use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
 use lit::*;
-use quoting::{quote_field_validation, quote_schema_validation, FieldQuoter};
+use quoting::{quote_validator, quote_schema_validation, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -27,41 +27,8 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Ensure the macro is on a struct with named fields
-    let fields = match ast.data {
-        syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
-            if fields.iter().any(|field| field.ident.is_none()) {
-                abort!(
-                    fields.span(),
-                    "struct has unnamed fields";
-                    help = "#[derive(Validate)] can only be used on structs with named fields";
-                );
-            }
-            fields.iter().cloned().collect::<Vec<_>>()
-        }
-        _ => abort!(ast.span(), "#[derive(Validate)] can only be used with structs"),
-    };
-
-    let mut validations = vec![];
-    let mut nested_validations = vec![];
-
-    let field_types = find_fields_type(&fields);
-
-    for field in &fields {
-        let field_ident = field.ident.clone().unwrap();
-        let (name, field_validations) = find_validators_for_field(field, &field_types);
-        let field_type = field_types.get(&field_ident.to_string()).cloned().unwrap();
-        let field_quoter = FieldQuoter::new(field_ident, name, field_type);
-
-        for validation in &field_validations {
-            quote_field_validation(
-                &field_quoter,
-                validation,
-                &mut validations,
-                &mut nested_validations,
-            );
-        }
-    }
-
+    let fields = collect_fields(ast);
+    let (validations, nested_validations) = quote_field_validations(&fields);
     let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
 
     let ident = &ast.ident;
@@ -91,6 +58,46 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     );
     // println!("{}", impl_ast.to_string());
     impl_ast
+}
+
+fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
+    match ast.data {
+        syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
+            if fields.iter().any(|field| field.ident.is_none()) {
+                abort!(
+                    fields.span(),
+                    "struct has unnamed fields";
+                    help = "#[derive(Validate)] can only be used on structs with named fields";
+                );
+            }
+            fields.iter().cloned().collect::<Vec<_>>()
+        }
+        _ => abort!(ast.span(), "#[derive(Validate)] can only be used with structs"),
+    }
+}
+
+fn quote_field_validations(fields: &Vec<syn::Field>) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
+    let mut validations = vec![];
+    let mut nested_validations = vec![];
+
+    let field_types = find_fields_type(&fields);
+    for field in fields {
+        let field_ident = field.ident.clone().unwrap();
+        let (name, field_validations) = find_validators_for_field(field, &field_types);
+        let field_type = field_types.get(&field_ident.to_string()).cloned().unwrap();
+        let field_quoter = FieldQuoter::new(field_ident, name, field_type);
+
+        for validation in &field_validations {
+            quote_validator(
+                &field_quoter,
+                validation,
+                &mut validations,
+                &mut nested_validations,
+            );
+        }
+    }
+
+    (validations, nested_validations)
 }
 
 /// Find if a struct has some schema validation and returns the info if so

@@ -452,7 +452,7 @@ pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::Token
     field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 
-pub fn quote_field_validation(
+pub fn quote_validator(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
     validations: &mut Vec<proc_macro2::TokenStream>,

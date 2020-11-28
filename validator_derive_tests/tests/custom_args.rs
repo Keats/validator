@@ -21,7 +21,7 @@ struct TestGenericStruct<'a, T: serde::ser::Serialize> {
     val: String,
 }
 
-impl<'v_a, 'a, T: serde::ser::Serialize> ValidateArgs<'v_a> for TestGenericStruct<'a, T> {
+impl<'a, T: serde::ser::Serialize> ValidateArgs<'_> for TestGenericStruct<'a, T> {
     type Args = ();
 
     fn validate_args(&self, _args: Self::Args) -> Result<(), validator::ValidationErrors> {
