@@ -2,4 +2,4 @@ error: Invalid attribute #[validate] on field `s`: both `equal` and `min` or `ma
  --> $DIR/equal_and_min_max_set.rs:5:32
   |
 5 |     #[validate(length(min = 1, equal = 2))]
-  |                                ^^^^^^^^^
+  |                                ^^^^^

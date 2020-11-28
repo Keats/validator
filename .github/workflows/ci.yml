@@ -40,6 +40,6 @@ jobs:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
-          rust-version: nightly
+          rust-version: stable
       - name: tests validator_derive with all features
-        run: cd validator_derive && cargo test --all-features
+        run: cd validator_derive_tests && cargo test

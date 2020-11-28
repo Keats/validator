@@ -2,4 +2,4 @@ error: Invalid argument for `must_match` validator of field `password`: types of
  --> $DIR/field_type_doesnt_match.rs:5:5
   |
 5 |     #[validate(must_match = "password2")]
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |     ^
