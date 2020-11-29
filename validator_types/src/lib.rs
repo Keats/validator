@@ -6,8 +6,15 @@
 pub enum Validator {
     Email,
     Url,
-    // String is the path to the function
-    Custom(String),
+    Custom {
+        /// This is the name of the function that should be called
+        function: String,
+        /// This is the argument type that can be passed in with a macro
+        argument_type: Option<String>,
+        /// This option stores the way to access the actual value to pass it on
+        /// This will be set by impl_validate when the the ValidateArgs type is defined
+        argument_access: Option<String>,
+    },
     // String is the name of the field to match
     MustMatch(String),
     // value is a &str or a HashMap<String, ..>
@@ -47,7 +54,7 @@ impl Validator {
             Validator::MustMatch(_) => "must_match",
             Validator::Email => "email",
             Validator::Url => "url",
-            Validator::Custom(_) => "custom",
+            Validator::Custom { .. } => "custom",
             Validator::Contains(_) => "contains",
             Validator::Regex(_) => "regex",
             Validator::Range { .. } => "range",

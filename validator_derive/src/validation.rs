@@ -13,6 +13,27 @@ pub struct SchemaValidation {
     pub message: Option<String>,
 }
 
+/// This struct holds the combined validation information for one filed
+#[derive(Debug)]
+pub struct FieldInformation {
+    pub field: syn::Field,
+    pub field_type: String,
+    pub name: String,
+    pub validations: Vec<FieldValidation>,
+}
+
+impl FieldInformation {
+    pub fn new(
+        field: syn::Field,
+        field_type: String,
+        name: String,
+        validations: Vec<FieldValidation>,
+    ) -> Self {
+        FieldInformation { field, field_type, name, validations }
+    }
+}
+
+/// This struct holds information about one specific validation with it's code, message and validator.
 #[derive(Debug)]
 pub struct FieldValidation {
     pub code: String,
@@ -162,6 +183,71 @@ pub fn extract_range_validation(
     }
 }
 
+pub fn extract_custom_validation(
+    field: String,
+    attr: &syn::Attribute,
+    meta_items: &[syn::NestedMeta],
+) -> FieldValidation {
+    let mut function = None;
+    let mut argument = None;
+
+    let (message, code) = extract_message_and_code("custom", &field, meta_items);
+
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
+    };
+
+    for meta_item in meta_items {
+        match *meta_item {
+            syn::NestedMeta::Meta(ref item) => match *item {
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
+                    let ident = path.get_ident().unwrap();
+                    match ident.to_string().as_ref() {
+                        "message" | "code" => continue,
+                        "function" => {
+                            function = match lit_to_string(lit) {
+                                Some(s) => Some(s),
+                                None => error(lit.span(), "invalid argument type for `function` of `custom` validator: expected a String")
+                            };
+                        }
+                        "arg" => {
+                            argument = match lit_to_string(lit) {
+                                Some(s) => Some(s),
+                                None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a String")
+                            };
+                        }
+                        v => error(path.span(), &format!(
+                            "unknown argument `{}` for validator `custom` (it only has `function`, `arg`)",
+                            v
+                        )),
+                    }
+                }
+                _ => abort!(
+                    item.span(),
+                    "unexpected item {:?} while parsing `custom` validator",
+                    item
+                ),
+            },
+            _ => unreachable!(),
+        }
+    }
+
+    if function.is_none() {
+        error(attr.span(), "Validator `custom` requires the function parameter");
+    }
+
+    let validator = Validator::Custom {
+        function: function.unwrap(),
+        argument_type: argument,
+        argument_access: None,
+    };
+    FieldValidation {
+        message,
+        code: code.unwrap_or_else(|| validator.code().to_string()),
+        validator,
+    }
+}
+
 /// Extract url/email/phone/non_control_character field validation with a code or a message
 pub fn extract_argless_validation(
     validator_name: String,
@@ -271,7 +357,11 @@ pub fn extract_one_arg_validation(
     }
 
     let validator = match validator_name.as_ref() {
-        "custom" => Validator::Custom(value.unwrap()),
+        "custom" => Validator::Custom {
+            function: value.unwrap(),
+            argument_type: None,
+            argument_access: None,
+        },
         "contains" => Validator::Contains(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),

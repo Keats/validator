@@ -5,7 +5,7 @@ use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use quote::ToTokens;
 use std::collections::HashMap;
-use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef};
+use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef, Type};
 use validator_types::Validator;
 
 mod asserts;
@@ -28,7 +28,10 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Collecting the validators
     let fields = collect_fields(ast);
-    let (validations, nested_validations) = quote_field_validations(&fields);
+    let mut validations = collect_field_validations(fields);
+    let (arg_type, has_arg) = construct_validator_argument_type(&mut validations);
+    let (validations, nested_validations) = quote_field_validations_2(validations);
+
     let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
 
     // Struct specific definitions
@@ -36,9 +39,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     // The Validate trait implementation
-    // TODO
-    let custom_args: Option<String> = None;
-    let validate_trait_impl = if custom_args.is_none() {
+    let validate_trait_impl = if !has_arg {
         quote!(
             impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
                 fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
@@ -63,11 +64,11 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         #validate_trait_impl
 
         impl #impl_generics ::validator::ValidateArgs<'v_a> for #ident #ty_generics #where_clause {
-            // TODO
-            type Args = ();
+            type Args = #arg_type;
 
             #[allow(unused_mut)]
-            fn validate_args(&self, _args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+            #[allow(unused_variable)]
+            fn validate_args(&self, args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                 let mut errors = ::validator::ValidationErrors::new();
 
                 #(#validations)*
@@ -85,7 +86,9 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
             }
         }
     );
+
     // println!("{}", impl_ast.to_string());
+
     impl_ast
 }
 
@@ -105,23 +108,95 @@ fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
     }
 }
 
-fn quote_field_validations(
-    fields: &Vec<syn::Field>,
+fn collect_field_validations(mut fields: Vec<syn::Field>) -> Vec<FieldInformation> {
+    let field_types = find_fields_type(&fields);
+    fields.drain(..).fold(vec![], |mut acc, field| {
+        let key = field.ident.clone().unwrap().to_string();
+        let (name, validations) = find_validators_for_field(&field, &field_types);
+        acc.push(FieldInformation::new(
+            field,
+            field_types.get(&key).unwrap().clone(),
+            name,
+            validations,
+        ));
+        acc
+    })
+}
+
+fn construct_validator_argument_type(
+    validations: &mut Vec<FieldInformation>,
+) -> (proc_macro2::TokenStream, bool) {
+    const ARGS_PARAMETER_NAME: &str = "args";
+
+    // This iterator only holds custom validations with a argument_type
+    let mut customs = validations.iter_mut().fold(vec![], |acc, x| {
+        x.validations.iter_mut().fold(acc, |mut acc, x| {
+            match &x.validator {
+                Validator::Custom { argument_type: Some(_), .. } => acc.push(&mut x.validator),
+                _ => (),
+            };
+            acc
+        })
+    });
+
+    if customs.is_empty() {
+        // Just the default empty type if no types are defined
+        (quote!(()), false)
+    } else if customs.len() == 1 {
+        // A single parameter will not be wrapped in a tuple
+        let x = customs.pop().unwrap();
+        match x {
+            Validator::Custom { argument_type: Some(t), argument_access, .. } => {
+                *argument_access = Some(String::from(ARGS_PARAMETER_NAME));
+                let type_stream: Type = syn::parse_str(t.as_str()).unwrap();
+                (quote!(#type_stream), true)
+            }
+            _ => unreachable!(),
+        }
+    } else {
+        // Multiple times will be wrapped in a tuple
+        let mut index = 0;
+        let (params, _) = customs.iter_mut().fold((quote!(), true), |(acc, first), x| {
+            match x {
+                Validator::Custom { argument_type: Some(t), argument_access, .. } => {
+                    // Format: args.1
+                    let mut access = String::from(ARGS_PARAMETER_NAME);
+                    access.push('.');
+                    access.push_str(&index.to_string());
+                    *argument_access = Some(access);
+                    index += 1;
+
+                    // TODO error handling?
+                    let type_stream: Type = syn::parse_str(t.as_str()).unwrap();
+
+                    if first {
+                        (quote!(#type_stream), false)
+                    } else {
+                        (quote!(#acc, #type_stream), false)
+                    }
+                }
+                _ => unreachable!(),
+            }
+        });
+
+        (quote!((#params)), true)
+    }
+}
+
+fn quote_field_validations_2(
+    mut fields: Vec<FieldInformation>,
 ) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
     let mut validations = vec![];
     let mut nested_validations = vec![];
 
-    let field_types = find_fields_type(&fields);
-    for field in fields {
-        let field_ident = field.ident.clone().unwrap();
-        let (name, field_validations) = find_validators_for_field(field, &field_types);
-        let field_type = field_types.get(&field_ident.to_string()).cloned().unwrap();
-        let field_quoter = FieldQuoter::new(field_ident, name, field_type);
+    fields.drain(..).for_each(|x| {
+        let field_ident = x.field.ident.clone().unwrap();
+        let field_quoter = FieldQuoter::new(field_ident, x.name, x.field_type);
 
-        for validation in &field_validations {
+        for validation in &x.validations {
             quote_validator(&field_quoter, validation, &mut validations, &mut nested_validations);
         }
-    }
+    });
 
     (validations, nested_validations)
 }
@@ -361,7 +436,11 @@ fn find_validators_for_field(
                                 match ident.to_string().as_ref() {
                                     "custom" => {
                                         match lit_to_string(lit) {
-                                            Some(s) => validators.push(FieldValidation::new(Validator::Custom(s))),
+                                            Some(s) => validators.push(FieldValidation::new(Validator::Custom {
+                                                function: s,
+                                                argument_type: None,
+                                                argument_access: None
+                                            })),
                                             None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };
                                     }
@@ -414,20 +493,19 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
+                                    "custom" => {
+                                        validators.push(extract_custom_validation(
+                                            rust_ident.clone(),
+                                            attr,
+                                            &meta_items,
+                                        ));
+                                    }
                                     "email"
                                     | "url"
                                     | "phone"
                                     | "credit_card"
                                     | "non_control_character" => {
                                         validators.push(extract_argless_validation(
-                                            ident.to_string(),
-                                            rust_ident.clone(),
-                                            &meta_items,
-                                        ));
-                                    }
-                                    "custom" => {
-                                        validators.push(extract_one_arg_validation(
-                                            "function",
                                             ident.to_string(),
                                             rust_ident.clone(),
                                             &meta_items,
