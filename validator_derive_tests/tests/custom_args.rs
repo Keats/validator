@@ -21,13 +21,13 @@ struct TestGenericStruct<'a, T: serde::ser::Serialize> {
     val: String,
 }
 
-impl<'a, T: serde::ser::Serialize> ValidateArgs<'_> for TestGenericStruct<'a, T> {
-    type Args = ();
-
-    fn validate_args(&self, _args: Self::Args) -> Result<(), validator::ValidationErrors> {
-        Ok(())
-    }
-}
+// impl<'a, T: serde::ser::Serialize> ValidateArgs<'_> for TestGenericStruct<'a, T> {
+//     type Args = ();
+//
+//     fn validate_args(&self, _args: Self::Args) -> Result<(), validator::ValidationErrors> {
+//         Ok(())
+//     }
+// }
 
 #[test]
 fn validate_generic_struct_custom_fn_ok() {

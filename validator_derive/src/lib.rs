@@ -5,7 +5,7 @@ use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use quote::ToTokens;
 use std::collections::HashMap;
-use syn::{parse_quote, spanned::Spanned};
+use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef};
 use validator_types::Validator;
 
 mod asserts;
@@ -15,7 +15,7 @@ mod validation;
 
 use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
 use lit::*;
-use quoting::{quote_validator, quote_schema_validation, FieldQuoter};
+use quoting::{quote_schema_validation, quote_validator, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -26,19 +26,48 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 }
 
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
-    // Ensure the macro is on a struct with named fields
+    // Collecting the validators
     let fields = collect_fields(ast);
     let (validations, nested_validations) = quote_field_validations(&fields);
     let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
 
+    // Struct specific definitions
     let ident = &ast.ident;
-
-    // Helper is provided for handling complex generic types correctly and effortlessly
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+
+    // The Validate trait implementation
+    // TODO
+    let custom_args: Option<String> = None;
+    let validate_trait_impl = if custom_args.is_none() {
+        quote!(
+            impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
+                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                    use ::validator::ValidateArgs;
+                    self.validate_args(())
+                }
+            }
+        )
+    } else {
+        quote!()
+    };
+
+    // Adding the validator lifetime 'v_a
+    let mut expanded_generic = ast.generics.clone();
+    expanded_generic
+        .params
+        .insert(0, GenericParam::Lifetime(LifetimeDef::new(Lifetime::new("'v_a", ast.span()))));
+    let (impl_generics, _, _) = expanded_generic.split_for_impl();
+
+    // Implementing ValidateArgs
     let impl_ast = quote!(
-        impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
+        #validate_trait_impl
+
+        impl #impl_generics ::validator::ValidateArgs<'v_a> for #ident #ty_generics #where_clause {
+            // TODO
+            type Args = ();
+
             #[allow(unused_mut)]
-            fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+            fn validate_args(&self, _args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                 let mut errors = ::validator::ValidationErrors::new();
 
                 #(#validations)*
@@ -76,7 +105,9 @@ fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
     }
 }
 
-fn quote_field_validations(fields: &Vec<syn::Field>) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
+fn quote_field_validations(
+    fields: &Vec<syn::Field>,
+) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
     let mut validations = vec![];
     let mut nested_validations = vec![];
 
@@ -88,12 +119,7 @@ fn quote_field_validations(fields: &Vec<syn::Field>) -> (Vec<proc_macro2::TokenS
         let field_quoter = FieldQuoter::new(field_ident, name, field_type);
 
         for validation in &field_validations {
-            quote_validator(
-                &field_quoter,
-                validation,
-                &mut validations,
-                &mut nested_validations,
-            );
+            quote_validator(&field_quoter, validation, &mut validations, &mut nested_validations);
         }
     }
 
