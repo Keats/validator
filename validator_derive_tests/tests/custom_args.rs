@@ -14,10 +14,7 @@ fn invalid_custom_tuple(_: &str, _arg: (i64, i64)) -> Result<(), ValidationError
     Err(ValidationError::new("meh"))
 }
 
-fn valid_reference_with_lifetime<'a>(
-    _: &str,
-    arg: &'a mut CustomStruct,
-) -> Result<(), ValidationError> {
+fn valid_reference_with_lifetime(_: &str, arg: &mut CustomStruct) -> Result<(), ValidationError> {
     arg.counter += 1;
     Ok(())
 }
@@ -32,7 +29,7 @@ fn invalid_validation_complex_args<'a, T: AddAssign>(
 }
 
 #[test]
-fn validate_custom_fn_tuple() {
+fn validate_custom_fn_reference_with_lifetime_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
         #[validate(custom(
