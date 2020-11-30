@@ -166,7 +166,6 @@ fn construct_validator_argument_type(
                     *argument_access = Some(access);
                     index += 1;
 
-                    // TODO error handling?
                     let type_stream: Type = syn::parse_str(t.as_str()).unwrap();
 
                     if first {

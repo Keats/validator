@@ -207,13 +207,24 @@ pub fn extract_custom_validation(
                         "function" => {
                             function = match lit_to_string(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `function` of `custom` validator: expected a String")
+                                None => error(lit.span(), "invalid argument type for `function` of `custom` validator: expected a string")
                             };
                         }
                         "arg" => {
                             argument = match lit_to_string(lit) {
-                                Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a String")
+                                Some(s) => {
+                                    match syn::parse_str::<syn::Type>(s.as_str()) {
+                                        Ok(_) => {}
+                                        Err(_) => {
+                                            let mut msg = "invalid argument type for `arg` of `custom` validator: The string has to be a single type.".to_string();
+                                            msg.push_str("\n(Tip: You can combine multiple types into one tuple.)");
+
+                                            error(lit.span(), msg.as_str())
+                                        }
+                                    }
+                                    Some(s)
+                                },
+                                None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a string")
                             };
                         }
                         v => error(path.span(), &format!(
