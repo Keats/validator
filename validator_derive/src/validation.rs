@@ -244,7 +244,7 @@ pub fn extract_custom_validation(
     }
 
     if function.is_none() {
-        error(attr.span(), "Validator `custom` requires the function parameter");
+        error(attr.span(), "The validator `custom` requires the `function` parameter.");
     }
 
     let validator = Validator::Custom {

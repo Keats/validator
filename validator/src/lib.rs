@@ -45,7 +45,7 @@
 //! | `range`                 |                                                       |
 //! | `must_match`            |                                                       |
 //! | `contains`              |                                                       |
-//! | `custom`                | This validator can also be used on then entire struct |
+//! | `custom`                |                                                       |
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
 //! | `phone`                 | (Requires the feature `phone` to be enabled)          |

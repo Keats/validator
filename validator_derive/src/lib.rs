@@ -27,10 +27,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Collecting the validators
-    let fields = collect_fields(ast);
-    let mut validations = collect_field_validations(fields);
+    let mut validations = collect_field_validations(ast);
     let (arg_type, has_arg) = construct_validator_argument_type(&mut validations);
-    let (validations, nested_validations) = quote_field_validations_2(validations);
+    let (validations, nested_validations) = quote_field_validations(validations);
 
     let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
 
@@ -108,7 +107,9 @@ fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
     }
 }
 
-fn collect_field_validations(mut fields: Vec<syn::Field>) -> Vec<FieldInformation> {
+fn collect_field_validations(ast: &syn::DeriveInput) -> Vec<FieldInformation> {
+    let mut fields= collect_fields(ast);
+
     let field_types = find_fields_type(&fields);
     fields.drain(..).fold(vec![], |mut acc, field| {
         let key = field.ident.clone().unwrap().to_string();
@@ -182,7 +183,7 @@ fn construct_validator_argument_type(
     }
 }
 
-fn quote_field_validations_2(
+fn quote_field_validations(
     mut fields: Vec<FieldInformation>,
 ) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
     let mut validations = vec![];
