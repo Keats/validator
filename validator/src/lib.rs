@@ -71,6 +71,7 @@ mod validation;
 pub use validation::cards::validate_credit_card;
 pub use validation::contains::validate_contains;
 pub use validation::email::validate_email;
+pub use validation::domain::validate_domain;
 pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6};
 pub use validation::length::validate_length;
 pub use validation::must_match::validate_must_match;
