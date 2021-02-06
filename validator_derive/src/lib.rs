@@ -2,11 +2,11 @@
 use if_chain::if_chain;
 use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use quote::ToTokens;
-use std::collections::HashMap;
+use std::{collections::HashMap, unreachable};
 use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef, Type};
-use validator_types::Validator;
+use validator_types::{CustomArgument, Validator};
 
 mod asserts;
 mod lit;
@@ -62,6 +62,9 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let impl_ast = quote!(
         #validate_trait_impl
 
+        // We need this here to prevent formatting lints that can be caused by `quote_spanned!`
+        // See: rust-lang/rust-clippy#6249 for more reference
+        #[allow(clippy::all)]
         impl #impl_generics ::validator::ValidateArgs<'v_a> for #ident #ty_generics #where_clause {
             type Args = #arg_type;
 
@@ -108,7 +111,7 @@ fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
 }
 
 fn collect_field_validations(ast: &syn::DeriveInput) -> Vec<FieldInformation> {
-    let mut fields= collect_fields(ast);
+    let mut fields = collect_fields(ast);
 
     let field_types = find_fields_type(&fields);
     fields.drain(..).fold(vec![], |mut acc, field| {
@@ -130,52 +133,38 @@ fn construct_validator_argument_type(
     const ARGS_PARAMETER_NAME: &str = "args";
 
     // This iterator only holds custom validations with a argument_type
-    let mut customs = validations.iter_mut().fold(vec![], |acc, x| {
-        x.validations.iter_mut().fold(acc, |mut acc, x| {
-            match &x.validator {
-                Validator::Custom { argument_type: Some(_), .. } => acc.push(&mut x.validator),
-                _ => (),
-            };
-            acc
-        })
-    });
+    let mut customs: Vec<&mut CustomArgument> = validations
+        .iter_mut()
+        .map(|x| x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut()))
+        .flatten()
+        .collect();
 
     if customs.is_empty() {
         // Just the default empty type if no types are defined
         (quote!(()), false)
     } else if customs.len() == 1 {
         // A single parameter will not be wrapped in a tuple
-        let x = customs.pop().unwrap();
-        match x {
-            Validator::Custom { argument_type: Some(t), argument_access, .. } => {
-                *argument_access = Some(String::from(ARGS_PARAMETER_NAME));
-                let type_stream: Type = syn::parse_str(t.as_str()).unwrap();
-                (quote!(#type_stream), true)
-            }
-            _ => unreachable!(),
-        }
+        let arg = customs.pop().unwrap();
+        arg.arg_access = Some(syn::parse_str(ARGS_PARAMETER_NAME).unwrap());
+        
+        let type_stream: &Type = &arg.arg_type;
+        let span = arg.def_span;
+        (quote_spanned!(span=> #type_stream), true)
     } else {
         // Multiple times will be wrapped in a tuple
         let mut index = 0;
-        let (params, _) = customs.iter_mut().fold((quote!(), true), |(acc, first), x| {
-            match x {
-                Validator::Custom { argument_type: Some(t), argument_access, .. } => {
-                    // Format: args.1
-                    let mut access = String::from(ARGS_PARAMETER_NAME);
-                    access.push('.');
-                    access.push_str(&index.to_string());
-                    *argument_access = Some(access);
-                    index += 1;
+        let params = customs.iter_mut().fold(quote!(), |acc, arg| {
+            let arg_access_string = format!("{}.{}", ARGS_PARAMETER_NAME, index);
+            arg.arg_access = Some(syn::parse_str(arg_access_string.as_str()).unwrap());
+            index += 1;
+            
+            let type_stream: &Type = &arg.arg_type;
+            let span = arg.def_span;
 
-                    let type_stream: Type = syn::parse_str(t.as_str()).unwrap();
-
-                    if first {
-                        (quote!(#type_stream), false)
-                    } else {
-                        (quote!(#acc, #type_stream), false)
-                    }
-                }
-                _ => unreachable!(),
+            if index == 1 {
+                quote_spanned!(span=> #type_stream)
+            } else {
+                quote_spanned!(span=> #acc, #type_stream)
             }
         });
 
@@ -438,8 +427,7 @@ fn find_validators_for_field(
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom {
                                                 function: s,
-                                                argument_type: None,
-                                                argument_access: None
+                                                argument: None,
                                             })),
                                             None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };
@@ -554,10 +542,20 @@ fn find_validators_for_field(
             }
             Ok(syn::Meta::Path(_)) => validators.push(FieldValidation::new(Validator::Nested)),
             Ok(syn::Meta::NameValue(_)) => abort!(attr.span(), "Unexpected name=value argument"),
-            Err(e) => unreachable!(
-                "Got something other than a list of attributes while checking field `{}`: {:?}",
-                field_ident, e
-            ),
+            Err(e) => {
+                let error_string = format!("{:?}", e);
+                if error_string == "Error(\"expected literal\")" {
+                    abort!(attr.span(),
+                        "This attributes for the field `{}` seem to be misformed, please validate the syntax with the documentation",
+                        field_ident
+                    );
+                } else {
+                    abort!(attr.span(),
+                        "Unable to parse this attribute for the field `{}` with the error: {:?}",
+                        field_ident, e
+                    );
+                }
+            },
         }
 
         if has_validate && validators.is_empty() {

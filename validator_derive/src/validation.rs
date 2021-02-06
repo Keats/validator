@@ -1,5 +1,5 @@
 use proc_macro_error::abort;
-use validator_types::Validator;
+use validator_types::{CustomArgument, Validator};
 
 use crate::lit::*;
 use proc_macro2::Span;
@@ -211,18 +211,19 @@ pub fn extract_custom_validation(
                             };
                         }
                         "arg" => {
-                            argument = match lit_to_string(lit) {
+                            match lit_to_string(lit) {
                                 Some(s) => {
                                     match syn::parse_str::<syn::Type>(s.as_str()) {
-                                        Ok(_) => {}
+                                        Ok(arg_type) => {
+                                            argument = Some(CustomArgument::new(lit.span().clone(), arg_type));
+                                        }
                                         Err(_) => {
                                             let mut msg = "invalid argument type for `arg` of `custom` validator: The string has to be a single type.".to_string();
                                             msg.push_str("\n(Tip: You can combine multiple types into one tuple.)");
 
-                                            error(lit.span(), msg.as_str())
+                                            error(lit.span(), msg.as_str());
                                         }
                                     }
-                                    Some(s)
                                 },
                                 None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a string")
                             };
@@ -247,11 +248,7 @@ pub fn extract_custom_validation(
         error(attr.span(), "The validator `custom` requires the `function` parameter.");
     }
 
-    let validator = Validator::Custom {
-        function: function.unwrap(),
-        argument_type: argument,
-        argument_access: None,
-    };
+    let validator = Validator::Custom { function: function.unwrap(), argument };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
@@ -368,11 +365,7 @@ pub fn extract_one_arg_validation(
     }
 
     let validator = match validator_name.as_ref() {
-        "custom" => Validator::Custom {
-            function: value.unwrap(),
-            argument_type: None,
-            argument_access: None,
-        },
+        "custom" => Validator::Custom { function: value.unwrap(), argument: None },
         "contains" => Validator::Contains(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),

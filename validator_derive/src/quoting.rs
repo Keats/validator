@@ -1,3 +1,4 @@
+use if_chain::if_chain;
 use proc_macro2::{self, Span};
 use quote::quote;
 use validator_types::Validator;
@@ -372,14 +373,17 @@ pub fn quote_custom_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    if let Validator::Custom { function, argument_access, .. } = &validation.validator {
+    if let Validator::Custom { function, argument, .. } = &validation.validator {
         let fn_ident: syn::Path = syn::parse_str(function).unwrap();
 
-        let access = if let Some(expr) = argument_access {
-            let expr: syn::Expr = syn::parse_str(expr).unwrap();
-            quote!(, #expr)
-        } else {
-            quote!()
+        let access = if_chain! {
+            if let Some(argument) = argument;
+            if let Some(access) = &argument.arg_access;
+            then {
+                quote!(, #access)
+            } else {
+                quote!()
+            }
         };
 
         let add_message_quoted = if let Some(ref m) = validation.message {
