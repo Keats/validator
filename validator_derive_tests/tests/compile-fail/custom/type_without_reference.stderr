@@ -1,0 +1,5 @@
+error: Invalid argument type: All types except numbers and tuples need be passed by reference using the lifetime `'v_a`
+ --> $DIR/type_without_reference.rs:5:55
+  |
+5 |     #[validate(custom(function = "hello_world", arg = "String"))]
+  |                                                       ^^^^^^^^

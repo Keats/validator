@@ -1,15 +1,5 @@
-error[E0261]: use of undeclared lifetime name `'a`
- --> $DIR/different_lifetime.rs:7:10
+error: Invalid argument reference: The lifetime `'a` is not supported. Please use the validator lifetime `'v_a`
+ --> $DIR/different_lifetime.rs:9:55
   |
-7 | #[derive(Validate)]
-  |          ^^^^^^^^ undeclared lifetime
-  |
-  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
-help: consider introducing lifetime `'a` here
-  |
-8 | 'a, struct Test {
-  | ^^^
-help: consider introducing lifetime `'a` here
-  |
-7 | #[derive(Validate<'a>)]
-  |                  ^^^^
+9 |     #[validate(custom(function = "hello_world", arg = "&'a mut String"))]
+  |                                                       ^^^^^^^^^^^^^^^^

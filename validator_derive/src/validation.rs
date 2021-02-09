@@ -1,7 +1,7 @@
 use proc_macro_error::abort;
 use validator_types::{CustomArgument, Validator};
 
-use crate::lit::*;
+use crate::{asserts::assert_custom_arg_type, lit::*};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 
@@ -215,6 +215,7 @@ pub fn extract_custom_validation(
                                 Some(s) => {
                                     match syn::parse_str::<syn::Type>(s.as_str()) {
                                         Ok(arg_type) => {
+                                            assert_custom_arg_type(&lit.span(), &arg_type);
                                             argument = Some(CustomArgument::new(lit.span().clone(), arg_type));
                                         }
                                         Err(_) => {
