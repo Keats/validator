@@ -11,7 +11,7 @@ lazy_static! {
     // It will mark esoteric email addresses like quoted string as invalid
     static ref EMAIL_USER_RE: Regex = Regex::new(r"^(?i)[a-z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap();
     static ref EMAIL_DOMAIN_RE: Regex = Regex::new(
-        r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
+        r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
     ).unwrap();
     // literal form, ipv4 or ipv6 address (SMTP 4.1.3)
     static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"(?i)\[([A-f0-9:\.]+)\]\z").unwrap();
@@ -99,7 +99,7 @@ mod tests {
             ("", false),
             ("abc", false),
             ("abc@", false),
-            ("abc@bar", true),
+            ("abc@bar", false),
             ("a @x.cz", false),
             ("abc@.com", false),
             ("something@@somewhere.com", false),
