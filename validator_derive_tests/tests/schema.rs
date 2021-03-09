@@ -12,7 +12,29 @@ fn can_validate_schema_fn_ok() {
         val: String,
     }
 
-    let s = TestStruct { val: "hello".to_string() };
+    let s = TestStruct { val: "hello".into() };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_multiple_schema_fn_ok() {
+    fn valid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
+    fn valid_schema_fn2(_: &TestStruct) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = "valid_schema_fn"))]
+    #[validate(schema(function = "valid_schema_fn2"))]
+    struct TestStruct {
+        val: String,
+    }
+
+    let s = TestStruct { val: "hello".into() };
 
     assert!(s.validate().is_ok());
 }
@@ -37,6 +59,34 @@ fn can_fail_schema_fn_validation() {
     assert!(errs.contains_key("__all__"));
     assert_eq!(errs["__all__"].len(), 1);
     assert_eq!(errs["__all__"][0].code, "meh");
+}
+
+#[test]
+fn can_fail_multiple_schema_fn_validation() {
+    fn invalid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
+        Err(ValidationError::new("meh"))
+    }
+
+    fn invalid_schema_fn2(_: &TestStruct) -> Result<(), ValidationError> {
+        Err(ValidationError::new("meh2"))
+    }
+
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = "invalid_schema_fn"))]
+    #[validate(schema(function = "invalid_schema_fn2"))]
+    struct TestStruct {
+        val: String,
+    }
+
+    let s = TestStruct { val: String::new() };
+    let res = s.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
+    assert!(errs.contains_key("__all__"));
+    assert_eq!(errs["__all__"].len(), 2);
+    assert_eq!(errs["__all__"][0].code, "meh");
+    assert_eq!(errs["__all__"][1].code, "meh2");
 }
 
 #[test]
