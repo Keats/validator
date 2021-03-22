@@ -342,6 +342,10 @@ For example, the following attributes all work:
 
 ### validator
 
+## 0.13.0 (2021/22/03)
+
+- Allow multiple schema-level validations
+
 ## 0.12.0 (2020/11/26)
 
 - Allow `length` and `range` validators to take a reference to a variable
