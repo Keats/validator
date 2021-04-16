@@ -342,7 +342,7 @@ For example, the following attributes all work:
 
 ### validator
 
-## 0.13.0 (2021/22/03)
+## 0.13.0 (2021/03/22)
 
 - Allow multiple schema-level validations
 
