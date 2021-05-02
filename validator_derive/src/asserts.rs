@@ -8,17 +8,19 @@ lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
 }
 
-pub static NUMBER_TYPES: [&str; 36] = [
+pub static NUMBER_TYPES: [&str; 40] = [
     "usize",
     "u8",
     "u16",
     "u32",
     "u64",
+    "u128",
     "isize",
     "i8",
     "i16",
     "i32",
     "i64",
+    "i128",
     "f32",
     "f64",
     "Option<usize>",
@@ -26,11 +28,13 @@ pub static NUMBER_TYPES: [&str; 36] = [
     "Option<u16>",
     "Option<u32>",
     "Option<u64>",
+    "Option<u128>",
     "Option<isize>",
     "Option<i8>",
     "Option<i16>",
     "Option<i32>",
     "Option<i64>",
+    "Option<i128>",
     "Option<f32>",
     "Option<f64>",
     "Option<Option<usize>>",
