@@ -35,6 +35,8 @@ mod tests {
         assert_eq!(true, validate_range(5u8, Some(0), Some(255)));
         assert_eq!(true, validate_range(4u16, Some(0), Some(16)));
         assert_eq!(true, validate_range(6u32, Some(0), Some(23)));
+        assert_eq!(true, validate_range(18446744073709551614u64, Some(0), Some(18446744073709551615)));
+        assert_eq!(true, validate_range(340282366920938463463374607431768211454u128, Some(0), Some(340282366920938463463374607431768211455)));
     }
 
     #[test]
