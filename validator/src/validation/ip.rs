@@ -8,13 +8,7 @@ pub fn validate_ip_v4<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
 {
-    match IpAddr::from_str(val.into().as_ref()) {
-        Ok(i) => match i {
-            IpAddr::V4(_) => true,
-            IpAddr::V6(_) => false,
-        },
-        Err(_) => false,
-    }
+    IpAddr::from_str(val.into().as_ref()).map_or(false, |i| i.is_ipv4())
 }
 
 /// Validates whether the given string is an IP V6
@@ -23,13 +17,7 @@ pub fn validate_ip_v6<'a, T>(val: T) -> bool
 where
     T: Into<Cow<'a, str>>,
 {
-    match IpAddr::from_str(val.into().as_ref()) {
-        Ok(i) => match i {
-            IpAddr::V4(_) => false,
-            IpAddr::V6(_) => true,
-        },
-        Err(_) => false,
-    }
+    IpAddr::from_str(val.into().as_ref()).map_or(false, |i| i.is_ipv6())
 }
 
 /// Validates whether the given string is an IP

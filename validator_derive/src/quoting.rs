@@ -506,38 +506,38 @@ pub fn quote_validator(
     }
 }
 
-pub fn quote_schema_validation(validation: Option<SchemaValidation>) -> proc_macro2::TokenStream {
-    if let Some(v) = validation {
-        let fn_ident = syn::Ident::new(&v.function, Span::call_site());
+pub fn quote_schema_validation(v: &SchemaValidation) -> proc_macro2::TokenStream {
+    let fn_ident = syn::Ident::new(&v.function, Span::call_site());
 
-        let add_message_quoted = if let Some(ref m) = v.message {
-            quote!(err.message = Some(::std::borrow::Cow::from(#m));)
-        } else {
-            quote!()
-        };
-        let mut_err_token = if v.message.is_some() { quote!(mut) } else { quote!() };
-        let quoted = quote!(
-            match #fn_ident(self) {
-                ::std::result::Result::Ok(()) => (),
-                ::std::result::Result::Err(#mut_err_token err) => {
-                    #add_message_quoted
-                    errors.add("__all__", err);
-                },
-            };
-        );
-
-        if !v.skip_on_field_errors {
-            return quoted;
-        }
-
-        quote!(
-            if errors.is_empty() {
-                #quoted
-            }
-        )
+    let add_message_quoted = if let Some(ref m) = v.message {
+        quote!(err.message = Some(::std::borrow::Cow::from(#m));)
     } else {
         quote!()
+    };
+
+    let mut_err_token = if v.message.is_some() { quote!(mut) } else { quote!() };
+
+    let quoted = quote!(
+        match #fn_ident(self) {
+            ::std::result::Result::Ok(()) => (),
+            ::std::result::Result::Err(#mut_err_token err) => {
+                #add_message_quoted
+                errors.add("__all__", err);
+            },
+        };
+    );
+
+    if !v.skip_on_field_errors {
+        return quoted;
     }
+
+    quote!(
+        #quoted
+    )
+}
+
+pub fn quote_schema_validations(validation: &[SchemaValidation]) -> Vec<proc_macro2::TokenStream> {
+    validation.iter().map(quote_schema_validation).collect()
 }
 
 pub fn quote_required_validation(

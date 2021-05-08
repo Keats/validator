@@ -15,7 +15,7 @@ mod validation;
 
 use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
 use lit::*;
-use quoting::{quote_schema_validation, quote_validator, FieldQuoter};
+use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -31,7 +31,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let (arg_type, has_arg) = construct_validator_argument_type(&mut validations);
     let (validations, nested_validations) = quote_field_validations(validations);
 
-    let schema_validation = quote_schema_validation(find_struct_validation(&ast.attrs));
+    let schema_validations = quote_schema_validations(&find_struct_validations(&ast.attrs));
 
     // Struct specific definitions
     let ident = &ast.ident;
@@ -75,7 +75,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
 
                 #(#validations)*
 
-                #schema_validation
+                #(#schema_validations)*
 
                 let mut result = if errors.is_empty() {
                     ::std::result::Result::Ok(())
@@ -191,95 +191,94 @@ fn quote_field_validations(
 }
 
 /// Find if a struct has some schema validation and returns the info if so
-fn find_struct_validation(struct_attrs: &[syn::Attribute]) -> Option<SchemaValidation> {
+fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
     let error = |span: Span, msg: &str| -> ! {
         abort!(span, "Invalid schema level validation: {}", msg);
     };
 
-    for attr in struct_attrs {
-        if attr.path != parse_quote!(validate) {
-            continue;
-        }
+    if_chain! {
+        if let Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.parse_meta();
+        if let syn::NestedMeta::Meta(ref item) = nested[0];
+        if let syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) = *item;
 
-        if_chain! {
-            if let Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.parse_meta();
-            if let syn::NestedMeta::Meta(ref item) = nested[0];
-            if let &syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) = item;
-
-            then {
-                let ident = path.get_ident().unwrap();
-                if ident != "schema" {
-                    error(attr.span(), "Only `schema` is allowed as validator on a struct")
-                }
-
-                let mut function = String::new();
-                let mut skip_on_field_errors = true;
-                let mut code = None;
-                let mut message = None;
-
-                for arg in nested {
-                    if_chain! {
-                        if let syn::NestedMeta::Meta(ref item) = *arg;
-                        if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item;
-
-                        then {
-                            let ident = path.get_ident().unwrap();
-                            match ident.to_string().as_ref() {
-                                "function" => {
-                                    function = match lit_to_string(lit) {
-                                        Some(s) => s,
-                                        None => error(lit.span(), "invalid argument type for `function` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                "skip_on_field_errors" => {
-                                    skip_on_field_errors = match lit_to_bool(lit) {
-                                        Some(s) => s,
-                                        None => error(lit.span(), "invalid argument type for `skip_on_field_errors` \
-                                        : only a bool is allowed"),
-                                    };
-                                },
-                                "code" => {
-                                    code = match lit_to_string(lit) {
-                                        Some(s) => Some(s),
-                                        None => error(lit.span(), "invalid argument type for `code` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                "message" => {
-                                    message = match lit_to_string(lit) {
-                                        Some(s) => Some(s),
-                                        None => error(lit.span(), "invalid argument type for `message` \
-                                        : only a string is allowed"),
-                                    };
-                                },
-                                _ => error(lit.span(), "Unknown argument")
-                            }
-                        } else {
-                            error(arg.span(), "Unexpected args")
-                        }
-                    }
-                }
-
-                if function == "" {
-                    error(path.span(), "`function` is required");
-                }
-
-                return Some(
-                    SchemaValidation {
-                        function,
-                        skip_on_field_errors,
-                        code,
-                        message,
-                    }
-                );
-            } else {
-                error(attr.span(), "Unexpected struct validator")
+        then {
+            let ident = path.get_ident().unwrap();
+            if ident != "schema" {
+                error(attr.span(), "Only `schema` is allowed as validator on a struct")
             }
+
+            let mut function = String::new();
+            let mut skip_on_field_errors = true;
+            let mut code = None;
+            let mut message = None;
+
+            for arg in nested {
+                if_chain! {
+                    if let syn::NestedMeta::Meta(ref item) = *arg;
+                    if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item;
+
+                    then {
+                        let ident = path.get_ident().unwrap();
+                        match ident.to_string().as_ref() {
+                            "function" => {
+                                function = match lit_to_string(lit) {
+                                    Some(s) => s,
+                                    None => error(lit.span(), "invalid argument type for `function` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            "skip_on_field_errors" => {
+                                skip_on_field_errors = match lit_to_bool(lit) {
+                                    Some(s) => s,
+                                    None => error(lit.span(), "invalid argument type for `skip_on_field_errors` \
+                                    : only a bool is allowed"),
+                                };
+                            },
+                            "code" => {
+                                code = match lit_to_string(lit) {
+                                    Some(s) => Some(s),
+                                    None => error(lit.span(), "invalid argument type for `code` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            "message" => {
+                                message = match lit_to_string(lit) {
+                                    Some(s) => Some(s),
+                                    None => error(lit.span(), "invalid argument type for `message` \
+                                    : only a string is allowed"),
+                                };
+                            },
+                            _ => error(lit.span(), "Unknown argument")
+                        }
+                    } else {
+                        error(arg.span(), "Unexpected args")
+                    }
+                }
+            }
+
+            if function.is_empty() {
+                error(path.span(), "`function` is required");
+            }
+
+            SchemaValidation {
+                function,
+                skip_on_field_errors,
+                code,
+                message,
+            }
+        } else {
+            error(attr.span(), "Unexpected struct validator")
         }
     }
+}
 
-    None
+/// Finds all struct schema validations
+fn find_struct_validations(struct_attrs: &[syn::Attribute]) -> Vec<SchemaValidation> {
+    struct_attrs
+        .iter()
+        .filter(|attribute| attribute.path == parse_quote!(validate))
+        .map(|attribute| find_struct_validation(attribute))
+        .collect()
 }
 
 /// Find the types (as string) for each field of the struct
