@@ -206,6 +206,11 @@ fn find_fields_type(fields: &[syn::Field]) -> HashMap<String, String> {
                 }
                 name
             }
+            syn::Type::Group(syn::TypeGroup { ref elem, .. }) => {
+                let mut tokens = proc_macro2::TokenStream::new();
+                elem.to_tokens(&mut tokens);
+                tokens.to_string().replace(' ', "")
+            }
             _ => {
                 let mut field_type = proc_macro2::TokenStream::new();
                 field.ty.to_tokens(&mut field_type);
