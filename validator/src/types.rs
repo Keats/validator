@@ -1,6 +1,6 @@
+use std;
 use std::borrow::Cow;
 use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
-use std::{self, fmt};
 
 use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
@@ -20,12 +20,6 @@ impl ValidationError {
 
     pub fn add_param<T: Serialize>(&mut self, name: Cow<'static, str>, val: &T) {
         self.params.insert(name, to_value(val).unwrap());
-    }
-}
-
-impl fmt::Display for ValidationError {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "Validation error: {} [{:?}]", self.code, self.params)
     }
 }
 
@@ -174,11 +168,5 @@ impl std::error::Error for ValidationErrors {
     }
     fn cause(&self) -> Option<&dyn std::error::Error> {
         None
-    }
-}
-
-impl fmt::Display for ValidationErrors {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(self, fmt)
     }
 }
