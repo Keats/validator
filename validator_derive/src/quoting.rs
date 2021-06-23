@@ -495,7 +495,8 @@ pub fn quote_field_validation(
 }
 
 pub fn quote_schema_validation(v: &SchemaValidation) -> proc_macro2::TokenStream {
-    let fn_ident = syn::Ident::new(&v.function, Span::call_site());
+    let fn_ident: syn::Path = syn::parse_str(&v.function).unwrap();
+    //let fn_ident = syn::Ident::new(&v.function, Span::call_site());
 
     let add_message_quoted = if let Some(ref m) = v.message {
         quote!(err.message = Some(::std::borrow::Cow::from(#m));)
