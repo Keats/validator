@@ -12,5 +12,5 @@ pub mod phone;
 pub mod range;
 pub mod required;
 pub mod urls;
-
+pub mod domain;
 pub use validator_types::Validator;
