@@ -1,3 +1,4 @@
+use if_chain::if_chain;
 use proc_macro2::{self, Span};
 use quote::quote;
 use validator_types::Validator;
@@ -372,8 +373,19 @@ pub fn quote_custom_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    if let Validator::Custom(ref fun) = validation.validator {
-        let fn_ident: syn::Path = syn::parse_str(fun).unwrap();
+    if let Validator::Custom { function, argument, .. } = &validation.validator {
+        let fn_ident: syn::Path = syn::parse_str(function).unwrap();
+
+        let access = if_chain! {
+            if let Some(argument) = argument;
+            if let Some(access) = &argument.arg_access;
+            then {
+                quote!(, #access)
+            } else {
+                quote!()
+            }
+        };
+
         let add_message_quoted = if let Some(ref m) = validation.message {
             quote!(err.message = Some(::std::borrow::Cow::from(#m));)
         } else {
@@ -381,7 +393,7 @@ pub fn quote_custom_validation(
         };
 
         let quoted = quote!(
-            match #fn_ident(#validator_param) {
+            match #fn_ident(#validator_param #access) {
                 ::std::result::Result::Ok(()) => (),
                 ::std::result::Result::Err(mut err) => {
                     #add_message_quoted
@@ -452,7 +464,7 @@ pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::Token
     field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
 }
 
-pub fn quote_field_validation(
+pub fn quote_validator(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
     validations: &mut Vec<proc_macro2::TokenStream>,
@@ -470,7 +482,7 @@ pub fn quote_field_validation(
         Validator::MustMatch(_) => {
             validations.push(quote_must_match_validation(&field_quoter, validation))
         }
-        Validator::Custom(_) => {
+        Validator::Custom { .. } => {
             validations.push(quote_custom_validation(&field_quoter, validation))
         }
         Validator::Contains(_) => {

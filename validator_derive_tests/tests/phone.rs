@@ -1,6 +1,5 @@
 use validator::Validate;
 
-
 #[test]
 fn can_validate_phone_ok() {
     #[derive(Debug, Validate)]
@@ -13,7 +12,6 @@ fn can_validate_phone_ok() {
 
     assert!(s.validate().is_ok());
 }
-
 
 #[test]
 fn bad_phone_fails_validation() {
@@ -32,7 +30,6 @@ fn bad_phone_fails_validation() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "phone");
 }
-
 
 #[test]
 fn can_specify_code_for_phone() {

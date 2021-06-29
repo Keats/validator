@@ -1,0 +1,12 @@
+error[E0599]: no method named `validate` found for struct `Test` in the current scope
+  --> $DIR/validate_not_impl_with_args.rs:15:10
+   |
+8  | struct Test {
+   | ----------- method `validate` not found for this
+...
+15 |     test.validate();
+   |          ^^^^^^^^ method not found in `Test`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `validate`, perhaps you need to implement it:
+           candidate #1: `Validate`

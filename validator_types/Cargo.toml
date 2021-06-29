@@ -16,3 +16,5 @@ card = []
 unic = []
 
 [dependencies]
+syn = { version = "1", features = ["extra-traits"] }
+proc-macro2 = "1"

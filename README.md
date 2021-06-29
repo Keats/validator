@@ -249,8 +249,8 @@ To use this validator, you must enable the `phone` feature for the `validator` c
 This validator doesn't take any arguments: `#[validate(phone)]`;
 
 ### custom
-Calls one of your functions to perform a custom validation.
-The field will be given as a parameter to the function, which should return a `Result<(), ValidationError>`.
+Calls one of your functions to perform a custom validation. The field will reference be given as a parameter to the function,
+which should return a `Result<(), ValidationError>`.
 
 Examples:
 
@@ -259,6 +259,46 @@ Examples:
 #[validate(custom = "::utils::validate_something")]
 #[validate(custom(function = "validate_something"))]
 ```
+
+You can also parse arguments from the validation function to your custom validation by setting the `arg` parameter. `arg` can only be set to one type but you can set it to a tuple to pass multiple types at once. Defining the `arg` parameter will implement the `ValidateArgs` trait with the corresponding function types like this:
+
+```rust
+use validator::{Validate, ValidateArgs, ValidationError};
+
+fn validate(value: &str, arg: (i64, i64)) -> Result<(), ValidationError> {
+    [...]
+}
+
+#[derive(Debug, Validate)]
+struct TestStruct {
+    #[validate(custom(function = "validate", arg = "(i64, i64)"))]
+    value: String,
+}
+
+let test_struct: TestStruct = [...]
+test_struct.validate_args((77, 555)).is_ok();
+```
+
+It is also possible to pass references by using the lifetime `'v_a` not that this lifetime should only be used for the function parameters like this:
+
+```rust
+fn validate_value(_: &str, arg: &mut Database) -> Result<(), ValidationError> {
+    [...]
+}
+
+#[derive(Debug, Validate)]
+struct TestStruct {
+    //                                                     vvvv This is the lifetime for references
+    #[validate(custom(function = "validate_value", arg = "&'v_a mut Database"))]
+    value: String,
+}
+
+let mut database: Database = [...]
+let test_struct: TestStruct = [...]
+test_struct.validate_args(&mut database).is_ok();
+```
+
+Custom validation with arguments doesn't work on nested validation. See [`validator_derive_tests/tests/custom.rs`](validator_derive_tests/custom.rs) and [`validator_derive_tests/tests/custom_args.rs`](validator_derive_tests/custom_args.rs) for more examples.
 
 ### nested
 Performs validation on a field with a type that also implements the Validate trait (or a vector of such types).

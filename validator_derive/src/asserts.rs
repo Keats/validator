@@ -1,3 +1,4 @@
+use proc_macro2::Span;
 use regex::Regex;
 
 use lazy_static::lazy_static;
@@ -8,17 +9,38 @@ lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
 }
 
-pub static NUMBER_TYPES: [&str; 36] = [
+static CUSTOM_ARG_LIFETIME: &str = "v_a";
+
+static CUSTOM_ARG_ALLOWED_COPY_TYPES: [&str; 14] = [
     "usize",
     "u8",
     "u16",
     "u32",
     "u64",
+    "u128",
     "isize",
     "i8",
     "i16",
     "i32",
     "i64",
+    "i128",
+    "f32",
+    "f64",
+];
+
+pub static NUMBER_TYPES: [&str; 38] = [
+    "usize",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "u128",
+    "isize",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "i128",
     "f32",
     "f64",
     "Option<usize>",
@@ -118,5 +140,61 @@ pub fn assert_has_range(field_name: String, type_name: &str, field_type: &syn::T
             type_name,
             field_name
         );
+    }
+}
+
+pub fn assert_custom_arg_type(field_span: &Span, field_type: &syn::Type) {
+    match field_type {
+        syn::Type::Reference(reference) => {
+            if let Some(lifetime) = &reference.lifetime {
+                let lifetime_ident = lifetime.ident.to_string(); 
+                if lifetime_ident != CUSTOM_ARG_LIFETIME {
+                    abort!(
+                        field_span,
+                        "Invalid argument reference: The lifetime `'{}` is not supported. Please use the validator lifetime `'{}`",
+                        lifetime_ident,
+                        CUSTOM_ARG_LIFETIME
+                    );
+                }
+            } else {
+                abort!(
+                    field_span,
+                    "Invalid argument reference: All references need to use the validator lifetime `'{}`",
+                    CUSTOM_ARG_LIFETIME
+                );
+            }
+        }
+        // trigger nested validation
+        syn::Type::Paren(paren) => {
+            assert_custom_arg_type(field_span, &paren.elem);
+        }
+        syn::Type::Tuple(tuple) => {
+            tuple.elems.iter().for_each(|x| assert_custom_arg_type(field_span, x));
+        }
+        // assert idents
+        syn::Type::Path(path) => {
+            let segments = &path.path.segments; 
+            if segments.len() == 1 {
+                let ident = &segments.first().unwrap().ident.to_string();
+                if CUSTOM_ARG_ALLOWED_COPY_TYPES.contains(&ident.as_str()) {
+                    // A known copy type that can be passed without a reference
+                    return;
+                }
+            }
+
+            abort!(
+                field_span,
+                "Invalid argument type: All types except numbers and tuples need be passed by reference using the lifetime `'{}`",
+                CUSTOM_ARG_LIFETIME,
+            );
+        }
+        // Not allows
+        _ => {
+            abort!(
+                field_span,
+                "Invalid argument type: Custom arguments only allow tuples, number types and references using the lifetime `'{}` ",
+                CUSTOM_ARG_LIFETIME,
+            );
+        }
     }
 }

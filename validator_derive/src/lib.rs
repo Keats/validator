@@ -2,11 +2,11 @@
 use if_chain::if_chain;
 use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use quote::ToTokens;
-use std::collections::HashMap;
-use syn::{parse_quote, spanned::Spanned};
-use validator_types::Validator;
+use std::{collections::HashMap, unreachable};
+use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef, Type};
+use validator_types::{CustomArgument, Validator};
 
 mod asserts;
 mod lit;
@@ -15,7 +15,7 @@ mod validation;
 
 use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
 use lit::*;
-use quoting::{quote_field_validation, quote_schema_validations, FieldQuoter};
+use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
 use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -26,52 +26,51 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 }
 
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
-    // Ensure the macro is on a struct with named fields
-    let fields = match ast.data {
-        syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
-            if fields.iter().any(|field| field.ident.is_none()) {
-                abort!(
-                    fields.span(),
-                    "struct has unnamed fields";
-                    help = "#[derive(Validate)] can only be used on structs with named fields";
-                );
-            }
-            fields.iter().cloned().collect::<Vec<_>>()
-        }
-        _ => abort!(ast.span(), "#[derive(Validate)] can only be used with structs"),
-    };
-
-    let mut validations = vec![];
-    let mut nested_validations = vec![];
-
-    let field_types = find_fields_type(&fields);
-
-    for field in &fields {
-        let field_ident = field.ident.clone().unwrap();
-        let (name, field_validations) = find_validators_for_field(field, &field_types);
-        let field_type = field_types.get(&field_ident.to_string()).cloned().unwrap();
-        let field_quoter = FieldQuoter::new(field_ident, name, field_type);
-
-        for validation in &field_validations {
-            quote_field_validation(
-                &field_quoter,
-                validation,
-                &mut validations,
-                &mut nested_validations,
-            );
-        }
-    }
+    // Collecting the validators
+    let mut validations = collect_field_validations(ast);
+    let (arg_type, has_arg) = construct_validator_argument_type(&mut validations);
+    let (validations, nested_validations) = quote_field_validations(validations);
 
     let schema_validations = quote_schema_validations(&find_struct_validations(&ast.attrs));
 
+    // Struct specific definitions
     let ident = &ast.ident;
-
-    // Helper is provided for handling complex generic types correctly and effortlessly
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+
+    // The Validate trait implementation
+    let validate_trait_impl = if !has_arg {
+        quote!(
+            impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
+                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                    use ::validator::ValidateArgs;
+                    self.validate_args(())
+                }
+            }
+        )
+    } else {
+        quote!()
+    };
+
+    // Adding the validator lifetime 'v_a
+    let mut expanded_generic = ast.generics.clone();
+    expanded_generic
+        .params
+        .insert(0, GenericParam::Lifetime(LifetimeDef::new(Lifetime::new("'v_a", ast.span()))));
+    let (impl_generics, _, _) = expanded_generic.split_for_impl();
+
+    // Implementing ValidateArgs
     let impl_ast = quote!(
-        impl #impl_generics ::validator::Validate for #ident #ty_generics #where_clause {
+        #validate_trait_impl
+
+        // We need this here to prevent formatting lints that can be caused by `quote_spanned!`
+        // See: rust-lang/rust-clippy#6249 for more reference
+        #[allow(clippy::all)]
+        impl #impl_generics ::validator::ValidateArgs<'v_a> for #ident #ty_generics #where_clause {
+            type Args = #arg_type;
+
             #[allow(unused_mut)]
-            fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+            #[allow(unused_variable)]
+            fn validate_args(&self, args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                 let mut errors = ::validator::ValidationErrors::new();
 
                 #(#validations)*
@@ -89,8 +88,106 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
             }
         }
     );
+
     // println!("{}", impl_ast.to_string());
+
     impl_ast
+}
+
+fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
+    match ast.data {
+        syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
+            if fields.iter().any(|field| field.ident.is_none()) {
+                abort!(
+                    fields.span(),
+                    "struct has unnamed fields";
+                    help = "#[derive(Validate)] can only be used on structs with named fields";
+                );
+            }
+            fields.iter().cloned().collect::<Vec<_>>()
+        }
+        _ => abort!(ast.span(), "#[derive(Validate)] can only be used with structs"),
+    }
+}
+
+fn collect_field_validations(ast: &syn::DeriveInput) -> Vec<FieldInformation> {
+    let mut fields = collect_fields(ast);
+
+    let field_types = find_fields_type(&fields);
+    fields.drain(..).fold(vec![], |mut acc, field| {
+        let key = field.ident.clone().unwrap().to_string();
+        let (name, validations) = find_validators_for_field(&field, &field_types);
+        acc.push(FieldInformation::new(
+            field,
+            field_types.get(&key).unwrap().clone(),
+            name,
+            validations,
+        ));
+        acc
+    })
+}
+
+fn construct_validator_argument_type(
+    validations: &mut Vec<FieldInformation>,
+) -> (proc_macro2::TokenStream, bool) {
+    const ARGS_PARAMETER_NAME: &str = "args";
+
+    // This iterator only holds custom validations with a argument_type
+    let mut customs: Vec<&mut CustomArgument> = validations
+        .iter_mut()
+        .map(|x| x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut()))
+        .flatten()
+        .collect();
+
+    if customs.is_empty() {
+        // Just the default empty type if no types are defined
+        (quote!(()), false)
+    } else if customs.len() == 1 {
+        // A single parameter will not be wrapped in a tuple
+        let arg = customs.pop().unwrap();
+        arg.arg_access = Some(syn::parse_str(ARGS_PARAMETER_NAME).unwrap());
+        
+        let type_stream: &Type = &arg.arg_type;
+        let span = arg.def_span;
+        (quote_spanned!(span=> #type_stream), true)
+    } else {
+        // Multiple times will be wrapped in a tuple
+        let mut index = 0;
+        let params = customs.iter_mut().fold(quote!(), |acc, arg| {
+            let arg_access_string = format!("{}.{}", ARGS_PARAMETER_NAME, index);
+            arg.arg_access = Some(syn::parse_str(arg_access_string.as_str()).unwrap());
+            index += 1;
+            
+            let type_stream: &Type = &arg.arg_type;
+            let span = arg.def_span;
+
+            if index == 1 {
+                quote_spanned!(span=> #type_stream)
+            } else {
+                quote_spanned!(span=> #acc, #type_stream)
+            }
+        });
+
+        (quote!((#params)), true)
+    }
+}
+
+fn quote_field_validations(
+    mut fields: Vec<FieldInformation>,
+) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
+    let mut validations = vec![];
+    let mut nested_validations = vec![];
+
+    fields.drain(..).for_each(|x| {
+        let field_ident = x.field.ident.clone().unwrap();
+        let field_quoter = FieldQuoter::new(field_ident, x.name, x.field_type);
+
+        for validation in &x.validations {
+            quote_validator(&field_quoter, validation, &mut validations, &mut nested_validations);
+        }
+    });
+
+    (validations, nested_validations)
 }
 
 /// Find if a struct has some schema validation and returns the info if so
@@ -332,7 +429,10 @@ fn find_validators_for_field(
                                 match ident.to_string().as_ref() {
                                     "custom" => {
                                         match lit_to_string(lit) {
-                                            Some(s) => validators.push(FieldValidation::new(Validator::Custom(s))),
+                                            Some(s) => validators.push(FieldValidation::new(Validator::Custom {
+                                                function: s,
+                                                argument: None,
+                                            })),
                                             None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };
                                     }
@@ -385,20 +485,19 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
+                                    "custom" => {
+                                        validators.push(extract_custom_validation(
+                                            rust_ident.clone(),
+                                            attr,
+                                            &meta_items,
+                                        ));
+                                    }
                                     "email"
                                     | "url"
                                     | "phone"
                                     | "credit_card"
                                     | "non_control_character" => {
                                         validators.push(extract_argless_validation(
-                                            ident.to_string(),
-                                            rust_ident.clone(),
-                                            &meta_items,
-                                        ));
-                                    }
-                                    "custom" => {
-                                        validators.push(extract_one_arg_validation(
-                                            "function",
                                             ident.to_string(),
                                             rust_ident.clone(),
                                             &meta_items,
@@ -447,10 +546,20 @@ fn find_validators_for_field(
             }
             Ok(syn::Meta::Path(_)) => validators.push(FieldValidation::new(Validator::Nested)),
             Ok(syn::Meta::NameValue(_)) => abort!(attr.span(), "Unexpected name=value argument"),
-            Err(e) => unreachable!(
-                "Got something other than a list of attributes while checking field `{}`: {:?}",
-                field_ident, e
-            ),
+            Err(e) => {
+                let error_string = format!("{:?}", e);
+                if error_string == "Error(\"expected literal\")" {
+                    abort!(attr.span(),
+                        "This attributes for the field `{}` seem to be misformed, please validate the syntax with the documentation",
+                        field_ident
+                    );
+                } else {
+                    abort!(attr.span(),
+                        "Unable to parse this attribute for the field `{}` with the error: {:?}",
+                        field_ident, e
+                    );
+                }
+            },
         }
 
         if has_validate && validators.is_empty() {

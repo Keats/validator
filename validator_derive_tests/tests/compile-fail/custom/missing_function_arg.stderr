@@ -1,0 +1,5 @@
+error: Invalid attribute #[validate] on field `s`: The validator `custom` requires the `function` parameter.
+ --> $DIR/missing_function_arg.rs:5:5
+  |
+5 |     #[validate(custom(arg = "i64"))]
+  |     ^
