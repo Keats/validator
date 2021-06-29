@@ -382,6 +382,12 @@ For example, the following attributes all work:
 
 ### validator
 
+## 0.14.0 (2021/06/29)
+
+- Allow passing arguments to custom functions
+- Better `Display` implementation
+- Better parsing of schema validation function in derive
+
 ## 0.13.0 (2021/03/22)
 
 - Allow multiple schema-level validations
