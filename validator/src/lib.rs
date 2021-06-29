@@ -63,6 +63,7 @@
 //! validator = { version = "0.12", features = ["derive"] }
 //! ```
 
+mod display_impl;
 mod traits;
 mod types;
 mod validation;
