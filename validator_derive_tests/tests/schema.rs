@@ -17,6 +17,55 @@ fn can_validate_schema_fn_ok() {
     assert!(s.validate().is_ok());
 }
 
+mod some_defining_mod {
+    use validator::Validate;
+
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = "crate::some_validation_mod::valid_schema_fn"))]
+    pub struct TestStructValid {
+        pub val: String,
+    }
+
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = "crate::some_validation_mod::invalid_schema_fn"))]
+    pub struct TestStructInvalid {
+        pub val: String,
+    }
+}
+
+mod some_validation_mod {
+    use validator::ValidationError;
+    use crate::some_defining_mod::{TestStructValid, TestStructInvalid};
+
+    pub fn valid_schema_fn(_: &TestStructValid) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
+    pub fn invalid_schema_fn(_: &TestStructInvalid) -> Result<(), ValidationError> {
+        Err(ValidationError::new("meh"))
+    }
+}
+
+#[test]
+fn can_validate_fully_qualified_fn_ok() {
+    let s = some_defining_mod::TestStructValid { val: "hello".into() };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_fail_fully_qualified_fn_validation() {
+    let s = some_defining_mod::TestStructInvalid { val: "hello".into() };
+
+    let res = s.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
+    assert!(errs.contains_key("__all__"));
+    assert_eq!(errs["__all__"].len(), 1);
+    assert_eq!(errs["__all__"][0].code, "meh");
+}
+
 #[test]
 fn can_validate_multiple_schema_fn_ok() {
     fn valid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
