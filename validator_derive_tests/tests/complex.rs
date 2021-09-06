@@ -294,7 +294,7 @@ fn test_works_with_none_values() {
 
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
-    F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
+    F: FnOnce(HashMap<String, ValidationErrorsKind>),
 {
     let errors = errors.clone();
     f(errors.errors().clone());
