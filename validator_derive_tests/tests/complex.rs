@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
@@ -294,8 +295,7 @@ fn test_works_with_none_values() {
 
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
-    F: FnOnce(HashMap<String, ValidationErrorsKind>),
+    F: FnOnce(HashMap<Cow<'static, str>, ValidationErrorsKind>),
 {
-    let errors = errors.clone();
     f(errors.errors().clone());
 }

@@ -388,8 +388,7 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
 
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
-    F: FnOnce(HashMap<String, ValidationErrorsKind>),
+    F: FnOnce(HashMap<Cow<'static, str>, ValidationErrorsKind>),
 {
-    let errors = errors.clone();
     f(errors.errors().clone());
 }
