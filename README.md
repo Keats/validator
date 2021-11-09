@@ -298,7 +298,7 @@ let test_struct: TestStruct = [...]
 test_struct.validate_args(&mut database).is_ok();
 ```
 
-Custom validation with arguments doesn't work on nested validation. See [`validator_derive_tests/tests/custom.rs`](validator_derive_tests/custom.rs) and [`validator_derive_tests/tests/custom_args.rs`](validator_derive_tests/custom_args.rs) for more examples.
+Custom validation with arguments doesn't work on nested validation. See [`validator_derive_tests/tests/custom.rs`](https://github.com/Keats/validator/blob/master/validator_derive_tests/tests/custom.rs) and [`validator_derive_tests/tests/custom_args.rs`](https://github.com/Keats/validator/blob/master/validator_derive_tests/tests/custom_args.rs) for more examples.
 
 ### nested
 Performs validation on a field with a type that also implements the Validate trait (or a vector of such types).
