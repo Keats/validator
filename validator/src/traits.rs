@@ -1,5 +1,8 @@
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+
+#[cfg(feature = "indexmap")]
+use indexmap::{IndexMap, IndexSet};
 
 use crate::types::ValidationErrors;
 
@@ -40,7 +43,84 @@ impl<T> HasLen for Vec<T> {
         self.len() as u64
     }
 }
+
 impl<'a, T> HasLen for &'a Vec<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<'a, K, V> HasLen for &'a HashMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<K, V> HasLen for HashMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<'a, T> HasLen for &'a HashSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<T> HasLen for HashSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<'a, K, V> HasLen for &'a BTreeMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<K, V> HasLen for BTreeMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<'a, T> HasLen for &'a BTreeSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<T> HasLen for BTreeSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<'a, K, V> HasLen for &'a IndexMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<K, V> HasLen for IndexMap<K, V> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<'a, T> HasLen for &'a IndexSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<T> HasLen for IndexSet<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
