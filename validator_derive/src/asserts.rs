@@ -138,7 +138,7 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
         && type_name != "&str"
     {
         abort!(field_type.span(),
-                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `{}` for field `{}`",
+                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, or map/set types (BTree/Hash/Index) but found `{}` for field `{}`",
                 type_name, field_name
             );
     }
