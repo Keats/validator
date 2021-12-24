@@ -431,7 +431,7 @@ fn find_validators_for_field(
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom {
                                                 function: s,
-                                                argument: None,
+                                                argument: Box::new(None),
                                             })),
                                             None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };

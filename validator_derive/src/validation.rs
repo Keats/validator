@@ -250,7 +250,7 @@ pub fn extract_custom_validation(
         error(attr.span(), "The validator `custom` requires the `function` parameter.");
     }
 
-    let validator = Validator::Custom { function: function.unwrap(), argument };
+    let validator = Validator::Custom { function: function.unwrap(), argument: Box::new(argument) };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
@@ -367,7 +367,7 @@ pub fn extract_one_arg_validation(
     }
 
     let validator = match validator_name.as_ref() {
-        "custom" => Validator::Custom { function: value.unwrap(), argument: None },
+        "custom" => Validator::Custom { function: value.unwrap(), argument: Box::new(None) },
         "contains" => Validator::Contains(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),

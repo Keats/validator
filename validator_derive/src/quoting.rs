@@ -378,7 +378,7 @@ pub fn quote_custom_validation(
         let fn_ident: syn::Path = syn::parse_str(function).unwrap();
 
         let access = if_chain! {
-            if let Some(argument) = argument;
+            if let Some(argument) = &**argument;
             if let Some(access) = &argument.arg_access;
             then {
                 quote!(, #access)
