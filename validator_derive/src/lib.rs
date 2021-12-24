@@ -200,8 +200,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
 
     if_chain! {
         if let Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.parse_meta();
-        if let syn::NestedMeta::Meta(ref item) = nested[0];
-        if let syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) = *item;
+        if let syn::NestedMeta::Meta(syn::Meta::List(syn::MetaList { ref path, ref nested, .. })) = nested[0];
 
         then {
             let ident = path.get_ident().unwrap();
@@ -216,8 +215,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
 
             for arg in nested {
                 if_chain! {
-                    if let syn::NestedMeta::Meta(ref item) = *arg;
-                    if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item;
+                    if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. })) = *arg;
 
                     then {
                         let ident = path.get_ident().unwrap();

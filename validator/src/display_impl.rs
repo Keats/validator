@@ -1,5 +1,6 @@
-use crate::{ValidationError, ValidationErrors, ValidationErrorsKind};
 use std::fmt::{self, Write};
+
+use crate::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 impl fmt::Display for ValidationError {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,7 +66,7 @@ impl fmt::Display for ValidationErrors {
         for (idx, (path, err)) in self.errors().iter().enumerate() {
             display_errors(fmt, err, path)?;
             if idx + 1 < self.errors().len() {
-                write!(fmt, "\n")?;
+                writeln!(fmt)?;
             }
         }
         Ok(())
