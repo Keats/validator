@@ -1,6 +1,7 @@
 use if_chain::if_chain;
 use proc_macro2::{self, Span};
 use quote::quote;
+
 use validator_types::Validator;
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
@@ -31,7 +32,7 @@ impl FieldQuoter {
 
         if self._type.starts_with("Option<") {
             quote!(#ident)
-        } else if COW_TYPE.is_match(&self._type.as_ref()) {
+        } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
         } else if self._type.starts_with('&') || NUMBER_TYPES.contains(&self._type.as_ref()) {
             quote!(self.#ident)
@@ -45,7 +46,7 @@ impl FieldQuoter {
 
         if self._type.starts_with("Option<") || self._type.starts_with("Vec<") {
             quote!(#ident)
-        } else if COW_TYPE.is_match(&self._type.as_ref()) {
+        } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
         } else {
             quote!(self.#ident)
@@ -160,16 +161,16 @@ pub fn quote_length_validation(
         };
 
         let min_tokens = option_to_tokens(
-            &min.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+            &min.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
         );
         let max_tokens = option_to_tokens(
-            &max.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+            &max.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
         );
         let equal_tokens = option_to_tokens(
-            &equal.clone().map(|ref x| value_or_path_to_tokens(x)).map(|x| quote!(#x as u64)),
+            &equal.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
         );
 
-        let quoted_error = quote_error(&validation);
+        let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !::validator::validate_length(
                 #validator_param,
@@ -222,7 +223,7 @@ pub fn quote_range_validation(
             max.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
         let max_tokens = option_to_tokens(&max_tokens);
 
-        let quoted_error = quote_error(&validation);
+        let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !::validator::validate_range(
                 #quoted_ident as f64,
@@ -251,7 +252,7 @@ pub fn quote_credit_card_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_credit_card(#validator_param) {
             #quoted_error
@@ -271,7 +272,7 @@ pub fn quote_phone_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_phone(#validator_param) {
             #quoted_error
@@ -291,7 +292,7 @@ pub fn quote_non_control_character_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_non_control_character(#validator_param) {
             #quoted_error
@@ -310,7 +311,7 @@ pub fn quote_url_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_url(#validator_param) {
             #quoted_error
@@ -329,7 +330,7 @@ pub fn quote_email_validation(
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_email(#validator_param) {
             #quoted_error
@@ -350,7 +351,7 @@ pub fn quote_must_match_validation(
 
     if let Validator::MustMatch(ref other) = validation.validator {
         let other_ident = syn::Ident::new(other, Span::call_site());
-        let quoted_error = quote_error(&validation);
+        let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !::validator::validate_must_match(&self.#ident, &self.#other_ident) {
                 #quoted_error
@@ -417,7 +418,7 @@ pub fn quote_contains_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     if let Validator::Contains(ref needle) = validation.validator {
-        let quoted_error = quote_error(&validation);
+        let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !::validator::validate_contains(#validator_param, &#needle) {
                 #quoted_error
@@ -442,7 +443,7 @@ pub fn quote_regex_validation(
 
     if let Validator::Regex(ref re) = validation.validator {
         let re_ident: syn::Path = syn::parse_str(re).unwrap();
-        let quoted_error = quote_error(&validation);
+        let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !#re_ident.is_match(#validator_param) {
                 #quoted_error
@@ -472,36 +473,36 @@ pub fn quote_validator(
 ) {
     match validation.validator {
         Validator::Length { .. } => {
-            validations.push(quote_length_validation(&field_quoter, validation))
+            validations.push(quote_length_validation(field_quoter, validation))
         }
         Validator::Range { .. } => {
-            validations.push(quote_range_validation(&field_quoter, validation))
+            validations.push(quote_range_validation(field_quoter, validation))
         }
-        Validator::Email => validations.push(quote_email_validation(&field_quoter, validation)),
-        Validator::Url => validations.push(quote_url_validation(&field_quoter, validation)),
+        Validator::Email => validations.push(quote_email_validation(field_quoter, validation)),
+        Validator::Url => validations.push(quote_url_validation(field_quoter, validation)),
         Validator::MustMatch(_) => {
-            validations.push(quote_must_match_validation(&field_quoter, validation))
+            validations.push(quote_must_match_validation(field_quoter, validation))
         }
         Validator::Custom { .. } => {
-            validations.push(quote_custom_validation(&field_quoter, validation))
+            validations.push(quote_custom_validation(field_quoter, validation))
         }
         Validator::Contains(_) => {
-            validations.push(quote_contains_validation(&field_quoter, validation))
+            validations.push(quote_contains_validation(field_quoter, validation))
         }
-        Validator::Regex(_) => validations.push(quote_regex_validation(&field_quoter, validation)),
+        Validator::Regex(_) => validations.push(quote_regex_validation(field_quoter, validation)),
         #[cfg(feature = "card")]
         Validator::CreditCard => {
-            validations.push(quote_credit_card_validation(&field_quoter, validation))
+            validations.push(quote_credit_card_validation(field_quoter, validation))
         }
         #[cfg(feature = "phone")]
-        Validator::Phone => validations.push(quote_phone_validation(&field_quoter, validation)),
-        Validator::Nested => nested_validations.push(quote_nested_validation(&field_quoter)),
+        Validator::Phone => validations.push(quote_phone_validation(field_quoter, validation)),
+        Validator::Nested => nested_validations.push(quote_nested_validation(field_quoter)),
         #[cfg(feature = "unic")]
         Validator::NonControlCharacter => {
-            validations.push(quote_non_control_character_validation(&field_quoter, validation))
+            validations.push(quote_non_control_character_validation(field_quoter, validation))
         }
         Validator::Required | Validator::RequiredNested => {
-            validations.push(quote_required_validation(&field_quoter, validation))
+            validations.push(quote_required_validation(field_quoter, validation))
         }
     }
 }
@@ -548,7 +549,7 @@ pub fn quote_required_validation(
     let ident = &field_quoter.ident;
     let validator_param = quote!(&self.#ident);
 
-    let quoted_error = quote_error(&validation);
+    let quoted_error = quote_error(validation);
     let quoted = quote!(
         if !::validator::validate_required(#validator_param) {
             #quoted_error
