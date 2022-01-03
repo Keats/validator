@@ -510,6 +510,13 @@ pub fn quote_validator(
 pub fn quote_schema_validation(v: &SchemaValidation) -> proc_macro2::TokenStream {
     let fn_ident: syn::Path = syn::parse_str(&v.function).unwrap();
 
+    let arg_quoted = if let Some(ref args) = v.args {
+        let arg_type = &args.arg_access;
+        quote!(self, #arg_type)
+    } else {
+        quote!(self)
+    };
+
     let add_message_quoted = if let Some(ref m) = v.message {
         quote!(err.message = Some(::std::borrow::Cow::from(#m));)
     } else {
@@ -519,7 +526,7 @@ pub fn quote_schema_validation(v: &SchemaValidation) -> proc_macro2::TokenStream
     let mut_err_token = if v.message.is_some() { quote!(mut) } else { quote!() };
 
     let quoted = quote!(
-        match #fn_ident(self) {
+        match #fn_ident(#arg_quoted) {
             ::std::result::Result::Ok(()) => (),
             ::std::result::Result::Err(#mut_err_token err) => {
                 #add_message_quoted
