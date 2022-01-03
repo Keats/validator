@@ -44,6 +44,7 @@
 //! | `length`                |                                                       |
 //! | `range`                 |                                                       |
 //! | `must_match`            |                                                       |
+//! | `must_not_match`        |                                                       |
 //! | `contains`              |                                                       |
 //! | `custom`                |                                                       |
 //! | `regex`                 |                                                       |
@@ -63,11 +64,8 @@
 //! validator = { version = "0.12", features = ["derive"] }
 //! ```
 
-mod display_impl;
-mod traits;
-mod types;
-mod validation;
-
+pub use traits::{Contains, HasLen, Validate, ValidateArgs};
+pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
 #[cfg(feature = "card")]
 pub use validation::cards::validate_credit_card;
 pub use validation::contains::validate_contains;
@@ -75,18 +73,19 @@ pub use validation::email::validate_email;
 pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6};
 pub use validation::length::validate_length;
 pub use validation::must_match::validate_must_match;
+pub use validation::must_not_match::validate_must_not_match;
 #[cfg(feature = "unic")]
 pub use validation::non_control_character::validate_non_control_character;
 #[cfg(feature = "phone")]
 pub use validation::phone::validate_phone;
 pub use validation::range::validate_range;
-
 pub use validation::required::validate_required;
 pub use validation::urls::validate_url;
 pub use validation::Validator;
-
-pub use traits::{Contains, HasLen, Validate, ValidateArgs};
-pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
-
 #[cfg(feature = "derive")]
 pub use validator_derive::Validate;
+
+mod display_impl;
+mod traits;
+mod types;
+mod validation;

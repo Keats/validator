@@ -58,13 +58,14 @@ fn can_specify_code_for_must_not_match() {
 fn can_specify_message_for_must_not_match() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(must_match(other = "val2", message = "oops"))]
+        #[validate(must_not_match(other = "val2", message = "oops"))]
         val: String,
         val2: String,
     }
     let s = TestStruct { val: "bob".to_string(), val2: "bob".to_string() };
     let res = s.validate();
     assert!(res.is_err());
+
     let err = res.unwrap_err();
     let errs = err.field_errors();
     assert!(errs.contains_key("val"));

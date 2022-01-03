@@ -1,0 +1,5 @@
+error: Invalid argument for `must_not_match` validator of field `password`: the other field doesn't exist in struct
+ --> $DIR/field_doesnt_exist.rs:5:5
+  |
+5 |     #[validate(must_not_match = "password2")]
+  |     ^

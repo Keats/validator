@@ -17,6 +17,8 @@ pub enum Validator {
     },
     // String is the name of the field to match
     MustMatch(String),
+    // String is the name of the field to not match
+    MustNotMatch(String),
     // value is a &str or a HashMap<String, ..>
     Contains(String),
     // No implementation in this crate, it's all in validator_derive
@@ -73,6 +75,7 @@ impl Validator {
     pub fn code(&self) -> &'static str {
         match *self {
             Validator::MustMatch(_) => "must_match",
+            Validator::MustNotMatch(_) => "must_not_match",
             Validator::Email => "email",
             Validator::Url => "url",
             Validator::Custom { .. } => "custom",

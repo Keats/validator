@@ -1,0 +1,5 @@
+error: unexpected name value validator: "not_a"
+ --> $DIR/unexpected_name_value.rs:5:16
+  |
+5 |     #[validate(not_a = "validator")]
+  |                ^^^^^

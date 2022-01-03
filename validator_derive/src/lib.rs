@@ -482,10 +482,19 @@ fn find_validators_for_field(
                                     "must_match" => {
                                         match lit_to_string(lit) {
                                             Some(s) => {
-                                                assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s), attr);
+                                                assert_type_matches("must_match", rust_ident.clone(), field_type, field_types.get(&s), attr);
                                                 validators.push(FieldValidation::new(Validator::MustMatch(s)));
                                             }
                                             None => error(lit.span(), "invalid argument for `must_match` validator: only strings are allowed"),
+                                        };
+                                    }
+                                    "must_not_match" => {
+                                        match lit_to_string(lit) {
+                                            Some(s) => {
+                                                assert_type_matches("must_not_match", rust_ident.clone(), field_type, field_types.get(&s), attr);
+                                                validators.push(FieldValidation::new(Validator::MustNotMatch(s)));
+                                            }
+                                            None => error(lit.span(), "invalid argument for `must_not_match` validator: only strings are allowed"),
                                         };
                                     }
                                     v => abort!(
@@ -559,6 +568,25 @@ fn find_validators_for_field(
                                         );
                                         if let Validator::MustMatch(ref t2) = validation.validator {
                                             assert_type_matches(
+                                                "must_match",
+                                                rust_ident.clone(),
+                                                field_type,
+                                                field_types.get(t2),
+                                                attr,
+                                            );
+                                        }
+                                        validators.push(validation);
+                                    }
+                                    "must_not_match" => {
+                                        let validation = extract_one_arg_validation(
+                                            "other",
+                                            ident.to_string(),
+                                            rust_ident.clone(),
+                                            &meta_items,
+                                        );
+                                        if let Validator::MustMatch(ref t2) = validation.validator {
+                                            assert_type_matches(
+                                                "must_not_match",
                                                 rust_ident.clone(),
                                                 field_type,
                                                 field_types.get(t2),

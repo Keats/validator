@@ -1,8 +1,7 @@
-use proc_macro2::Span;
-use regex::Regex;
-
 use lazy_static::lazy_static;
+use proc_macro2::Span;
 use proc_macro_error::abort;
+use regex::Regex;
 use syn::spanned::Spanned;
 
 lazy_static! {
@@ -12,19 +11,7 @@ lazy_static! {
 static CUSTOM_ARG_LIFETIME: &str = "v_a";
 
 static CUSTOM_ARG_ALLOWED_COPY_TYPES: [&str; 14] = [
-    "usize",
-    "u8",
-    "u16",
-    "u32",
-    "u64",
-    "u128",
-    "isize",
-    "i8",
-    "i16",
-    "i32",
-    "i64",
-    "i128",
-    "f32",
+    "usize", "u8", "u16", "u32", "u64", "u128", "isize", "i8", "i16", "i32", "i64", "i128", "f32",
     "f64",
 ];
 
@@ -80,6 +67,7 @@ pub fn assert_string_type(name: &str, type_name: &str, field_type: &syn::Type) {
 }
 
 pub fn assert_type_matches(
+    validator_name: &str,
     field_name: String,
     field_type: &str,
     field_type2: Option<&String>,
@@ -87,10 +75,15 @@ pub fn assert_type_matches(
 ) {
     if let Some(t2) = field_type2 {
         if field_type != t2 {
-            abort!(field_attr.span(), "Invalid argument for `must_match` validator of field `{}`: types of field can't match", field_name);
+            abort!(
+                field_attr.span(),
+                "Invalid argument for `{}` validator of field `{}`: types of field can't match",
+                validator_name,
+                field_name
+            );
         }
     } else {
-        abort!(field_attr.span(), "Invalid argument for `must_match` validator of field `{}`: the other field doesn't exist in struct", field_name);
+        abort!(field_attr.span(), "Invalid argument for `{}` validator of field `{}`: the other field doesn't exist in struct", validator_name, field_name);
     }
 }
 
@@ -150,7 +143,7 @@ pub fn assert_custom_arg_type(field_span: &Span, field_type: &syn::Type) {
     match field_type {
         syn::Type::Reference(reference) => {
             if let Some(lifetime) = &reference.lifetime {
-                let lifetime_ident = lifetime.ident.to_string(); 
+                let lifetime_ident = lifetime.ident.to_string();
                 if lifetime_ident != CUSTOM_ARG_LIFETIME {
                     abort!(
                         field_span,
@@ -176,7 +169,7 @@ pub fn assert_custom_arg_type(field_span: &Span, field_type: &syn::Type) {
         }
         // assert idents
         syn::Type::Path(path) => {
-            let segments = &path.path.segments; 
+            let segments = &path.path.segments;
             if segments.len() == 1 {
                 let ident = &segments.first().unwrap().ident.to_string();
                 if CUSTOM_ARG_ALLOWED_COPY_TYPES.contains(&ident.as_str()) {

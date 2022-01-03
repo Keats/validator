@@ -367,6 +367,31 @@ pub fn quote_must_match_validation(
     unreachable!();
 }
 
+pub fn quote_must_not_match_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
+    let ident = &field_quoter.ident;
+    let field_name = &field_quoter.name;
+
+    if let Validator::MustNotMatch(ref other) = validation.validator {
+        let other_ident = syn::Ident::new(other, Span::call_site());
+        let quoted_error = quote_error(validation);
+        let quoted = quote!(
+            if !::validator::validate_must_not_match(&self.#ident, &self.#other_ident) {
+                #quoted_error
+                err.add_param(::std::borrow::Cow::from("value"), &self.#ident);
+                err.add_param(::std::borrow::Cow::from("other"), &self.#other_ident);
+                errors.add(#field_name, err);
+            }
+        );
+
+        return field_quoter.wrap_if_option(quoted);
+    }
+
+    unreachable!();
+}
+
 pub fn quote_custom_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
@@ -482,6 +507,9 @@ pub fn quote_validator(
         Validator::Url => validations.push(quote_url_validation(field_quoter, validation)),
         Validator::MustMatch(_) => {
             validations.push(quote_must_match_validation(field_quoter, validation))
+        }
+        Validator::MustNotMatch(_) => {
+            validations.push(quote_must_not_match_validation(field_quoter, validation))
         }
         Validator::Custom { .. } => {
             validations.push(quote_custom_validation(field_quoter, validation))
