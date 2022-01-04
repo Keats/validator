@@ -1,9 +1,10 @@
+use proc_macro2::Span;
 use proc_macro_error::abort;
+use syn::spanned::Spanned;
+
 use validator_types::{CustomArgument, Validator};
 
 use crate::{asserts::assert_custom_arg_type, lit::*};
-use proc_macro2::Span;
-use syn::spanned::Spanned;
 
 #[derive(Debug)]
 pub struct SchemaValidation {
@@ -67,30 +68,30 @@ pub fn extract_length_validation(
             if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item {
                 let ident = path.get_ident().unwrap();
                 match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
-                        "min" => {
-                            min = match lit_to_u64_or_path(lit) {
-                                Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `min` of `length` validator: only number literals or value paths are allowed"),
-                            };
-                        },
-                        "max" => {
-                            max = match lit_to_u64_or_path(lit) {
-                                Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `max` of `length` validator: only number literals or value paths are allowed"),
-                            };
-                        },
-                        "equal" => {
-                            equal = match lit_to_u64_or_path(lit) {
-                                Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `equal` of `length` validator: only number literals or value paths are allowed"),
-                            };
-                        },
-                        v => error(path.span(), &format!(
-                            "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
-                            v
-                        ))
+                    "message" | "code" => continue,
+                    "min" => {
+                        min = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `min` of `length` validator: only number literals or value paths are allowed"),
+                        };
                     }
+                    "max" => {
+                        max = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `max` of `length` validator: only number literals or value paths are allowed"),
+                        };
+                    }
+                    "equal" => {
+                        equal = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `equal` of `length` validator: only number literals or value paths are allowed"),
+                        };
+                    }
+                    v => error(path.span(), &format!(
+                        "unknown argument `{}` for validator `length` (it only has `min`, `max`, `equal`)",
+                        v
+                    ))
+                }
             } else {
                 error(
                     item.span(),
@@ -216,7 +217,7 @@ pub fn extract_custom_validation(
                                     match syn::parse_str::<syn::Type>(s.as_str()) {
                                         Ok(arg_type) => {
                                             assert_custom_arg_type(&lit.span(), &arg_type);
-                                            argument = Some(CustomArgument::new(lit.span().clone(), arg_type));
+                                            argument = Some(CustomArgument::new(lit.span(), arg_type));
                                         }
                                         Err(_) => {
                                             let mut msg = "invalid argument type for `arg` of `custom` validator: The string has to be a single type.".to_string();
@@ -225,7 +226,7 @@ pub fn extract_custom_validation(
                                             error(lit.span(), msg.as_str());
                                         }
                                     }
-                                },
+                                }
                                 None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a string")
                             };
                         }
@@ -249,7 +250,7 @@ pub fn extract_custom_validation(
         error(attr.span(), "The validator `custom` requires the `function` parameter.");
     }
 
-    let validator = Validator::Custom { function: function.unwrap(), argument };
+    let validator = Validator::Custom { function: function.unwrap(), argument: Box::new(argument) };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
@@ -366,7 +367,7 @@ pub fn extract_one_arg_validation(
     }
 
     let validator = match validator_name.as_ref() {
-        "custom" => Validator::Custom { function: value.unwrap(), argument: None },
+        "custom" => Validator::Custom { function: value.unwrap(), argument: Box::new(None) },
         "contains" => Validator::Contains(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),
@@ -399,23 +400,23 @@ fn extract_message_and_code(
             match ident.to_string().as_ref() {
                 "code" => {
                     code = match lit_to_string(lit) {
-                                Some(s) => Some(s),
-                                None => abort!(
+                        Some(s) => Some(s),
+                        None => abort!(
                                     meta_item.span(),
                                     "Invalid argument type for `code` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),
-                            };
+                    };
                 }
                 "message" => {
                     message = match lit_to_string(lit) {
-                                Some(s) => Some(s),
-                                None => abort!(
+                        Some(s) => Some(s),
+                        None => abort!(
                                     meta_item.span(),
                                     "Invalid argument type for `message` for validator `{}` on field `{}`: only a string is allowed",
                                     validator_name, field
                                 ),
-                            };
+                    };
                 }
                 _ => continue,
             }

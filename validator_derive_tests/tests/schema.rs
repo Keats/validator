@@ -6,6 +6,7 @@ fn can_validate_schema_fn_ok() {
         Ok(())
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "valid_schema_fn"))]
     struct TestStruct {
@@ -35,7 +36,8 @@ mod some_defining_mod {
 
 mod some_validation_mod {
     use validator::ValidationError;
-    use crate::some_defining_mod::{TestStructValid, TestStructInvalid};
+
+    use crate::some_defining_mod::{TestStructInvalid, TestStructValid};
 
     pub fn valid_schema_fn(_: &TestStructValid) -> Result<(), ValidationError> {
         Ok(())
@@ -76,6 +78,7 @@ fn can_validate_multiple_schema_fn_ok() {
         Ok(())
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "valid_schema_fn"))]
     #[validate(schema(function = "valid_schema_fn2"))]
@@ -94,6 +97,7 @@ fn can_fail_schema_fn_validation() {
         Err(ValidationError::new("meh"))
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "invalid_schema_fn"))]
     struct TestStruct {
@@ -120,6 +124,7 @@ fn can_fail_multiple_schema_fn_validation() {
         Err(ValidationError::new("meh2"))
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "invalid_schema_fn"))]
     #[validate(schema(function = "invalid_schema_fn2"))]
@@ -144,6 +149,7 @@ fn can_specify_message_for_schema_fn() {
         Err(ValidationError::new("meh"))
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "invalid_schema_fn", message = "oops"))]
     struct TestStruct {
@@ -164,6 +170,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     fn invalid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
         Err(ValidationError::new("meh"))
     }
+    #[allow(dead_code)]
     #[derive(Debug, Validate)]
     #[validate(schema(function = "invalid_schema_fn", skip_on_field_errors = false))]
     struct TestStruct {
