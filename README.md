@@ -48,8 +48,8 @@ fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
 }
 
 match signup_data.validate() {
-Ok(_) => (),
-Err(e) => return e;
+  Ok(_) => (),
+  Err(e) => return e;
 };
 ```
 
@@ -75,9 +75,9 @@ In the simple example above, any errors would be of the `Field(Vec<ValidationErr
 ```rust
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
-    pub code: Cow<'static, str>,
-    pub message: Option<Cow<'static, str>>,
-    pub params: HashMap<Cow<'static, str>, Value>,
+  pub code: Cow<'static, str>,
+  pub message: Option<Cow<'static, str>>,
+  pub params: HashMap<Cow<'static, str>, Value>,
 }
 ```
 
@@ -121,8 +121,8 @@ struct Preference {
 }
 
 match signup_data.validate() {
-Ok(_) => (),
-Err(e) => return e;
+  Ok(_) => (),
+  Err(e) => return e;
 };
  ```
 
@@ -174,11 +174,11 @@ Examples:
 const MIN_CONST: u64 = 1;
 const MAX_CONST: u64 = 10;
 
-# [validate(length(min = 1, max = 10))]
-# [validate(length(min = 1))]
-# [validate(length(max = 10))]
-# [validate(length(equal = 10))]
-# [validate(length(min = "MIN_CONST", max = "MAX_CONST"))]
+#[validate(length(min = 1, max = 10))]
+#[validate(length(min = 1))]
+#[validate(length(max = 10))]
+#[validate(length(equal = 10))]
+#[validate(length(min = "MIN_CONST", max = "MAX_CONST"))]
 ```
 
 ### range
@@ -192,13 +192,13 @@ Examples:
 const MAX_CONSTANT: i32 = 10;
 const MIN_CONSTANT: i32 = 0;
 
-# [validate(range(min = 1))]
-# [validate(range(min = "MIN_CONSTANT"))]
-# [validate(range(min = 1, max = 10))]
-# [validate(range(min = 1.1, max = 10.8))]
-# [validate(range(max = 10.8))]
-# [validate(range(min = "MAX_CONSTANT"))]
-# [validate(range(min = "crate::MAX_CONSTANT"))]
+#[validate(range(min = 1))]
+#[validate(range(min = "MIN_CONSTANT"))]
+#[validate(range(min = 1, max = 10))]
+#[validate(range(min = 1.1, max = 10.8))]
+#[validate(range(max = 10.8))]
+#[validate(range(min = "MAX_CONSTANT"))]
+#[validate(range(min = "crate::MAX_CONSTANT"))]
 ```
 
 ### must_match
@@ -209,8 +209,8 @@ missing or has a different type than the field the attribute is on.
 Examples:
 
 ```rust
-# [validate(must_match = "password2")]
-# [validate(must_match(other = "password2"))]
+#[validate(must_match = "password2")]
+#[validate(must_match(other = "password2"))]
 ```
 
 ### must_not_match
@@ -221,8 +221,8 @@ is missing or has a different type than the field the attribute is on.
 Examples:
 
 ```rust
-# [validate(must_not_match = "old_password")]
-# [validate(must_not_match(other = "old_password"))]
+#[validate(must_not_match = "old_password")]
+#[validate(must_not_match(other = "old_password"))]
 ```
 
 ### contains
@@ -233,8 +233,8 @@ argument.
 Examples:
 
 ```rust
-# [validate(contains = "gmail")]
-# [validate(contains(pattern = "gmail"))]
+#[validate(contains = "gmail")]
+#[validate(contains(pattern = "gmail"))]
 ```
 
 ### regex
@@ -248,8 +248,8 @@ lazy_static! {
     static ref RE_TWO_CHARS: Regex = Regex::new(r"[a-z]{2}$").unwrap();
 }
 
-# [validate(regex = "RE_TWO_CHARS")]
-# [validate(regex(path = "RE_TWO_CHARS"))]
+#[validate(regex = "RE_TWO_CHARS")]
+#[validate(regex(path = "RE_TWO_CHARS"))]
 ```
 
 ### credit\_card
@@ -259,7 +259,7 @@ Test whether the string is a valid credit card number.
 Examples:
 
 ```rust
-# [validate(credit_card)]
+#[validate(credit_card)]
 ```
 
 ### phone
@@ -277,9 +277,9 @@ function, which should return a `Result<(), ValidationError>`.
 Examples:
 
 ```rust
-# [validate(custom = "validate_something")]
-# [validate(custom = "::utils::validate_something")]
-# [validate(custom(function = "validate_something"))]
+#[validate(custom = "validate_something")]
+#[validate(custom = "::utils::validate_something")]
+#[validate(custom(function = "validate_something"))]
 ```
 
 You can also parse arguments from the validation function to your custom validation by setting the `arg`
@@ -320,7 +320,7 @@ struct TestStruct {
 
 let mut database: Database = [...]
 let test_struct: TestStruct = [...]
-test_struct.validate_args( & mut database).is_ok();
+test_struct.validate_args(&mut database).is_ok();
 ```
 
 Custom validation with arguments doesn't work on nested validation.
@@ -335,7 +335,7 @@ Performs validation on a field with a type that also implements the Validate tra
 Examples:
 
 ```rust
-# [validate]
+#[validate]
 ```
 
 ### non_control_character
@@ -386,28 +386,28 @@ For example, the following attributes all work:
 
 ```rust
 // code attribute
-# [validate(email(code = "code_str"))]
-# [validate(credit_card(code = "code_str"))]
-# [validate(length(min = 5, max = 10, code = "code_str"))]
+#[validate(email(code = "code_str"))]
+#[validate(credit_card(code = "code_str"))]
+#[validate(length(min = 5, max = 10, code = "code_str"))]
 
-# [validate(regex(path = "static_regex", code = "code_str"))]
-# [validate(custom(function = "custom_fn", code = "code_str"))]
-# [validate(contains(pattern = "pattern_str", code = "code_str"))]
-# [validate(must_match(other = "match_value", code = "code_str"))]
-# [validate(must_not_match(other = "not_match_value", code = "code_str"))]
+#[validate(regex(path = "static_regex", code = "code_str"))]
+#[validate(custom(function = "custom_fn", code = "code_str"))]
+#[validate(contains(pattern = "pattern_str", code = "code_str"))]
+#[validate(must_match(other = "match_value", code = "code_str"))]
+#[validate(must_not_match(other = "not_match_value", code = "code_str"))]
 
 // message attribute
-# [validate(url(message = "message_str"))]
-# [validate(length(min = 5, max = 10, message = "message_str"))]
+#[validate(url(message = "message_str"))]
+#[validate(length(min = 5, max = 10, message = "message_str"))]
 
-# [validate(regex(path = "static_regex", message = "message_str"))]
-# [validate(custom(function = "custom_fn", message = "message_str"))]
-# [validate(contains(pattern = "pattern_str", message = "message_str"))]
-# [validate(must_match(other = "match_value", message = "message_str"))]
+#[validate(regex(path = "static_regex", message = "message_str"))]
+#[validate(custom(function = "custom_fn", message = "message_str"))]
+#[validate(contains(pattern = "pattern_str", message = "message_str"))]
+#[validate(must_match(other = "match_value", message = "message_str"))]
 
 // both attributes
-# [validate(url(message = "message", code = "code_str"))]
-# [validate(email(code = "code_str", message = "message"))]
-# [validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
+#[validate(url(message = "message", code = "code_str"))]
+#[validate(email(code = "code_str", message = "message"))]
+#[validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
 
 ```
