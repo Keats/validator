@@ -22,6 +22,9 @@ validator_derive = { version = "0.14", path = "../validator_derive", optional = 
 card-validate = { version = "2.2", optional = true }
 phonenumber = { version = "0.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
+rocket = { version = "0.5.0-rc.1", optional = true, default-features = false, features = [
+    "json",
+] }
 
 
 [features]

@@ -102,6 +102,14 @@ impl<T: Validate> Validate for &T {
     }
 }
 
+/// Implements Validate for Rockets `Json` type
+#[cfg(feature="rocket")]
+impl<T: Validate> Validate for rocket::serde::json::Json<T> {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        T::validate(&self.0)
+    }
+}
+
 /// This trait will be implemented by deriving `Validate`. This implementation can take one
 /// argument and pass this on to custom validators. The default `Args` type will be `()` if
 /// there is no custom validation with defined arguments.
