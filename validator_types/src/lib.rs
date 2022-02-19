@@ -13,7 +13,7 @@ pub enum Validator {
         /// This is the name of the function that should be called
         function: String,
         /// This is the argument type that can be passed in with a macro
-        argument: Option<CustomArgument>,
+        argument: Box<Option<CustomArgument>>,
     },
     // String is the name of the field to match
     MustMatch(String),
@@ -93,17 +93,17 @@ impl Validator {
     }
 
     /// This returns the defined custom argument if it was defined
-    pub fn get_custom_argument<'a>(&'a self) -> Option<&'a CustomArgument> {
+    pub fn get_custom_argument(&self) -> Option<&CustomArgument> {
         match self {
-            Validator::Custom { argument: Some(argument), .. } => return Some(argument),
+            Validator::Custom { argument, .. } => (**argument).as_ref(),
             _ => None,
         }
     }
 
     /// This returns the defined custom argument if it was defined
-    pub fn get_custom_argument_mut<'a>(&'a mut self) -> Option<&'a mut CustomArgument> {
+    pub fn get_custom_argument_mut(&mut self) -> Option<&mut CustomArgument> {
         match self {
-            Validator::Custom { argument: Some(argument), .. } => return Some(argument),
+            Validator::Custom { argument, .. } => (**argument).as_mut(),
             _ => None,
         }
     }

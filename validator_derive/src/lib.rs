@@ -1,22 +1,24 @@
 #![recursion_limit = "128"]
+
+use std::{collections::HashMap, unreachable};
+
 use if_chain::if_chain;
 use proc_macro2::Span;
 use proc_macro_error::{abort, proc_macro_error};
-use quote::{quote, quote_spanned};
 use quote::ToTokens;
-use std::{collections::HashMap, unreachable};
+use quote::{quote, quote_spanned};
 use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef, Type};
+
+use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
+use lit::*;
+use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
+use validation::*;
 use validator_types::{CustomArgument, Validator};
 
 mod asserts;
 mod lit;
 mod quoting;
 mod validation;
-
-use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
-use lit::*;
-use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
-use validation::*;
 
 #[proc_macro_derive(Validate, attributes(validate))]
 #[proc_macro_error]
@@ -146,7 +148,7 @@ fn construct_validator_argument_type(
         // A single parameter will not be wrapped in a tuple
         let arg = customs.pop().unwrap();
         arg.arg_access = Some(syn::parse_str(ARGS_PARAMETER_NAME).unwrap());
-        
+
         let type_stream: &Type = &arg.arg_type;
         let span = arg.def_span;
         (quote_spanned!(span=> #type_stream), true)
@@ -157,7 +159,7 @@ fn construct_validator_argument_type(
             let arg_access_string = format!("{}.{}", ARGS_PARAMETER_NAME, index);
             arg.arg_access = Some(syn::parse_str(arg_access_string.as_str()).unwrap());
             index += 1;
-            
+
             let type_stream: &Type = &arg.arg_type;
             let span = arg.def_span;
 
@@ -198,8 +200,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
 
     if_chain! {
         if let Ok(syn::Meta::List(syn::MetaList { ref nested, .. })) = attr.parse_meta();
-        if let syn::NestedMeta::Meta(ref item) = nested[0];
-        if let syn::Meta::List(syn::MetaList { ref path, ref nested, .. }) = *item;
+        if let syn::NestedMeta::Meta(syn::Meta::List(syn::MetaList { ref path, ref nested, .. })) = nested[0];
 
         then {
             let ident = path.get_ident().unwrap();
@@ -214,8 +215,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
 
             for arg in nested {
                 if_chain! {
-                    if let syn::NestedMeta::Meta(ref item) = *arg;
-                    if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item;
+                    if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. })) = *arg;
 
                     then {
                         let ident = path.get_ident().unwrap();
@@ -277,7 +277,7 @@ fn find_struct_validations(struct_attrs: &[syn::Attribute]) -> Vec<SchemaValidat
     struct_attrs
         .iter()
         .filter(|attribute| attribute.path == parse_quote!(validate))
-        .map(|attribute| find_struct_validation(attribute))
+        .map(find_struct_validation)
         .collect()
 }
 
@@ -431,7 +431,7 @@ fn find_validators_for_field(
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Custom {
                                                 function: s,
-                                                argument: None,
+                                                argument: Box::new(None),
                                             })),
                                             None => error(lit.span(), "invalid argument for `custom` validator: only strings are allowed"),
                                         };
@@ -451,9 +451,9 @@ fn find_validators_for_field(
                                     "must_match" => {
                                         match lit_to_string(lit) {
                                             Some(s) => {
-                                                assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s), &attr);
+                                                assert_type_matches(rust_ident.clone(), field_type, field_types.get(&s), attr);
                                                 validators.push(FieldValidation::new(Validator::MustMatch(s)));
-                                            },
+                                            }
                                             None => error(lit.span(), "invalid argument for `must_match` validator: only strings are allowed"),
                                         };
                                     }
@@ -531,7 +531,7 @@ fn find_validators_for_field(
                                                 rust_ident.clone(),
                                                 field_type,
                                                 field_types.get(t2),
-                                                &attr,
+                                                attr,
                                             );
                                         }
                                         validators.push(validation);
@@ -554,12 +554,14 @@ fn find_validators_for_field(
                         field_ident
                     );
                 } else {
-                    abort!(attr.span(),
+                    abort!(
+                        attr.span(),
                         "Unable to parse this attribute for the field `{}` with the error: {:?}",
-                        field_ident, e
+                        field_ident,
+                        e
                     );
                 }
-            },
+            }
         }
 
         if has_validate && validators.is_empty() {

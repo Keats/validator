@@ -70,14 +70,7 @@ pub static NUMBER_TYPES: [&str; 38] = [
 ];
 
 pub fn assert_string_type(name: &str, type_name: &str, field_type: &syn::Type) {
-    if type_name != "String"
-        && type_name != "&str"
-        && !COW_TYPE.is_match(type_name)
-        && type_name != "Option<String>"
-        && type_name != "Option<Option<String>>"
-        && !(type_name.starts_with("Option<") && type_name.ends_with("str>"))
-        && !(type_name.starts_with("Option<Option<") && type_name.ends_with("str>>"))
-    {
+    if !type_name.contains("String") && !type_name.contains("str") {
         abort!(
             field_type.span(),
             "`{}` validator can only be used on String, &str, Cow<'_,str> or an Option of those",
@@ -113,7 +106,8 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
         return;
     }
 
-    if type_name != "String"
+    if !type_name.contains("String") 
+        && !type_name.contains("str")
         && !type_name.starts_with("Vec<")
         && !type_name.starts_with("Option<Vec<")
         && !type_name.starts_with("Option<Option<Vec<")
@@ -132,10 +126,7 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
         && !type_name.starts_with("IndexSet<")
         && !type_name.starts_with("Option<IndexSet<")
         // a bit ugly
-        && !(type_name.starts_with("Option<") && type_name.ends_with("str>"))
-        && !(type_name.starts_with("Option<Option<") && type_name.ends_with("str>>"))
         && !COW_TYPE.is_match(type_name)
-        && type_name != "&str"
     {
         abort!(field_type.span(),
                 "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, or map/set types (BTree/Hash/Index) but found `{}` for field `{}`",

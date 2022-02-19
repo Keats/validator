@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::HashMap;
+
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
@@ -54,6 +56,7 @@ struct Card {
     cvv: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Validate, Deserialize)]
 struct Preference {
     #[validate(length(min = 4))]
