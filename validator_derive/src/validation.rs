@@ -9,6 +9,7 @@ use crate::{asserts::assert_custom_arg_type, lit::*};
 #[derive(Debug)]
 pub struct SchemaValidation {
     pub function: String,
+    pub args: Option<CustomArgument>,
     pub skip_on_field_errors: bool,
     pub code: Option<String>,
     pub message: Option<String>,

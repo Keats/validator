@@ -15,6 +15,8 @@ use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
 use validation::*;
 use validator_types::{CustomArgument, Validator};
 
+use crate::asserts::assert_custom_arg_type;
+
 mod asserts;
 mod lit;
 mod quoting;
@@ -29,11 +31,13 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
 fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Collecting the validators
-    let mut validations = collect_field_validations(ast);
-    let (arg_type, has_arg) = construct_validator_argument_type(&mut validations);
-    let (validations, nested_validations) = quote_field_validations(validations);
+    let mut fields_validations = collect_field_validations(ast);
+    let mut struct_validations = find_struct_validations(&ast.attrs);
+    let (arg_type, has_arg) =
+        construct_validator_argument_type(&mut fields_validations, &mut struct_validations);
+    let (validations, nested_validations) = quote_field_validations(fields_validations);
 
-    let schema_validations = quote_schema_validations(&find_struct_validations(&ast.attrs));
+    let schema_validations = quote_schema_validations(&struct_validations);
 
     // Struct specific definitions
     let ident = &ast.ident;
@@ -58,6 +62,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     expanded_generic
         .params
         .insert(0, GenericParam::Lifetime(LifetimeDef::new(Lifetime::new("'v_a", ast.span()))));
+
     let (impl_generics, _, _) = expanded_generic.split_for_impl();
 
     // Implementing ValidateArgs
@@ -130,16 +135,22 @@ fn collect_field_validations(ast: &syn::DeriveInput) -> Vec<FieldInformation> {
 }
 
 fn construct_validator_argument_type(
-    validations: &mut Vec<FieldInformation>,
+    fields_validations: &mut Vec<FieldInformation>,
+    struct_validations: &mut Vec<SchemaValidation>,
 ) -> (proc_macro2::TokenStream, bool) {
     const ARGS_PARAMETER_NAME: &str = "args";
 
     // This iterator only holds custom validations with a argument_type
-    let mut customs: Vec<&mut CustomArgument> = validations
+    let mut customs: Vec<&mut CustomArgument> = fields_validations
         .iter_mut()
         .map(|x| x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut()))
         .flatten()
         .collect();
+
+    let mut schemas: Vec<&mut CustomArgument> =
+        struct_validations.iter_mut().map(|x| x.args.as_mut()).flatten().collect();
+
+    customs.append(&mut schemas);
 
     if customs.is_empty() {
         // Just the default empty type if no types are defined
@@ -212,6 +223,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
             let mut skip_on_field_errors = true;
             let mut code = None;
             let mut message = None;
+            let mut args = None;
 
             for arg in nested {
                 if_chain! {
@@ -248,6 +260,24 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
                                     : only a string is allowed"),
                                 };
                             },
+                            "arg" => {
+                                match lit_to_string(lit) {
+                                    Some(s) => {
+                                        match syn::parse_str::<syn::Type>(s.as_str()) {
+                                            Ok(arg_type) => {
+                                                assert_custom_arg_type(&lit.span(), &arg_type);
+                                                args = Some(CustomArgument::new(lit.span(), arg_type));
+                                            }
+                                            Err(_) => {
+                                                let mut msg = "invalid argument type for `arg` of `schema` validator: The string has to be a single type.".to_string();
+                                                msg.push_str("\n(Tip: You can combine multiple types into one tuple.)");
+                                                error(lit.span(), msg.as_str());
+                                            }
+                                        }
+                                    }
+                                    None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a string")
+                                };
+                            },
                             _ => error(lit.span(), "Unknown argument")
                         }
                     } else {
@@ -262,6 +292,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
 
             SchemaValidation {
                 function,
+                args,
                 skip_on_field_errors,
                 code,
                 message,
