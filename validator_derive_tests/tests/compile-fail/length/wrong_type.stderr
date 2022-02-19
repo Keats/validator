@@ -1,4 +1,4 @@
-error: Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `usize` for field `s`
+error: Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, or map/set types (BTree/Hash/Index) but found `usize` for field `s`
  --> $DIR/wrong_type.rs:6:8
   |
 6 |     s: usize,

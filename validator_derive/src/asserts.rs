@@ -111,11 +111,25 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
         && !type_name.starts_with("Vec<")
         && !type_name.starts_with("Option<Vec<")
         && !type_name.starts_with("Option<Option<Vec<")
+        && type_name != "Option<String>"
+        && type_name != "Option<Option<String>>"
+        && !type_name.starts_with("HashMap<")
+        && !type_name.starts_with("Option<HashMap<")
+        && !type_name.starts_with("HashSet<")
+        && !type_name.starts_with("Option<HashSet<")
+        && !type_name.starts_with("BTreeMap<")
+        && !type_name.starts_with("Option<BTreeMap<")
+        && !type_name.starts_with("BTreeSet<")
+        && !type_name.starts_with("Option<BTreeSet<")
+        && !type_name.starts_with("IndexMap<")
+        && !type_name.starts_with("Option<IndexMap<")
+        && !type_name.starts_with("IndexSet<")
+        && !type_name.starts_with("Option<IndexSet<")
         // a bit ugly
         && !COW_TYPE.is_match(type_name)
     {
         abort!(field_type.span(),
-                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> or `Vec` but found `{}` for field `{}`",
+                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, or map/set types (BTree/Hash/Index) but found `{}` for field `{}`",
                 type_name, field_name
             );
     }

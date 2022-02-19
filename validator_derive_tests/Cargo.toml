@@ -11,3 +11,6 @@ serde_json = "1.0"
 trybuild = "1.0"
 regex = "1"
 lazy_static = "1"
+
+[dependencies]
+indexmap = {version = "1", features = ["serde-1"], optional = true }
