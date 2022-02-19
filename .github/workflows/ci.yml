@@ -10,13 +10,13 @@ jobs:
         build: [pinned, stable, nightly]
         include:
           - build: pinned
-            os: ubuntu-18.04
-            rust: 1.42.0
+            os: ubuntu-20.04
+            rust: 1.46.0
           - build: stable
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             rust: stable
           - build: nightly
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             rust: nightly
     steps:
       - uses: actions/checkout@v1
@@ -34,7 +34,7 @@ jobs:
 
   test_validator_derive:
     name: test validator_derive
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
       - name: Install Rust

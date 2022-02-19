@@ -1,5 +1,10 @@
 ## Changelog
 
+## 0.15.0 (unreleased)
+
+- Allow passing args to schema validator
+- Implement HasLen for map/set types
+- 
 ## 0.14.0 (2021/06/29)
 
 - Allow passing arguments to custom functions
