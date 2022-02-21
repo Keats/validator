@@ -224,6 +224,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
             let mut code = None;
             let mut message = None;
             let mut args = None;
+            let mut sensitive = false;
 
             for arg in nested {
                 if_chain! {
@@ -278,6 +279,13 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
                                     None => error(lit.span(), "invalid argument type for `arg` of `custom` validator: expected a string")
                                 };
                             },
+                            "sensitive" => {
+                                sensitive = match lit_to_bool(lit) {
+                                    Some(b) => b,
+                                    None => error(lit.span(), "invalid argument type for `sensitive` \
+                                    : only `true` or `false` are allowed"),
+                                };
+                            }
                             _ => error(lit.span(), "Unknown argument")
                         }
                     } else {
@@ -296,6 +304,7 @@ fn find_struct_validation(attr: &syn::Attribute) -> SchemaValidation {
                 skip_on_field_errors,
                 code,
                 message,
+                sensitive
             }
         } else {
             error(attr.span(), "Unexpected struct validator")

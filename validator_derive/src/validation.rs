@@ -13,6 +13,7 @@ pub struct SchemaValidation {
     pub skip_on_field_errors: bool,
     pub code: Option<String>,
     pub message: Option<String>,
+    pub sensitive: bool,
 }
 
 /// This struct holds the combined validation information for one filed
@@ -41,11 +42,17 @@ pub struct FieldValidation {
     pub code: String,
     pub message: Option<String>,
     pub validator: Validator,
+    pub sensitive: bool,
 }
 
 impl FieldValidation {
     pub fn new(validator: Validator) -> FieldValidation {
-        FieldValidation { code: validator.code().to_string(), validator, message: None }
+        FieldValidation {
+            code: validator.code().to_string(),
+            validator,
+            message: None,
+            sensitive: false,
+        }
     }
 }
 
@@ -58,7 +65,7 @@ pub fn extract_length_validation(
     let mut max = None;
     let mut equal = None;
 
-    let (message, code) = extract_message_and_code("length", &field, meta_items);
+    let (message, code, sensitive) = extract_meta_params("length", &field, meta_items);
 
     let error = |span: Span, msg: &str| -> ! {
         abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
@@ -69,7 +76,7 @@ pub fn extract_length_validation(
             if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item {
                 let ident = path.get_ident().unwrap();
                 match ident.to_string().as_ref() {
-                    "message" | "code" => continue,
+                    "message" | "code" | "sensitive" => continue,
                     "min" => {
                         min = match lit_to_u64_or_path(lit) {
                             Some(s) => Some(s),
@@ -121,6 +128,7 @@ pub fn extract_length_validation(
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
+        sensitive,
     }
 }
 
@@ -132,7 +140,7 @@ pub fn extract_range_validation(
     let mut min = None;
     let mut max = None;
 
-    let (message, code) = extract_message_and_code("range", &field, meta_items);
+    let (message, code, sensitive) = extract_meta_params("range", &field, meta_items);
 
     let error = |span: Span, msg: &str| -> ! {
         abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
@@ -144,7 +152,7 @@ pub fn extract_range_validation(
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
+                        "message" | "code" | "sensitive"=> continue,
                         "min" => {
                             min = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
@@ -182,6 +190,7 @@ pub fn extract_range_validation(
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
+        sensitive,
     }
 }
 
@@ -193,7 +202,7 @@ pub fn extract_custom_validation(
     let mut function = None;
     let mut argument = None;
 
-    let (message, code) = extract_message_and_code("custom", &field, meta_items);
+    let (message, code, sensitive) = extract_meta_params("custom", &field, meta_items);
 
     let error = |span: Span, msg: &str| -> ! {
         abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
@@ -205,7 +214,7 @@ pub fn extract_custom_validation(
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
+                        "message" | "code" | "sensitive" => continue,
                         "function" => {
                             function = match lit_to_string(lit) {
                                 Some(s) => Some(s),
@@ -256,6 +265,7 @@ pub fn extract_custom_validation(
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
+        sensitive,
     }
 }
 
@@ -265,7 +275,7 @@ pub fn extract_argless_validation(
     field: String,
     meta_items: &[syn::NestedMeta],
 ) -> FieldValidation {
-    let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
+    let (message, code, sensitive) = extract_meta_params(&validator_name, &field, meta_items);
 
     for meta_item in meta_items {
         match *meta_item {
@@ -273,7 +283,7 @@ pub fn extract_argless_validation(
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, .. }) => {
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
+                        "message" | "code" | "sensitive" => continue,
                         v => abort!(
                             meta_item.span(),
                             "Unknown argument `{}` for validator `{}` on field `{}`",
@@ -308,6 +318,7 @@ pub fn extract_argless_validation(
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
+        sensitive,
     }
 }
 
@@ -319,7 +330,7 @@ pub fn extract_one_arg_validation(
     meta_items: &[syn::NestedMeta],
 ) -> FieldValidation {
     let mut value = None;
-    let (message, code) = extract_message_and_code(&validator_name, &field, meta_items);
+    let (message, code, sensitive) = extract_meta_params(&validator_name, &field, meta_items);
 
     for meta_item in meta_items {
         match *meta_item {
@@ -327,7 +338,7 @@ pub fn extract_one_arg_validation(
                 syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) => {
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
-                        "message" | "code" => continue,
+                        "message" | "code" | "sensitive" => continue,
                         v if v == val_name => {
                             value = match lit_to_string(lit) {
                                 Some(s) => Some(s),
@@ -379,16 +390,18 @@ pub fn extract_one_arg_validation(
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
+        sensitive,
     }
 }
 
-fn extract_message_and_code(
+fn extract_meta_params(
     validator_name: &str,
     field: &str,
     meta_items: &[syn::NestedMeta],
-) -> (Option<String>, Option<String>) {
+) -> (Option<String>, Option<String>, bool) {
     let mut message = None;
     let mut code = None;
+    let mut sensitive = false;
 
     for meta_item in meta_items {
         if let syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
@@ -419,10 +432,16 @@ fn extract_message_and_code(
                                 ),
                     };
                 }
+                "sensitive" => {
+                    sensitive = match lit_to_bool(lit) {
+                        Some(b) => b,
+                        None => false,
+                    };
+                }
                 _ => continue,
             }
         }
     }
 
-    (message, code)
+    (message, code, sensitive)
 }
