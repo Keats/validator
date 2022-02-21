@@ -54,7 +54,7 @@ match signup_data.validate() {
 
 A validation on an `Option<_>` field will be executed on the contained type if the option is `Some`. The `validate()`
  method returns a `Result<(), ValidationErrors>`. In the case of an invalid result, the `ValidationErrors` instance includes
-a map of errors keyed against the struct's field names. Errors may be represented in three ways, as described by the 
+a map of errors keyed against the struct's field names. Errors may be represented in three ways, as described by the
 `ValidationErrorsKind` enum:
 
 ```rust
@@ -339,13 +339,14 @@ if an error happened while validating the struct fields.
 
 Any error on the struct level validation will appear in the key `__all__` of the hashmap of errors.
 
-## Message and code
+## `message`, `code`, and `sensitive`
 
-Each validator can take 2 optional arguments in addition to their own arguments:
+Each validator can take 3 optional arguments in addition to their own arguments:
 
 - `message`: a message to go with the error, for example if you want to do i18n
 - `code`: each validator has a default error code (for example the `regex` validator code is `regex`) but it can be overriden
 if necessary, mainly needed for the `custom` validator
+- `sensitive`: when set to `true`, the field value will be omitted from validation errors, and can be used for fields with sensitive data such as passwords
 
 Note that these arguments can't be applied to nested validation calls with `#[validate]`.
 
@@ -371,9 +372,14 @@ For example, the following attributes all work:
 #[validate(contains(pattern = "pattern_str", message = "message_str"))]
 #[validate(must_match(other = "match_value", message = "message_str"))]
 
-// both attributes
+// sensitive attribute
+#[validate(length(min = 8, max = 255, sensitive = true))]
+#[validate(credit_card(sensitive = true))]
+
+// multiple attributes
 #[validate(url(message = "message", code = "code_str"))]
 #[validate(email(code = "code_str", message = "message"))]
 #[validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
+#[validate(length(min = 8, code = "code_str", message = "message_str", sensitive = true))]
 
 ```
