@@ -171,6 +171,12 @@ pub fn quote_length_validation(
         );
 
         let quoted_error = quote_error(validation);
+        let quoted_value = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+        };
+
         let quoted = quote!(
             if !::validator::validate_length(
                 #validator_param,
@@ -182,7 +188,7 @@ pub fn quote_length_validation(
                 #min_err_param_quoted
                 #max_err_param_quoted
                 #equal_err_param_quoted
-                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                #quoted_value
                 errors.add(#field_name, err);
             }
         );
@@ -214,6 +220,12 @@ pub fn quote_range_validation(
             quote!()
         };
 
+        let quoted_value = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &#quoted_ident);)
+        };
+
         // Can't interpolate None
         let min_tokens =
             min.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
@@ -233,7 +245,7 @@ pub fn quote_range_validation(
                 #quoted_error
                 #min_err_param_quoted
                 #max_err_param_quoted
-                err.add_param(::std::borrow::Cow::from("value"), &#quoted_ident);
+                #quoted_value
                 errors.add(#field_name, err);
             }
         );
@@ -253,10 +265,16 @@ pub fn quote_credit_card_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!()
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_credit_card(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
@@ -273,10 +291,16 @@ pub fn quote_phone_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!()
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_phone(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
@@ -293,10 +317,16 @@ pub fn quote_non_control_character_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!()
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_non_control_character(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
@@ -312,10 +342,16 @@ pub fn quote_url_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!()
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_url(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
@@ -331,10 +367,16 @@ pub fn quote_email_validation(
     let validator_param = field_quoter.quote_validator_param();
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!()
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_email(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
@@ -352,10 +394,16 @@ pub fn quote_must_match_validation(
     if let Validator::MustMatch(ref other) = validation.validator {
         let other_ident = syn::Ident::new(other, Span::call_site());
         let quoted_error = quote_error(validation);
+        let quoted_value = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &self.#ident);)
+        };
+
         let quoted = quote!(
             if !::validator::validate_must_match(&self.#ident, &self.#other_ident) {
                 #quoted_error
-                err.add_param(::std::borrow::Cow::from("value"), &self.#ident);
+                #quoted_value
                 err.add_param(::std::borrow::Cow::from("other"), &self.#other_ident);
                 errors.add(#field_name, err);
             }
@@ -393,12 +441,18 @@ pub fn quote_custom_validation(
             quote!()
         };
 
+        let add_value_quoted = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+        };
+
         let quoted = quote!(
             match #fn_ident(#validator_param #access) {
                 ::std::result::Result::Ok(()) => (),
                 ::std::result::Result::Err(mut err) => {
                     #add_message_quoted
-                    err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                    #add_value_quoted
                     errors.add(#field_name, err);
                 },
             };
@@ -419,10 +473,16 @@ pub fn quote_contains_validation(
 
     if let Validator::Contains(ref needle) = validation.validator {
         let quoted_error = quote_error(validation);
+        let quoted_value = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+        };
+
         let quoted = quote!(
             if !::validator::validate_contains(#validator_param, &#needle) {
                 #quoted_error
-                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                #quoted_value
                 err.add_param(::std::borrow::Cow::from("needle"), &#needle);
                 errors.add(#field_name, err);
             }
@@ -444,10 +504,16 @@ pub fn quote_regex_validation(
     if let Validator::Regex(ref re) = validation.validator {
         let re_ident: syn::Path = syn::parse_str(re).unwrap();
         let quoted_error = quote_error(validation);
+        let quoted_value = if validation.sensitive {
+            quote!()
+        } else {
+            quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+        };
+
         let quoted = quote!(
             if !#re_ident.is_match(#validator_param) {
                 #quoted_error
-                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                #quoted_value
                 errors.add(#field_name, err);
             }
         );
@@ -557,10 +623,16 @@ pub fn quote_required_validation(
     let validator_param = quote!(&self.#ident);
 
     let quoted_error = quote_error(validation);
+    let quoted_value = if validation.sensitive {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    } else {
+        quote!(err.add_param(::std::borrow::Cow::from("value"), &#validator_param);)
+    };
+
     let quoted = quote!(
         if !::validator::validate_required(#validator_param) {
             #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+            #quoted_value
             errors.add(#field_name, err);
         }
     );
