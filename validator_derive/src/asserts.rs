@@ -7,24 +7,15 @@ use syn::spanned::Spanned;
 
 lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
+    pub static ref LEN_TYPE: Regex =
+        Regex::new(r"(Option<)?(Vec|HashMap|HashSet|BTreeMap|BTreeSet|IndexMap|IndexSet)<")
+            .unwrap();
 }
 
 static CUSTOM_ARG_LIFETIME: &str = "v_a";
 
 static CUSTOM_ARG_ALLOWED_COPY_TYPES: [&str; 14] = [
-    "usize",
-    "u8",
-    "u16",
-    "u32",
-    "u64",
-    "u128",
-    "isize",
-    "i8",
-    "i16",
-    "i32",
-    "i64",
-    "i128",
-    "f32",
+    "usize", "u8", "u16", "u32", "u64", "u128", "isize", "i8", "i16", "i32", "i64", "i128", "f32",
     "f64",
 ];
 
@@ -108,23 +99,7 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
 
     if !type_name.contains("String") 
         && !type_name.contains("str")
-        && !type_name.starts_with("Vec<")
-        && !type_name.starts_with("Option<Vec<")
-        && !type_name.starts_with("Option<Option<Vec<")
-        && type_name != "Option<String>"
-        && type_name != "Option<Option<String>>"
-        && !type_name.starts_with("HashMap<")
-        && !type_name.starts_with("Option<HashMap<")
-        && !type_name.starts_with("HashSet<")
-        && !type_name.starts_with("Option<HashSet<")
-        && !type_name.starts_with("BTreeMap<")
-        && !type_name.starts_with("Option<BTreeMap<")
-        && !type_name.starts_with("BTreeSet<")
-        && !type_name.starts_with("Option<BTreeSet<")
-        && !type_name.starts_with("IndexMap<")
-        && !type_name.starts_with("Option<IndexMap<")
-        && !type_name.starts_with("IndexSet<")
-        && !type_name.starts_with("Option<IndexSet<")
+        && !LEN_TYPE.is_match(type_name)
         // a bit ugly
         && !COW_TYPE.is_match(type_name)
     {
@@ -150,7 +125,7 @@ pub fn assert_custom_arg_type(field_span: &Span, field_type: &syn::Type) {
     match field_type {
         syn::Type::Reference(reference) => {
             if let Some(lifetime) = &reference.lifetime {
-                let lifetime_ident = lifetime.ident.to_string(); 
+                let lifetime_ident = lifetime.ident.to_string();
                 if lifetime_ident != CUSTOM_ARG_LIFETIME {
                     abort!(
                         field_span,
@@ -176,7 +151,7 @@ pub fn assert_custom_arg_type(field_span: &Span, field_type: &syn::Type) {
         }
         // assert idents
         syn::Type::Path(path) => {
-            let segments = &path.path.segments; 
+            let segments = &path.path.segments;
             if segments.len() == 1 {
                 let ident = &segments.first().unwrap().ident.to_string();
                 if CUSTOM_ARG_ALLOWED_COPY_TYPES.contains(&ident.as_str()) {
