@@ -31,7 +31,7 @@ impl std::error::Error for ValidationError {
     }
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum ValidationErrorsKind {
     Struct(Box<ValidationErrors>),
@@ -39,7 +39,7 @@ pub enum ValidationErrorsKind {
     Field(Vec<ValidationError>),
 }
 
-#[derive(Default, Debug, Serialize, Clone, PartialEq)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ValidationErrors(HashMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
