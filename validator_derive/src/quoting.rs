@@ -44,7 +44,10 @@ impl FieldQuoter {
     pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
 
-        if self._type.starts_with("Option<") || self._type.starts_with("Vec<") {
+        if self._type.starts_with("Option<")
+            || self._type.starts_with("Vec<")
+            || is_map(&self._type)
+        {
             quote!(#ident)
         } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
@@ -112,7 +115,7 @@ impl FieldQuoter {
                 }).collect();
                 result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
             });
-        } else if Self::is_map(&self._type) {
+        } else if is_map(&self._type) {
             if self._type.starts_with("Option<") {
                 return quote!(
                 if !::validator::ValidationErrors::has_error(&result, #field_name) {
@@ -138,17 +141,17 @@ impl FieldQuoter {
 
         tokens
     }
+}
 
-    fn is_map(_type: &str) -> bool {
-        if _type.starts_with("Option<") {
-            return Self::is_map(&_type[7..]);
-        }
-
-        _type.starts_with("HashMap<")
-            || _type.starts_with("FxHashMap<")
-            || _type.starts_with("FnvHashMap<")
-            || _type.starts_with("BTreeMap<")
+fn is_map(_type: &str) -> bool {
+    if _type.starts_with("Option<") {
+        return is_map(&_type[7..]);
     }
+
+    _type.starts_with("HashMap<")
+        || _type.starts_with("FxHashMap<")
+        || _type.starts_with("FnvHashMap<")
+        || _type.starts_with("BTreeMap<")
 }
 
 /// Quote an actual end-user error creation automatically
