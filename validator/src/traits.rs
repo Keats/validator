@@ -50,25 +50,25 @@ impl<'a, T> HasLen for &'a Vec<T> {
     }
 }
 
-impl<'a, K, V> HasLen for &'a HashMap<K, V> {
+impl<'a, K, V, S> HasLen for &'a HashMap<K, V, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<K, V> HasLen for HashMap<K, V> {
+impl<K, V, S> HasLen for HashMap<K, V, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<'a, T> HasLen for &'a HashSet<T> {
+impl<'a, T, S> HasLen for &'a HashSet<T, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<T> HasLen for HashSet<T> {
+impl<T, S> HasLen for HashSet<T, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
