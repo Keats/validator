@@ -48,7 +48,21 @@ struct ParentWithOptionVectorOfChildren {
     child: Option<Vec<Child>>,
 }
 
-#[derive(Debug, Validate, Serialize)]
+#[derive(Debug, Validate)]
+struct ParentWithMapOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: HashMap<i8, Child>,
+}
+
+#[derive(Debug, Validate)]
+struct ParentWithOptionMapOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: Option<HashMap<i8, Child>>,
+}
+
+#[derive(Debug, Validate, Serialize, Clone)]
 struct Child {
     #[validate(length(min = 1))]
     value: String,
@@ -259,6 +273,64 @@ fn test_can_validate_option_vector_fields() {
         });
         assert!(errs.contains_key(&3));
         unwrap_map(&errs[&3], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_map_fields() {
+    let instance = ParentWithMapOfChildren {
+        child: [(0, Child { value: String::new() })].iter().cloned().collect(),
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_option_map_fields() {
+    let instance = ParentWithOptionMapOfChildren {
+        child: Some([(0, Child { value: String::new() })].iter().cloned().collect()),
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
             assert_eq!(errs.len(), 1);
             assert!(errs.contains_key("value"));
             if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
