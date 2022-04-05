@@ -44,7 +44,10 @@ impl FieldQuoter {
     pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
 
-        if self._type.starts_with("Option<") || self._type.starts_with("Vec<") {
+        if self._type.starts_with("Option<")
+            || self._type.starts_with("Vec<")
+            || is_map(&self._type)
+        {
             quote!(#ident)
         } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
@@ -89,7 +92,7 @@ impl FieldQuoter {
 
     /// Wrap the quoted output of a validation with a for loop if
     /// the field type is a vector
-    pub fn wrap_if_vector(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    pub fn wrap_if_collection(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
         let field_ident = &self.ident;
         let field_name = &self.name;
         if self._type.starts_with("Vec<") {
@@ -112,10 +115,43 @@ impl FieldQuoter {
                 }).collect();
                 result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
             });
+        } else if is_map(&self._type) {
+            if self._type.starts_with("Option<") {
+                return quote!(
+                if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                    let results: Vec<_> = #field_ident.iter().map(|(_, #field_ident)| {
+                        let mut result = ::std::result::Result::Ok(());
+                        #tokens
+                        result
+                    }).collect();
+                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+                });
+            } else {
+                return quote!(
+                if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                    let results: Vec<_> = self.#field_ident.iter().map(|(_, #field_ident)| {
+                        let mut result = ::std::result::Result::Ok(());
+                        #tokens
+                        result
+                    }).collect();
+                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
+                });
+            }
         }
 
         tokens
     }
+}
+
+fn is_map(_type: &str) -> bool {
+    if _type.starts_with("Option<") {
+        return is_map(&_type[7..]);
+    }
+
+    _type.starts_with("HashMap<")
+        || _type.starts_with("FxHashMap<")
+        || _type.starts_with("FnvHashMap<")
+        || _type.starts_with("BTreeMap<")
 }
 
 /// Quote an actual end-user error creation automatically
@@ -462,7 +498,7 @@ pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::Token
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
     let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
-    field_quoter.wrap_if_option(field_quoter.wrap_if_vector(quoted))
+    field_quoter.wrap_if_option(field_quoter.wrap_if_collection(quoted))
 }
 
 pub fn quote_validator(
