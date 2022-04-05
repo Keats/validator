@@ -342,12 +342,7 @@ fn find_fields_type(fields: &[syn::Field]) -> HashMap<String, String> {
             _ => {
                 let mut field_type = proc_macro2::TokenStream::new();
                 field.ty.to_tokens(&mut field_type);
-                abort!(
-                    field.ty.span(),
-                    "Type `{}` of field `{}` not supported",
-                    field_type,
-                    field_ident
-                )
+                field_type.to_string().replace(' ', "")
             }
         };
 
