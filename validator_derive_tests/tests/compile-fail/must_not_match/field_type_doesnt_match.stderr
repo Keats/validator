@@ -1,0 +1,5 @@
+error: Invalid argument for `must_not_match` validator of field `password`: types of field can't match
+ --> $DIR/field_type_doesnt_match.rs:5:5
+  |
+5 |     #[validate(must_not_match = "password2")]
+  |     ^

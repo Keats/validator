@@ -371,6 +371,7 @@ pub fn extract_one_arg_validation(
         "custom" => Validator::Custom { function: value.unwrap(), argument: Box::new(None) },
         "contains" => Validator::Contains(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
+        "must_not_match" => Validator::MustNotMatch(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),
         _ => unreachable!(),
     };

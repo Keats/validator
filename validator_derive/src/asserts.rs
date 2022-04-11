@@ -1,8 +1,7 @@
-use proc_macro2::Span;
-use regex::Regex;
-
 use lazy_static::lazy_static;
+use proc_macro2::Span;
 use proc_macro_error::abort;
+use regex::Regex;
 use syn::spanned::Spanned;
 
 lazy_static! {
@@ -71,6 +70,7 @@ pub fn assert_string_type(name: &str, type_name: &str, field_type: &syn::Type) {
 }
 
 pub fn assert_type_matches(
+    validator_name: &str,
     field_name: String,
     field_type: &str,
     field_type2: Option<&String>,
@@ -78,10 +78,15 @@ pub fn assert_type_matches(
 ) {
     if let Some(t2) = field_type2 {
         if field_type != t2 {
-            abort!(field_attr.span(), "Invalid argument for `must_match` validator of field `{}`: types of field can't match", field_name);
+            abort!(
+                field_attr.span(),
+                "Invalid argument for `{}` validator of field `{}`: types of field can't match",
+                validator_name,
+                field_name
+            );
         }
     } else {
-        abort!(field_attr.span(), "Invalid argument for `must_match` validator of field `{}`: the other field doesn't exist in struct", field_name);
+        abort!(field_attr.span(), "Invalid argument for `{}` validator of field `{}`: the other field doesn't exist in struct", validator_name, field_name);
     }
 }
 
