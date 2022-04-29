@@ -9,12 +9,13 @@ repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]
 edition = "2018"
 
-
 [features]
+default = ["proc-macro"]
 phone = []
 card = []
 unic = []
+proc-macro = ["proc-macro2/proc-macro", "syn/proc-macro"]
 
 [dependencies]
-syn = { version = "1", features = ["extra-traits"] }
+syn = { version = "1", features = ["extra-traits"], deault-features=false }
 proc-macro2 = "1"
