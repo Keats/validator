@@ -1,10 +1,13 @@
 ## Changelog
 
-## 0.15.0 (unreleased)
+## 0.15.0 (2022/05/03)
 
 - Allow passing args to schema validator
 - Implement HasLen for map/set types
-- 
+- Remove `validator_types` from validator crate
+- Add ValidationErrors::errors_mut
+- Ignore unsupported fields rather than erroring
+
 ## 0.14.0 (2021/06/29)
 
 - Allow passing arguments to custom functions
