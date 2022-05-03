@@ -83,7 +83,6 @@ pub use validation::range::validate_range;
 
 pub use validation::required::validate_required;
 pub use validation::urls::validate_url;
-pub use validation::Validator;
 
 pub use traits::{Contains, HasLen, Validate, ValidateArgs};
 pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};

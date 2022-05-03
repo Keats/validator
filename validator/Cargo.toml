@@ -17,7 +17,6 @@ idna = "0.2"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
-validator_types = { version = "0.14", path = "../validator_types" }
 validator_derive = { version = "0.14", path = "../validator_derive", optional = true }
 card-validate = { version = "2.2", optional = true }
 phonenumber = { version = "0.3", optional = true }
@@ -26,7 +25,7 @@ indexmap = {version = "1", features = ["serde-1"], optional = true }
 
 
 [features]
-phone = ["phonenumber", "validator_derive/phone", "validator_types/phone"]
-card = ["card-validate", "validator_derive/card", "validator_types/card"]
-unic = ["unic-ucd-common", "validator_derive/unic", "validator_types/unic"]
+phone = ["phonenumber", "validator_derive/phone"]
+card = ["card-validate", "validator_derive/card"]
+unic = ["unic-ucd-common", "validator_derive/unic"]
 derive = ["validator_derive"]
