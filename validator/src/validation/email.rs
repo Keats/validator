@@ -33,13 +33,13 @@ where
     let user_part = parts[1];
     let domain_part = parts[0];
 
-	// validate the length of each part of the email, BEFORE doing the regex
-	// according to RFC5321 the max length of the local part is 64 characters
-	// and the max length of the domain part is 255 characters
-	// https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
-	if user_part.length() > 64 || domain_part.length() > 255 {
-		return false;
-	}
+    // validate the length of each part of the email, BEFORE doing the regex
+    // according to RFC5321 the max length of the local part is 64 characters
+    // and the max length of the domain part is 255 characters
+    // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
+    if user_part.length() > 64 || domain_part.length() > 255 {
+        return false;
+    }
 
     if !EMAIL_USER_RE.is_match(user_part) {
         return false;
@@ -59,11 +59,7 @@ where
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
 #[must_use]
 fn validate_domain_part(domain_part: &str) -> bool {
-    if domain_part.length() > 255 {
-		return false;
-	}
-	
-	if EMAIL_DOMAIN_RE.is_match(domain_part) {
+    if EMAIL_DOMAIN_RE.is_match(domain_part) {
         return true;
     }
 
@@ -161,13 +157,13 @@ mod tests {
         assert_eq!(validate_email(test), false);
     }
 
-	#[test]
-	fn test_validate_email_rfc5321() {
-		// 65 character local part
-		let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
-		assert_eq!(validate_email(test), false);
-		// 256 character domain part
-		let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
-		assert_eq!(validate_email(test), false);
-	}
+    #[test]
+    fn test_validate_email_rfc5321() {
+        // 65 character local part
+        let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
+        assert_eq!(validate_email(test), false);
+        // 256 character domain part
+        let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
+        assert_eq!(validate_email(test), false);
+    }
 }
