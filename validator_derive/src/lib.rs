@@ -523,7 +523,7 @@ fn find_validators_for_field(
                                     | "phone"
                                     | "credit_card"
                                     | "non_control_character"
-									| "required" => {
+                                    | "required" => {
                                         validators.push(extract_argless_validation(
                                             ident.to_string(),
                                             rust_ident.clone(),
