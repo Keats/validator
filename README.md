@@ -249,7 +249,7 @@ To use this validator, you must enable the `phone` feature for the `validator` c
 This validator doesn't take any arguments: `#[validate(phone)]`;
 
 ### custom
-Calls one of your functions to perform a custom validation. The field will reference be given as a parameter to the function,
+Calls one of your functions to perform a custom validation. The field reference will be given as a parameter to the function,
 which should return a `Result<(), ValidationError>`.
 
 Examples:
