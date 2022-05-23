@@ -42,7 +42,7 @@ fn validate_length_with_ref_fails() {
 
     let s = TestStruct { val: "".to_string() };
 
-    assert!(s.validate().is_ok());
+    assert!(s.validate().is_err());
 }
 
 #[test]
