@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn test_validate_contains_string_can_fail() {
-        assert_eq!(validate_contains("hey", "o"), false);
+        assert!(validate_contains("hey", "o"));
     }
 
     #[test]
@@ -36,7 +36,7 @@ mod tests {
     fn test_validate_contains_hashmap_key_can_fail() {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
-        assert_eq!(validate_contains(map, "bob"), false);
+        assert!(!validate_contains(map, "bob"));
     }
 
     #[test]
@@ -50,8 +50,8 @@ mod tests {
     #[test]
     fn test_validate_contains_cow_can_fail() {
         let test: Cow<'static, str> = "hey".into();
-        assert_eq!(validate_contains(test, "o"), false);
+        assert!(!validate_contains(test, "o"));
         let test: Cow<'static, str> = String::from("hey").into();
-        assert_eq!(validate_contains(test, "o"), false);
+        assert!(!validate_contains(test, "o"));
     }
 }

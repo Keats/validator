@@ -40,40 +40,40 @@ mod tests {
 
     #[test]
     fn test_validate_length_equal_overrides_min_max() {
-        assert_eq!(validate_length("hello", Some(1), Some(2), Some(5)), true);
+        assert!(validate_length("hello", Some(1), Some(2), Some(5)));
     }
 
     #[test]
     fn test_validate_length_string_min_max() {
-        assert_eq!(validate_length("hello", Some(1), Some(10), None), true);
+        assert!(validate_length("hello", Some(1), Some(10), None));
     }
 
     #[test]
     fn test_validate_length_string_min_only() {
-        assert_eq!(validate_length("hello", Some(10), None, None), false);
+        assert!(!validate_length("hello", Some(10), None, None));
     }
 
     #[test]
     fn test_validate_length_string_max_only() {
-        assert_eq!(validate_length("hello", None, Some(1), None), false);
+        assert!(!validate_length("hello", None, Some(1), None));
     }
 
     #[test]
     fn test_validate_length_cow() {
         let test: Cow<'static, str> = "hello".into();
-        assert_eq!(validate_length(test, None, None, Some(5)), true);
+        assert!(validate_length(test, None, None, Some(5)));
 
         let test: Cow<'static, str> = String::from("hello").into();
-        assert_eq!(validate_length(test, None, None, Some(5)), true);
+        assert!(validate_length(test, None, None, Some(5)));
     }
 
     #[test]
     fn test_validate_length_vec() {
-        assert_eq!(validate_length(vec![1, 2, 3], None, None, Some(3)), true);
+        assert!(validate_length(vec![1, 2, 3], None, None, Some(3)));
     }
 
     #[test]
     fn test_validate_length_unicode_chars() {
-        assert_eq!(validate_length("日本", None, None, Some(2)), true);
+        assert!(validate_length("日本", None, None, Some(2)));
     }
 }

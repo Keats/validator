@@ -33,12 +33,12 @@ mod tests {
     #[test]
     fn test_credit_card_cow() {
         let test: Cow<'static, str> = "4539571147647251".into();
-        assert_eq!(validate_credit_card(test), true);
+        assert!(validate_credit_card(test));
         let test: Cow<'static, str> = String::from("4539571147647251").into();
-        assert_eq!(validate_credit_card(test), true);
+        assert!(validate_credit_card(test));
         let test: Cow<'static, str> = "5236313877109141".into();
-        assert_eq!(validate_credit_card(test), false);
+        assert!(!validate_credit_card(test));
         let test: Cow<'static, str> = String::from("5236313877109141").into();
-        assert_eq!(validate_credit_card(test), false);
+        assert!(!validate_credit_card(test));
     }
 }

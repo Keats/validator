@@ -73,7 +73,7 @@ where
         ValueOrPath::Value(ref t) => quote!(#t),
         ValueOrPath::Path(ref path) => {
             // Global space
-            let ident: syn::Path = syn::parse_str(&path.to_string()).unwrap();
+            let ident: syn::Path = syn::parse_str(path).unwrap();
             quote!(#ident)
         }
     }

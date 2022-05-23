@@ -140,12 +140,12 @@ mod tests {
     #[test]
     fn test_validate_email_cow() {
         let test: Cow<'static, str> = "email@here.com".into();
-        assert_eq!(validate_email(test), true);
+        assert!(validate_email(test));
         let test: Cow<'static, str> = String::from("email@here.com").into();
-        assert_eq!(validate_email(test), true);
+        assert!(validate_email(test));
         let test: Cow<'static, str> = "a@[127.0.0.1]\n".into();
-        assert_eq!(validate_email(test), false);
+        assert!(!validate_email(test));
         let test: Cow<'static, str> = String::from("a@[127.0.0.1]\n").into();
-        assert_eq!(validate_email(test), false);
+        assert!(!validate_email(test));
     }
 }
