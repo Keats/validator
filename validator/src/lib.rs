@@ -45,6 +45,7 @@
 //! | `range`                 |                                                       |
 //! | `must_match`            |                                                       |
 //! | `contains`              |                                                       |
+//! | `does_not_contain`      |                                                       |
 //! | `custom`                |                                                       |
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
@@ -71,6 +72,7 @@ mod validation;
 #[cfg(feature = "card")]
 pub use validation::cards::validate_credit_card;
 pub use validation::contains::validate_contains;
+pub use validation::does_not_contain::validate_does_not_contain;
 pub use validation::email::validate_email;
 pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6};
 pub use validation::length::validate_length;

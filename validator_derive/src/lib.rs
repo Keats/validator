@@ -467,6 +467,12 @@ fn find_validators_for_field(
                                             None => error(lit.span(), "invalid argument for `contains` validator: only strings are allowed"),
                                         };
                                     }
+                                    "does_not_contain" => {
+                                        match lit_to_string(lit) {
+                                            Some(s) => validators.push(FieldValidation::new(Validator::DoesNotContain(s))),
+                                            None => error(lit.span(), "invalid argument for `does_not_contain` validator: only strings are allowed"),
+                                        };
+                                    }
                                     "regex" => {
                                         match lit_to_string(lit) {
                                             Some(s) => validators.push(FieldValidation::new(Validator::Regex(s))),
@@ -528,7 +534,7 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
-                                    "contains" => {
+                                    "contains" | "does_not_contain" => {
                                         validators.push(extract_one_arg_validation(
                                             "pattern",
                                             ident.to_string(),
