@@ -28,30 +28,30 @@ mod tests {
     #[test]
     fn test_validate_range_generic_ok() {
         // Unspecified generic type:
-        assert_eq!(true, validate_range(10, Some(-10), Some(10)));
-        assert_eq!(true, validate_range(0.0, Some(0.0), Some(10.0)));
+        assert!(validate_range(10, Some(-10), Some(10)));
+        assert!(validate_range(0.0, Some(0.0), Some(10.0)));
 
         // Specified type:
-        assert_eq!(true, validate_range(5u8, Some(0), Some(255)));
-        assert_eq!(true, validate_range(4u16, Some(0), Some(16)));
-        assert_eq!(true, validate_range(6u32, Some(0), Some(23)));
+        assert!(validate_range(5u8, Some(0), Some(255)));
+        assert!(validate_range(4u16, Some(0), Some(16)));
+        assert!(validate_range(6u32, Some(0), Some(23)));
     }
 
     #[test]
     fn test_validate_range_generic_fail() {
-        assert_eq!(false, validate_range(5, Some(17), Some(19)));
-        assert_eq!(false, validate_range(-1.0, Some(0.0), Some(10.0)));
+        assert!(!validate_range(5, Some(17), Some(19)));
+        assert!(!validate_range(-1.0, Some(0.0), Some(10.0)));
     }
 
     #[test]
     fn test_validate_range_generic_min_only() {
-        assert_eq!(false, validate_range(5, Some(10), None));
-        assert_eq!(true, validate_range(15, Some(10), None));
+        assert!(!validate_range(5, Some(10), None));
+        assert!(validate_range(15, Some(10), None));
     }
 
     #[test]
     fn test_validate_range_generic_max_only() {
-        assert_eq!(true, validate_range(5, None, Some(10)));
-        assert_eq!(false, validate_range(15, None, Some(10)));
+        assert!(validate_range(5, None, Some(10)));
+        assert!(!validate_range(15, None, Some(10)));
     }
 }

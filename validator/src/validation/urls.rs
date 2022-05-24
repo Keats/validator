@@ -33,12 +33,12 @@ mod tests {
     #[test]
     fn test_validate_url_cow() {
         let test: Cow<'static, str> = "http://localhost:80".into();
-        assert_eq!(validate_url(test), true);
+        assert!(validate_url(test));
         let test: Cow<'static, str> = String::from("http://localhost:80").into();
-        assert_eq!(validate_url(test), true);
+        assert!(validate_url(test));
         let test: Cow<'static, str> = "http".into();
-        assert_eq!(validate_url(test), false);
+        assert!(!validate_url(test));
         let test: Cow<'static, str> = String::from("http").into();
-        assert_eq!(validate_url(test), false);
+        assert!(!validate_url(test));
     }
 }

@@ -36,12 +36,12 @@ mod tests {
     #[test]
     fn test_non_control_character_cow() {
         let test: Cow<'static, str> = "आकाश".into();
-        assert_eq!(validate_non_control_character(test), true);
+        assert!(validate_non_control_character(test));
         let test: Cow<'static, str> = String::from("வானத்தில்").into();
-        assert_eq!(validate_non_control_character(test), true);
+        assert!(validate_non_control_character(test));
         let test: Cow<'static, str> = "\u{000c}".into();
-        assert_eq!(validate_non_control_character(test), false);
+        assert!(!validate_non_control_character(test));
         let test: Cow<'static, str> = String::from("\u{009F}").into();
-        assert_eq!(validate_non_control_character(test), false);
+        assert!(!validate_non_control_character(test));
     }
 }

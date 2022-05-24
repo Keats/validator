@@ -144,8 +144,8 @@ impl FieldQuoter {
 }
 
 fn is_map(_type: &str) -> bool {
-    if _type.starts_with("Option<") {
-        return is_map(&_type[7..]);
+    if let Some(stripped) = _type.strip_prefix("Option<") {
+        return is_map(stripped);
     }
 
     _type.starts_with("HashMap<")

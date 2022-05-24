@@ -40,12 +40,12 @@ mod tests {
     #[test]
     fn test_phone_cow() {
         let test: Cow<'static, str> = "+1 (415) 237-0800".into();
-        assert_eq!(validate_phone(test), true);
+        assert!(validate_phone(test));
         let test: Cow<'static, str> = String::from("+1 (415) 237-0800").into();
-        assert_eq!(validate_phone(test), true);
+        assert!(validate_phone(test));
         let test: Cow<'static, str> = "TEXT".into();
-        assert_eq!(validate_phone(test), false);
+        assert!(!validate_phone(test));
         let test: Cow<'static, str> = String::from("TEXT").into();
-        assert_eq!(validate_phone(test), false);
+        assert!(!validate_phone(test));
     }
 }
