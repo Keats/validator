@@ -8,6 +8,7 @@ homepage = "https://github.com/Keats/validator"
 repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]
 edition = "2018"
+readme = "../README.md"
 
 
 [features]

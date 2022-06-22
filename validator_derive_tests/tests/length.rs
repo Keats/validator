@@ -42,7 +42,7 @@ fn validate_length_with_ref_fails() {
 
     let s = TestStruct { val: "".to_string() };
 
-    assert_eq!(s.validate().is_ok(), false);
+    assert!(s.validate().is_err());
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn validate_length_with_ref_i32_fails() {
 
     let s = TestStruct { val: "TO_LONG_YAY".to_string() };
 
-    assert_eq!(s.validate().is_ok(), false);
+    assert!(s.validate().is_err());
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn validate_length_with_ref_negative_i32_fails() {
 
     let s = TestStruct { val: "TO_LONG_YAY".to_string() };
 
-    assert_eq!(s.validate().is_ok(), true);
+    assert!(s.validate().is_ok());
 }
 
 #[test]

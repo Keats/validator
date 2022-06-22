@@ -57,13 +57,13 @@ mod tests {
     #[test]
     fn test_validate_ip_cow() {
         let test: Cow<'static, str> = "1.1.1.1".into();
-        assert_eq!(validate_ip(test), true);
+        assert!(validate_ip(test));
         let test: Cow<'static, str> = String::from("1.1.1.1").into();
-        assert_eq!(validate_ip(test), true);
+        assert!(validate_ip(test));
         let test: Cow<'static, str> = "2a02::223:6cff :fe8a:2e8a".into();
-        assert_eq!(validate_ip(test), false);
+        assert!(!validate_ip(test));
         let test: Cow<'static, str> = String::from("2a02::223:6cff :fe8a:2e8a").into();
-        assert_eq!(validate_ip(test), false);
+        assert!(!validate_ip(test));
     }
 
     #[test]
@@ -88,13 +88,13 @@ mod tests {
     #[test]
     fn test_validate_ip_v4_cow() {
         let test: Cow<'static, str> = "1.1.1.1".into();
-        assert_eq!(validate_ip_v4(test), true);
+        assert!(validate_ip_v4(test));
         let test: Cow<'static, str> = String::from("1.1.1.1").into();
-        assert_eq!(validate_ip_v4(test), true);
+        assert!(validate_ip_v4(test));
         let test: Cow<'static, str> = "٧.2٥.3٣.243".into();
-        assert_eq!(validate_ip_v4(test), false);
+        assert!(!validate_ip_v4(test));
         let test: Cow<'static, str> = String::from("٧.2٥.3٣.243").into();
-        assert_eq!(validate_ip_v4(test), false);
+        assert!(!validate_ip_v4(test));
     }
 
     #[test]
@@ -130,12 +130,12 @@ mod tests {
     #[test]
     fn test_validate_ip_v6_cow() {
         let test: Cow<'static, str> = "fe80::223:6cff:fe8a:2e8a".into();
-        assert_eq!(validate_ip_v6(test), true);
+        assert!(validate_ip_v6(test));
         let test: Cow<'static, str> = String::from("fe80::223:6cff:fe8a:2e8a").into();
-        assert_eq!(validate_ip_v6(test), true);
+        assert!(validate_ip_v6(test));
         let test: Cow<'static, str> = "::ffff:zzzz:0a0a".into();
-        assert_eq!(validate_ip_v6(test), false);
+        assert!(!validate_ip_v6(test));
         let test: Cow<'static, str> = String::from("::ffff:zzzz:0a0a").into();
-        assert_eq!(validate_ip_v6(test), false);
+        assert!(!validate_ip_v6(test));
     }
 }

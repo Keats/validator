@@ -30,12 +30,12 @@ mod tests {
 
     #[test]
     fn test_validate_must_match_numbers_false() {
-        assert_eq!(false, validate_must_match(2, 3));
+        assert!(!validate_must_match(2, 3));
     }
 
     #[test]
     fn test_validate_must_match_numbers_option_false() {
-        assert_eq!(false, validate_must_match(Some(2), Some(3)));
+        assert!(!validate_must_match(Some(2), Some(3)));
     }
 
     #[test]
@@ -45,12 +45,12 @@ mod tests {
 
     #[test]
     fn test_validate_must_match_none_some_false() {
-        assert_eq!(false, validate_must_match(None, Some(3)));
+        assert!(!validate_must_match(None, Some(3)));
     }
 
     #[test]
     fn test_validate_must_match_some_none_false() {
-        assert_eq!(false, validate_must_match(Some(3), None));
+        assert!(!validate_must_match(Some(3), None));
     }
 
     #[test]
