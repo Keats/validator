@@ -301,6 +301,7 @@ pub fn extract_argless_validation(
         "phone" => Validator::Phone,
         #[cfg(feature = "unic")]
         "non_control_character" => Validator::NonControlCharacter,
+        "required" => Validator::Required,
         _ => Validator::Url,
     };
 
