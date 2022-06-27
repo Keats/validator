@@ -218,8 +218,8 @@ Examples:
 ```
 
 ### does_not_contain
-Pretty much the opposite of contains, provided just for ease-of-use. Tests whether the string does not contain
-the substring given or if a key is NOT present in a hashmap. `does_not_contain` takes 1 string argument.
+Pretty much the opposite of contains, provided just for ease-of-use. Tests whether a container does not contain
+the substring given if it's a string or if a key is NOT present in a hashmap. `does_not_contain` takes 1 string argument.
 
 Examples:
 
