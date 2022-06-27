@@ -143,7 +143,9 @@ fn construct_validator_argument_type(
     // This iterator only holds custom validations with a argument_type
     let mut customs: Vec<&mut CustomArgument> = fields_validations
         .iter_mut()
-        .flat_map(|x| x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut()))
+        .flat_map(|x| {
+            x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut())
+        })
         .collect();
 
     let mut schemas: Vec<&mut CustomArgument> =
