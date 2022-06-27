@@ -540,6 +540,9 @@ pub fn quote_validator(
         Validator::Required | Validator::RequiredNested => {
             validations.push(quote_required_validation(field_quoter, validation))
         }
+        Validator::DoesNotContain(_) => {
+            validations.push(quote_does_not_contain_validation(field_quoter, validation))
+        }
     }
 }
 
@@ -602,4 +605,28 @@ pub fn quote_required_validation(
     );
 
     quoted
+}
+
+pub fn quote_does_not_contain_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
+    let field_name = &field_quoter.name;
+    let validator_param = field_quoter.quote_validator_param();
+
+    if let Validator::DoesNotContain(ref needle) = validation.validator {
+        let quoted_error = quote_error(validation);
+        let quoted = quote!(
+            if !::validator::validate_does_not_contain(#validator_param, &#needle) {
+                #quoted_error
+                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                err.add_param(::std::borrow::Cow::from("needle"), &#needle);
+                errors.add(#field_name, err);
+            }
+        );
+
+        return field_quoter.wrap_if_option(quoted);
+    }
+
+    unreachable!();
 }

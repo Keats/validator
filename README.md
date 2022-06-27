@@ -217,6 +217,17 @@ Examples:
 #[validate(contains(pattern = "gmail"))]
 ```
 
+### does_not_contain
+Pretty much the opposite of contains, provided just for ease-of-use. Tests whether the string does not contain
+the substring given or if a key is NOT present in a hashmap. `does_not_contain` takes 1 string argument.
+
+Examples:
+
+```rust
+#[validate(does_not_contain = "gmail")]
+#[validate(does_not_contain(pattern = "gmail"))]
+```
+
 ### regex
 Tests whether the string matches the regex given. `regex` takes
 1 string argument: the path to a static Regex instance.
@@ -360,6 +371,7 @@ For example, the following attributes all work:
 #[validate(regex(path = "static_regex", code = "code_str"))]
 #[validate(custom(function = "custom_fn", code = "code_str"))]
 #[validate(contains(pattern = "pattern_str", code = "code_str"))]
+#[validate(does_not_contain(pattern = "pattern_str", code = "code_str"))]
 #[validate(must_match(other = "match_value", code = "code_str"))]
 
 // message attribute
@@ -369,6 +381,7 @@ For example, the following attributes all work:
 #[validate(regex(path = "static_regex", message = "message_str"))]
 #[validate(custom(function = "custom_fn", message = "message_str"))]
 #[validate(contains(pattern = "pattern_str", message = "message_str"))]
+#[validate(does_not_contain(pattern = "pattern_str", message = "message_str"))]
 #[validate(must_match(other = "match_value", message = "message_str"))]
 
 // both attributes

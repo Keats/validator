@@ -40,6 +40,7 @@ pub enum Validator {
     NonControlCharacter,
     Required,
     RequiredNested,
+    DoesNotContain(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -89,6 +90,7 @@ impl Validator {
             Validator::NonControlCharacter => "non_control_character",
             Validator::Required => "required",
             Validator::RequiredNested => "required_nested",
+            Validator::DoesNotContain(_) => "does_not_contain",
         }
     }
 
