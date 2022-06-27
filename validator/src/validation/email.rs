@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
 
-use crate::validation::ip::validate_ip;
+use crate::{validation::ip::validate_ip, HasLen};
 
 lazy_static! {
     // Regex from the specs
@@ -32,6 +32,14 @@ where
     let parts: Vec<&str> = val.rsplitn(2, '@').collect();
     let user_part = parts[1];
     let domain_part = parts[0];
+
+    // validate the length of each part of the email, BEFORE doing the regex
+    // according to RFC5321 the max length of the local part is 64 characters
+    // and the max length of the domain part is 255 characters
+    // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
+    if user_part.length() > 64 || domain_part.length() > 255 {
+        return false;
+    }
 
     if !EMAIL_USER_RE.is_match(user_part) {
         return false;
@@ -147,5 +155,15 @@ mod tests {
         assert!(!validate_email(test));
         let test: Cow<'static, str> = String::from("a@[127.0.0.1]\n").into();
         assert!(!validate_email(test));
+    }
+
+    #[test]
+    fn test_validate_email_rfc5321() {
+        // 65 character local part
+        let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
+        assert_eq!(validate_email(test), false);
+        // 256 character domain part
+        let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
+        assert_eq!(validate_email(test), false);
     }
 }
