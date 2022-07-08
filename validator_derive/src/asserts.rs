@@ -8,7 +8,7 @@ use syn::spanned::Spanned;
 lazy_static! {
     pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
     pub static ref LEN_TYPE: Regex =
-        Regex::new(r"(Option<)?(Vec|HashMap|HashSet|BTreeMap|BTreeSet|IndexMap|IndexSet)<")
+        Regex::new(r"(Option<)?((Vec|HashMap|HashSet|BTreeMap|BTreeSet|IndexMap|IndexSet)<|\[)")
             .unwrap();
 }
 
@@ -97,14 +97,14 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
         return;
     }
 
-    if !type_name.contains("String") 
+    if !type_name.contains("String")
         && !type_name.contains("str")
         && !LEN_TYPE.is_match(type_name)
         // a bit ugly
         && !COW_TYPE.is_match(type_name)
     {
         abort!(field_type.span(),
-                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, or map/set types (BTree/Hash/Index) but found `{}` for field `{}`",
+                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, slice, or map/set types (BTree/Hash/Index) but found `{}` for field `{}`",
                 type_name, field_name
             );
     }
