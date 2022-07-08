@@ -1,5 +1,8 @@
 use serde::Serialize;
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 use validator::{
     validate_length, Validate, ValidationError, ValidationErrors, ValidationErrorsKind,
 };
@@ -42,6 +45,20 @@ struct ParentWithVectorOfChildren {
 }
 
 #[derive(Debug, Validate)]
+struct ParentWithSliceOfChildren<'a> {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: &'a [Child],
+}
+
+#[derive(Debug, Validate)]
+struct ParentWithArrayOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: [Child; 4],
+}
+
+#[derive(Debug, Validate)]
 struct ParentWithOptionVectorOfChildren {
     #[validate]
     #[validate(length(min = 1))]
@@ -56,13 +73,41 @@ struct ParentWithMapOfChildren {
 }
 
 #[derive(Debug, Validate)]
+struct ParentWithRefMapOfChildren<'a> {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: &'a HashMap<i8, Child>,
+}
+
+#[derive(Debug, Validate)]
 struct ParentWithOptionMapOfChildren {
     #[validate]
     #[validate(length(min = 1))]
     child: Option<HashMap<i8, Child>>,
 }
 
-#[derive(Debug, Validate, Serialize, Clone)]
+#[derive(Debug, Validate)]
+struct ParentWithSetOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: HashSet<Child>,
+}
+
+#[derive(Debug, Validate)]
+struct ParentWithRefSetOfChildren<'a> {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: &'a HashSet<Child>,
+}
+
+#[derive(Debug, Validate)]
+struct ParentWithOptionSetOfChildren {
+    #[validate]
+    #[validate(length(min = 1))]
+    child: Option<HashSet<Child>>,
+}
+
+#[derive(Debug, Validate, Serialize, Clone, Hash, PartialEq, Eq)]
 struct Child {
     #[validate(length(min = 1))]
     value: String,
@@ -243,6 +288,95 @@ fn test_can_validate_vector_fields() {
 }
 
 #[test]
+fn test_can_validate_slice_fields() {
+    let child = vec![
+        Child { value: "valid".to_string() },
+        Child { value: String::new() },
+        Child { value: "valid".to_string() },
+        Child { value: String::new() },
+    ];
+    let instance = ParentWithSliceOfChildren { child: &child };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&1));
+        unwrap_map(&errs[&1], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+        assert!(errs.contains_key(&3));
+        unwrap_map(&errs[&3], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_array_fields() {
+    let instance = ParentWithArrayOfChildren {
+        child: [
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
+            Child { value: "valid".to_string() },
+            Child { value: String::new() },
+        ],
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&1));
+        unwrap_map(&errs[&1], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+        assert!(errs.contains_key(&3));
+        unwrap_map(&errs[&3], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
 fn test_can_validate_option_vector_fields() {
     let instance = ParentWithOptionVectorOfChildren {
         child: Some(vec![
@@ -317,9 +451,123 @@ fn test_can_validate_map_fields() {
 }
 
 #[test]
+fn test_can_validate_ref_map_fields() {
+    let child = [(0, Child { value: String::new() })].iter().cloned().collect();
+    let instance = ParentWithRefMapOfChildren { child: &child };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
 fn test_can_validate_option_map_fields() {
     let instance = ParentWithOptionMapOfChildren {
         child: Some([(0, Child { value: String::new() })].iter().cloned().collect()),
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_set_fields() {
+    let instance = ParentWithSetOfChildren {
+        child: [Child { value: String::new() }].iter().cloned().collect(),
+    };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_ref_set_fields() {
+    let child = [Child { value: String::new() }].iter().cloned().collect();
+    let instance = ParentWithRefSetOfChildren { child: &child };
+
+    let res = instance.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.errors();
+    assert_eq!(errs.len(), 1);
+    assert!(errs.contains_key("child"));
+    if let ValidationErrorsKind::List(ref errs) = errs["child"] {
+        assert!(errs.contains_key(&0));
+        unwrap_map(&errs[&0], |errs| {
+            assert_eq!(errs.len(), 1);
+            assert!(errs.contains_key("value"));
+            if let ValidationErrorsKind::Field(ref errs) = errs["value"] {
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].code, "length");
+            } else {
+                panic!("Expected field validation errors");
+            }
+        });
+    } else {
+        panic!("Expected list validation errors");
+    }
+}
+
+#[test]
+fn test_can_validate_option_set_fields() {
+    let instance = ParentWithOptionSetOfChildren {
+        child: Some([Child { value: String::new() }].iter().cloned().collect()),
     };
 
     let res = instance.validate();
