@@ -50,6 +50,24 @@ impl<'a, T> HasLen for &'a Vec<T> {
     }
 }
 
+impl<T> HasLen for &[T] {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+impl<T, const N: usize> HasLen for [T; N] {
+    fn length(&self) -> u64 {
+        N as u64
+    }
+}
+
+impl<T, const N: usize> HasLen for &[T; N] {
+    fn length(&self) -> u64 {
+        N as u64
+    }
+}
+
 impl<'a, K, V, S> HasLen for &'a HashMap<K, V, S> {
     fn length(&self) -> u64 {
         self.len() as u64
