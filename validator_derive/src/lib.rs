@@ -72,6 +72,9 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         // We need this here to prevent formatting lints that can be caused by `quote_spanned!`
         // See: rust-lang/rust-clippy#6249 for more reference
         #[allow(clippy::all)]
+        // Triggers when single_use_lifetimes rustc lint is configured in user project and there are no
+        // usages of 'v_a lifetime in the generated impl definition
+        #[allow(single_use_lifetimes)]
         impl #impl_generics ::validator::ValidateArgs<'v_a> for #ident #ty_generics #where_clause {
             type Args = #arg_type;
 
