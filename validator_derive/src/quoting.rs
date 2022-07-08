@@ -44,10 +44,7 @@ impl FieldQuoter {
     pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
         let ident = &self.ident;
 
-        if self._type.starts_with("Option<")
-            || self._type.starts_with("Vec<")
-            || is_map(&self._type)
-        {
+        if self._type.starts_with("Option<") || is_list(&self._type) || is_map(&self._type) {
             quote!(#ident)
         } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
@@ -95,63 +92,60 @@ impl FieldQuoter {
     pub fn wrap_if_collection(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
         let field_ident = &self.ident;
         let field_name = &self.name;
-        if self._type.starts_with("Vec<") {
-            return quote!(
-            if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                let results: Vec<_> = self.#field_ident.iter().map(|#field_ident| {
-                    let mut result = ::std::result::Result::Ok(());
-                    #tokens
-                    result
-                }).collect();
-                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-            });
-        } else if self._type.starts_with("Option<Vec<") {
-            return quote!(
-            if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                let results: Vec<_> = #field_ident.iter().map(|#field_ident| {
-                    let mut result = ::std::result::Result::Ok(());
-                    #tokens
-                    result
-                }).collect();
-                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-            });
+
+        // When we're using an option, we'll have the field unwrapped, so we should not access it
+        // through `self`.
+        let prefix = (!self._type.starts_with("Option<")).then(|| quote! { self. });
+
+        // When iterating over a list, the iterator has Item=T, while a map yields Item=(K, V), and
+        // we're only interested in V.
+        let args = if is_list(&self._type) {
+            quote! { #field_ident }
         } else if is_map(&self._type) {
-            if self._type.starts_with("Option<") {
-                return quote!(
-                if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                    let results: Vec<_> = #field_ident.iter().map(|(_, #field_ident)| {
-                        let mut result = ::std::result::Result::Ok(());
-                        #tokens
-                        result
-                    }).collect();
-                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-                });
-            } else {
-                return quote!(
-                if !::validator::ValidationErrors::has_error(&result, #field_name) {
-                    let results: Vec<_> = self.#field_ident.iter().map(|(_, #field_ident)| {
-                        let mut result = ::std::result::Result::Ok(());
-                        #tokens
-                        result
-                    }).collect();
-                    result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
-                });
+            quote! { (_, #field_ident) }
+        } else {
+            return tokens;
+        };
+
+        quote! {
+            if !::validator::ValidationErrors::has_error(&result, #field_name) {
+                let results: Vec<_> = #prefix #field_ident.iter().map(|#args| {
+                    let mut result = ::std::result::Result::Ok(());
+                    #tokens
+                    result
+                }).collect();
+                result = ::validator::ValidationErrors::merge_all(result, #field_name, results);
             }
         }
-
-        tokens
     }
 }
 
 fn is_map(_type: &str) -> bool {
     if let Some(stripped) = _type.strip_prefix("Option<") {
-        return is_map(stripped);
+        is_map(stripped)
+    } else if let Some(stripped) = _type.strip_prefix("&") {
+        is_map(stripped)
+    } else {
+        _type.starts_with("HashMap<")
+            || _type.starts_with("FxHashMap<")
+            || _type.starts_with("FnvHashMap<")
+            || _type.starts_with("BTreeMap<")
+            || _type.starts_with("IndexMap<")
     }
+}
 
-    _type.starts_with("HashMap<")
-        || _type.starts_with("FxHashMap<")
-        || _type.starts_with("FnvHashMap<")
-        || _type.starts_with("BTreeMap<")
+fn is_list(_type: &str) -> bool {
+    if let Some(stripped) = _type.strip_prefix("&") {
+        is_list(stripped)
+    } else if let Some(stripped) = _type.strip_prefix("Option<") {
+        is_list(stripped)
+    } else {
+        _type.starts_with("Vec<")
+            || _type.starts_with("HashSet<")
+            || _type.starts_with("BTreeSet<")
+            || _type.starts_with("IndexSet<")
+            || _type.starts_with("[")
+    }
 }
 
 /// Quote an actual end-user error creation automatically
