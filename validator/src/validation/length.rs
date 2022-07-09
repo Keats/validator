@@ -34,25 +34,52 @@ pub fn validate_length<T: HasLen>(
     true
 }
 
-pub trait ValidateLenght: HasLen {
-    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool;
+// A temporary fn so the crate can still be built.
+// Same functionality as the above function, it just accepts a length instead of
+// calculating the length by itself
+pub fn validate_length_for_trait(
+    length: u64,
+    min: Option<u64>,
+    max: Option<u64>,
+    equal: Option<u64>,
+) -> bool {
+    if let Some(eq) = equal {
+        return length == eq;
+    } else {
+        if let Some(m) = min {
+            if length < m {
+                return false;
+            }
+        }
+        if let Some(m) = max {
+            if length > m {
+                return false;
+            }
+        }
+    }
+
+    true
 }
 
-impl ValidateLenght for String {
-    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length(self, min, max, equal)
+pub trait ValidateLength {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool;
+}
+
+impl ValidateLength for String {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
     }
 }
 
-impl ValidateLenght for Cow<'static, str> {
-    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length(self, min, max, equal)
+impl ValidateLength for Cow<'static, str> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
     }
 }
 
-impl<T> ValidateLenght for Vec<T> {
-    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length(self, min, max, equal)
+impl<T> ValidateLength for Vec<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
     }
 }
 
@@ -60,7 +87,7 @@ impl<T> ValidateLenght for Vec<T> {
 mod tests {
     use std::borrow::Cow;
 
-    use crate::{validate_length, validation::length::ValidateLenght};
+    use crate::{validate_length, validation::length::ValidateLength};
 
     #[test]
     fn test_validate_length_equal_overrides_min_max() {
