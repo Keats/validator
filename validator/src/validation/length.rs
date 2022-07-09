@@ -40,20 +40,20 @@ pub trait ValidateLenght: HasLen {
 
 impl ValidateLenght for String {
     fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-		validate_length(self, min, max, equal)
+        validate_length(self, min, max, equal)
     }
 }
 
 impl ValidateLenght for Cow<'static, str> {
-	fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-		validate_length(self, min, max, equal)
-	}	
+    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length(self, min, max, equal)
+    }
 }
 
 impl<T> ValidateLenght for Vec<T> {
-	fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-		validate_length(self, min, max, equal)
-	}
+    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length(self, min, max, equal)
+    }
 }
 
 #[cfg(test)]
@@ -102,12 +102,12 @@ mod tests {
     }
 
 
-	#[test]
-	fn test_validate_length_trait_equal_overrides_min_max() {
-		assert!(String::from("hello").validate_length(Some(1), Some(2), Some(5)));
-	}
+    #[test]
+    fn test_validate_length_trait_equal_overrides_min_max() {
+        assert!(String::from("hello").validate_length(Some(1), Some(2), Some(5)));
+    }
 
-	#[test]
+    #[test]
     fn test_validate_length_trait_string_min_max() {
         assert!(String::from("hello").validate_length(Some(1), Some(10), None));
     }
