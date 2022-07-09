@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::traits::HasLen;
 
 /// Validates the length of the value given.
@@ -32,11 +34,33 @@ pub fn validate_length<T: HasLen>(
     true
 }
 
+pub trait ValidateLenght: HasLen {
+    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool;
+}
+
+impl ValidateLenght for String {
+    fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+		validate_length(self, min, max, equal)
+    }
+}
+
+impl ValidateLenght for Cow<'static, str> {
+	fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+		validate_length(self, min, max, equal)
+	}	
+}
+
+impl<T> ValidateLenght for Vec<T> {
+	fn validate_length(self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+		validate_length(self, min, max, equal)
+	}
+}
+
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
 
-    use super::validate_length;
+    use crate::{validate_length, validation::length::ValidateLenght};
 
     #[test]
     fn test_validate_length_equal_overrides_min_max() {
@@ -75,5 +99,45 @@ mod tests {
     #[test]
     fn test_validate_length_unicode_chars() {
         assert!(validate_length("日本", None, None, Some(2)));
+    }
+
+
+	#[test]
+	fn test_validate_length_trait_equal_overrides_min_max() {
+		assert!(String::from("hello").validate_length(Some(1), Some(2), Some(5)));
+	}
+
+	#[test]
+    fn test_validate_length_trait_string_min_max() {
+        assert!(String::from("hello").validate_length(Some(1), Some(10), None));
+    }
+
+    #[test]
+    fn test_validate_length_trait_string_min_only() {
+        assert!(!String::from("hello").validate_length(Some(10), None, None));
+    }
+
+    #[test]
+    fn test_validate_length_trait_string_max_only() {
+        assert!(!String::from("hello").validate_length(None, Some(1), None));
+    }
+
+    #[test]
+    fn test_validate_length_trait_cow() {
+        let test: Cow<'static, str> = "hello".into();
+        assert!(test.validate_length(None, None, Some(5)));
+
+        let test: Cow<'static, str> = String::from("hello").into();
+        assert!(test.validate_length(None, None, Some(5)));
+    }
+
+    #[test]
+    fn test_validate_length_trait_vec() {
+        assert!(vec![1, 2, 3].validate_length(None, None, Some(3)));
+    }
+
+    #[test]
+    fn test_validate_length_trait_unicode_chars() {
+        assert!(String::from("日本").validate_length(None, None, Some(2)));
     }
 }
