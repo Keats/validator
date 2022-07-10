@@ -1,7 +1,8 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::{HashMap, HashSet, BTreeMap, BTreeSet}};
+
+use indexmap::{IndexMap, IndexSet};
 
 use crate::traits::HasLen;
-use crate::impl_validate_length;
 
 /// Validates the length of the value given.
 /// If the validator has `equal` set, it will ignore any `min` and `max` value.
@@ -66,23 +67,29 @@ pub trait ValidateLength {
     fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool;
 }
 
-impl_validate_length!(
-    String,
-    &str,
-    Cow<'static, str>
-);
+impl ValidateLength for String {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
+    }
+}
 
-// impl ValidateLength for String {
-//     fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-//         validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-//     }
-// }
+impl<'a> ValidateLength for &'a String {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
+    }
+}
 
-// impl ValidateLength for Cow<'static, str> {
-//     fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-//         validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-//     }
-// }
+impl<'a> ValidateLength for &'a str {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
+    }
+}
+
+impl<'a> ValidateLength for Cow<'a, str> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
+    }
+}
 
 impl<T> ValidateLength for Vec<T> {
     fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
@@ -90,19 +97,85 @@ impl<T> ValidateLength for Vec<T> {
     }
 }
 
+impl<'a, T> ValidateLength for &'a Vec<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
 
+impl<T> ValidateLength for &[T] {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
 
-#[macro_export]
-macro_rules! impl_validate_length {
-    ( $( $type: ty ),* ) => {
-        $(
-            impl ValidateLength for $type {
-                fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-                    validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-                }
-            }
-        )*
-    };
+impl<T, const N: usize> ValidateLength for [T; N] {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(N as u64, min, max, equal)
+    }
+}
+
+impl<T, const N: usize> ValidateLength for &[T; N] {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(N as u64, min, max, equal)
+    }
+}
+
+impl<'a, K, V, S> ValidateLength for &'a HashMap<K, V, S> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+impl<K, V, S> ValidateLength for HashMap<K, V, S> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+impl<'a, T, S> ValidateLength for &'a HashSet<T, S> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+impl<'a, K, V> ValidateLength for &'a BTreeMap<K, V> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+impl<'a, T> ValidateLength for &'a BTreeSet<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+impl<T> ValidateLength for BTreeSet<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<'a, K, V> ValidateLength for &'a IndexMap<K, V> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<'a, T> ValidateLength for &'a IndexSet<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<T> ValidateLength for IndexSet<T> {
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+        validate_length_for_trait(self.len() as u64, min, max, equal)
+    }
 }
 
 #[cfg(test)]
