@@ -1,5 +1,6 @@
 use std::{borrow::Cow, collections::{HashMap, HashSet, BTreeMap, BTreeSet}};
 
+#[cfg(feature = "indexmap")]
 use indexmap::{IndexMap, IndexSet};
 
 /// Validates the length of the value given.
