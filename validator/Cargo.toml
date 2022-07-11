@@ -23,6 +23,10 @@ card-validate = { version = "2.2", optional = true }
 phonenumber = { version = "0.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
 indexmap = {version = "1", features = ["serde-1"], optional = true }
+schemars = { version = "0.8", optional = true }
+# used only for schemars integration test - dev-dependencies can't be optional
+rocket = { version = "0.5.0-rc.2", optional = true, features = ["json"] }
+rocket_okapi = { version = "0.8.0-rc.2", optional = true }
 
 
 [features]
@@ -30,3 +34,7 @@ phone = ["phonenumber", "validator_derive/phone"]
 card = ["card-validate", "validator_derive/card"]
 unic = ["unic-ucd-common", "validator_derive/unic"]
 derive = ["validator_derive"]
+
+[[test]]
+name = "schemars"
+required-features = ["phone", "schemars", "rocket", "rocket_okapi"]
