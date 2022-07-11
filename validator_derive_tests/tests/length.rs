@@ -225,14 +225,31 @@ fn can_validate_set_ref_for_length() {
 
 #[test]
 fn can_validate_custom_impl_for_length() {
-    use serde::Serialize;
+	use serde::Serialize;
 
-    #[derive(Debug, Serialize)]
+	#[derive(Debug, Serialize)]
     struct CustomString(String);
 
     impl validator::ValidateLength for &CustomString {
-        fn length(&self) -> u64 {
-            self.0.chars().count() as u64
+        fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+			let length = self.0.chars().count() as u64;
+
+			if let Some(eq) = equal {
+				return length == eq;
+			} else {
+				if let Some(m) = min {
+					if length < m {
+						return false;
+					}
+				}
+				if let Some(m) = max {
+					if length > m {
+						return false;
+					}
+				}
+			}
+		
+			true
         }
     }
 
@@ -242,30 +259,30 @@ fn can_validate_custom_impl_for_length() {
         val: CustomString,
     }
 
-    #[derive(Debug, Validate)]
-    struct EqualsTestStruct {
-        #[validate(length(equal = 11))]
-        val: CustomString
-    }
+	#[derive(Debug, Validate)]
+	struct EqualsTestStruct {
+		#[validate(length(equal = 11))]
+		val: CustomString
+	}
 
     let too_short = TestStruct {
         val: CustomString(String::from("oops"))
     };
 
-    let too_long = TestStruct {
-        val: CustomString(String::from("too long for this"))
-    };
+	let too_long = TestStruct {
+		val: CustomString(String::from("too long for this"))
+	};
 
-    let ok = TestStruct {
-        val: CustomString(String::from("perfect"))
-    };
+	let ok = TestStruct {
+		val: CustomString(String::from("perfect"))
+	};
 
-    let equals_ok = EqualsTestStruct {
-        val: CustomString(String::from("just enough"))
-    };
+	let equals_ok = EqualsTestStruct {
+		val: CustomString(String::from("just enough"))
+	};
 
     assert!(too_short.validate().is_err());
     assert!(too_long.validate().is_err());
-    assert!(ok.validate().is_ok());
-    assert!(equals_ok.validate().is_ok());
+	assert!(ok.validate().is_ok());
+	assert!(equals_ok.validate().is_ok());
 }
