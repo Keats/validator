@@ -18,143 +18,140 @@ pub fn validate_length<T: ValidateLength>(
     value.validate_length(min, max, equal)
 }
 
-fn validate_length_for_trait(
-    length: u64,
-    min: Option<u64>,
-    max: Option<u64>,
-    equal: Option<u64>,
-) -> bool {
-    if let Some(eq) = equal {
-        return length == eq;
-    } else {
-        if let Some(m) = min {
-            if length < m {
-                return false;
-            }
-        }
-        if let Some(m) = max {
-            if length > m {
-                return false;
-            }
-        }
-    }
-
-    true
-}
-
 pub trait ValidateLength {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool;
+    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+		let length = self.length();
+
+		if let Some(eq) = equal {
+			return length == eq;
+		} else {
+			if let Some(m) = min {
+				if length < m {
+					return false;
+				}
+			}
+			if let Some(m) = max {
+				if length > m {
+					return false;
+				}
+			}
+		}
+	
+		true
+	}
+
+	fn length(&self) -> u64;
 }
 
 impl ValidateLength for String {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-    }
+	fn length(&self) -> u64 {
+		self.chars().count() as u64
+	}
 }
 
 impl<'a> ValidateLength for &'a String {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.chars().count() as u64
+	}
 }
 
 impl<'a> ValidateLength for &'a str {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.chars().count() as u64
+	}
 }
 
 impl<'a> ValidateLength for Cow<'a, str> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.chars().count() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.chars().count() as u64
+	}
 }
 
 impl<T> ValidateLength for Vec<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<'a, T> ValidateLength for &'a Vec<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<T> ValidateLength for &[T] {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<T, const N: usize> ValidateLength for [T; N] {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(N as u64, min, max, equal)
-    }
+	fn length(&self) -> u64 {
+		N as u64
+	}
 }
 
 impl<T, const N: usize> ValidateLength for &[T; N] {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(N as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		N as u64
+	}
 }
 
 impl<'a, K, V, S> ValidateLength for &'a HashMap<K, V, S> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<K, V, S> ValidateLength for HashMap<K, V, S> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<'a, T, S> ValidateLength for &'a HashSet<T, S> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<'a, K, V> ValidateLength for &'a BTreeMap<K, V> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<'a, T> ValidateLength for &'a BTreeSet<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 impl<T> ValidateLength for BTreeSet<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 #[cfg(feature = "indexmap")]
 impl<'a, K, V> ValidateLength for &'a IndexMap<K, V> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 #[cfg(feature = "indexmap")]
 impl<'a, T> ValidateLength for &'a IndexSet<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 #[cfg(feature = "indexmap")]
 impl<T> ValidateLength for IndexSet<T> {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-        validate_length_for_trait(self.len() as u64, min, max, equal)
-    }
+    fn length(&self) -> u64 {
+		self.len() as u64
+	}
 }
 
 #[cfg(test)]

@@ -232,8 +232,8 @@ fn can_validate_custom_impl_for_length() {
 
     impl validator::ValidateLength for &CustomString {
         fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-			let length = self.0.chars().count() as u64;
-
+			let length = self.length();
+			
 			if let Some(eq) = equal {
 				return length == eq;
 			} else {
@@ -251,6 +251,10 @@ fn can_validate_custom_impl_for_length() {
 		
 			true
         }
+
+		fn length(&self) -> u64 {
+			self.0.chars().count() as u64
+		}
     }
 
     #[derive(Debug, Validate)]
