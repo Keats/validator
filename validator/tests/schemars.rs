@@ -154,9 +154,9 @@ impl From<ValidationErrors> for OperationError {
 impl From<std::io::Error> for OperationError {
     fn from(err: std::io::Error) -> Self {
         if err.kind() == std::io::ErrorKind::UnexpectedEof {
-            OperationError::PayloadTooLarge(format!("{err}"))
+            OperationError::PayloadTooLarge(format!("{}", err))
         } else {
-            OperationError::IOError(format!("io error: {err}"))
+            OperationError::IOError(format!("io error: {}", err))
         }
     }
 }
@@ -167,11 +167,11 @@ impl<'r> From<JsonError<'r>> for OperationError {
             JsonError::Io(e) => Self::from(e),
             JsonError::Parse(s, e) if e.classify() == serde_json::error::Category::Data => {
                 OperationError::DeserializationError(format!(
-                    "deserialization failed: {e}, json document: {s}"
+                    "deserialization failed: {}, json document: {}",  e, s
                 ))
             }
             JsonError::Parse(s, e) => OperationError::JsonParseError(format!(
-                "json parse error: {e}, json document: {s}"
+                "json parse error: {}, json document: {}", s, e
             )),
         }
     }
