@@ -3,6 +3,8 @@ use validator::{Validate, ValidationErrors};
 const MAX_CONST: usize = 10;
 const MIN_CONST: usize = 0;
 
+const TOO_LONG_MESSAGE: &str = "value is too big";
+
 // Loose floating point comparison using EPSILON error bound
 macro_rules! assert_float {
     ($e1:expr, $e2:expr) => {
@@ -63,6 +65,19 @@ fn can_validate_range_value_crate_path_ok() {
 }
 
 #[test]
+fn can_validate_range_message_crate_path_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = "MIN_CONST", max = "MAX_CONST", message = "CONST:TOO_LONG_MESSAGE"))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
 fn value_out_of_range_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
@@ -98,6 +113,26 @@ fn value_out_of_range_fails_validation_with_crate_path() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].code, "range");
+}
+
+#[test]
+fn pass_message_with_create_path() {
+	#[derive(Debug, Validate)]
+	struct TestStruct {
+		#[validate(range(max = 10, message = "CONST:TOO_LONG_MESSAGE"))]
+		val: usize
+	}
+
+	let s = TestStruct { val: 11 };
+	let res = s.validate();
+
+	assert!(res.is_err());
+
+	let err = res.unwrap_err();
+	let errs = err.field_errors();
+	assert!(errs.contains_key("val"));
+	assert_eq!(errs["val"].len(), 1);
+	assert_eq!(errs["val"][0].clone().message.unwrap(), TOO_LONG_MESSAGE);
 }
 
 #[test]

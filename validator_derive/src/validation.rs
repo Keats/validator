@@ -2,7 +2,7 @@ use proc_macro2::Span;
 use proc_macro_error::abort;
 use syn::spanned::Spanned;
 
-use validator_types::{CustomArgument, Validator};
+use validator_types::{CustomArgument, Validator, ValueOrPath};
 
 use crate::{asserts::assert_custom_arg_type, lit::*};
 
@@ -39,7 +39,7 @@ impl FieldInformation {
 #[derive(Debug)]
 pub struct FieldValidation {
     pub code: String,
-    pub message: Option<String>,
+    pub message: Option<ValueOrPath<String>>,
     pub validator: Validator,
 }
 
@@ -388,7 +388,7 @@ fn extract_message_and_code(
     validator_name: &str,
     field: &str,
     meta_items: &[syn::NestedMeta],
-) -> (Option<String>, Option<String>) {
+) -> (Option<ValueOrPath<String>>, Option<String>) {
     let mut message = None;
     let mut code = None;
 
@@ -412,7 +412,7 @@ fn extract_message_and_code(
                     };
                 }
                 "message" => {
-                    message = match lit_to_string(lit) {
+                    message = match lit_to_string_or_path(lit) {
                         Some(s) => Some(s),
                         None => abort!(
                                     meta_item.span(),
