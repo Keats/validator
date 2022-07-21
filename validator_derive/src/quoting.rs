@@ -419,8 +419,8 @@ pub fn quote_custom_validation(
         };
 
         let add_message_quoted = if let Some(ref m) = validation.message {
-			let v = value_or_path_to_tokens(m);
-        	quote!(err.message = Some(::std::borrow::Cow::from(#v));)
+            let v = value_or_path_to_tokens(m);
+            quote!(err.message = Some(::std::borrow::Cow::from(#v));)
         } else {
             quote!()
         };

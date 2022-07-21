@@ -52,17 +52,17 @@ pub fn lit_to_f64_or_path(lit: &syn::Lit) -> Option<ValueOrPath<f64>> {
 }
 
 pub fn lit_to_string_or_path(lit: &syn::Lit) -> Option<ValueOrPath<String>> {
-	let string = lit_to_string(lit);
-	if let Some(string) = string {
-		if string.starts_with("CONST:") {
-			let path = string.split(":").collect::<Vec<&str>>()[1];
-			return Some(ValueOrPath::Path(path.to_string()))
-		} else {
-			return Some(ValueOrPath::Value(string))
-		}
-	}
+    let string = lit_to_string(lit);
+    if let Some(string) = string {
+        if string.starts_with("CONST:") {
+            let path = string.split(":").collect::<Vec<&str>>()[1];
+            return Some(ValueOrPath::Path(path.to_string()))
+        } else {
+            return Some(ValueOrPath::Value(string))
+        }
+    }
 
-	None
+    None
 }
 
 pub fn lit_to_bool(lit: &syn::Lit) -> Option<bool> {
