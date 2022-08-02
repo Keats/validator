@@ -1,3 +1,4 @@
+use serde::Serialize;
 use validator::Validate;
 
 #[test]
@@ -64,4 +65,31 @@ fn can_specify_message_for_email() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+}
+
+#[test]
+fn can_validate_custom_impl_for_email() {
+    #[derive(Debug, Serialize)]
+    struct CustomEmail {
+        user_part: String,
+        domain_part: String,
+    }
+
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(email)]
+        val: CustomEmail,
+    }
+
+    impl validator::ValidateEmail for &CustomEmail {
+        fn to_email_string(&self) -> String {
+            format!("{}@{}", self.user_part, self.domain_part)
+        }
+    }
+
+    let t = TestStruct {
+        val: CustomEmail { user_part: "username".to_string(), domain_part: "gmail.com".to_owned() },
+    };
+
+    assert!(t.validate().is_ok())
 }

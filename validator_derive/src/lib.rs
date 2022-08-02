@@ -146,7 +146,9 @@ fn construct_validator_argument_type(
     // This iterator only holds custom validations with a argument_type
     let mut customs: Vec<&mut CustomArgument> = fields_validations
         .iter_mut()
-        .flat_map(|x| x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut()))
+        .flat_map(|x| {
+            x.validations.iter_mut().filter_map(|x| x.validator.get_custom_argument_mut())
+        })
         .collect();
 
     let mut schemas: Vec<&mut CustomArgument> =
@@ -406,7 +408,6 @@ fn find_validators_for_field(
                             syn::Meta::Path(ref name) => {
                                 match name.get_ident().unwrap().to_string().as_ref() {
                                     "email" => {
-                                        assert_string_type("email", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Email));
                                     }
                                     "url" => {

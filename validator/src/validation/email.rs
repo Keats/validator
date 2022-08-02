@@ -21,39 +21,8 @@ lazy_static! {
 /// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
 /// that are unfamiliar to most users.
 #[must_use]
-pub fn validate_email<'a, T>(val: T) -> bool
-where
-    T: Into<Cow<'a, str>>,
-{
-    let val = val.into();
-    if val.is_empty() || !val.contains('@') {
-        return false;
-    }
-    let parts: Vec<&str> = val.rsplitn(2, '@').collect();
-    let user_part = parts[1];
-    let domain_part = parts[0];
-
-    // validate the length of each part of the email, BEFORE doing the regex
-    // according to RFC5321 the max length of the local part is 64 characters
-    // and the max length of the domain part is 255 characters
-    // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
-    if user_part.length() > 64 || domain_part.length() > 255 {
-        return false;
-    }
-
-    if !EMAIL_USER_RE.is_match(user_part) {
-        return false;
-    }
-
-    if !validate_domain_part(domain_part) {
-        // Still the possibility of an [IDN](https://en.wikipedia.org/wiki/Internationalized_domain_name)
-        return match domain_to_ascii(domain_part) {
-            Ok(d) => validate_domain_part(&d),
-            Err(_) => false,
-        };
-    }
-
-    true
+pub fn validate_email<T: ValidateEmail>(val: T) -> bool {
+    val.validate_email()
 }
 
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
@@ -70,6 +39,68 @@ fn validate_domain_part(domain_part: &str) -> bool {
             None => false,
         },
         None => false,
+    }
+}
+
+pub trait ValidateEmail {
+    fn validate_email(&self) -> bool {
+        let val = self.to_email_string();
+
+        if val.is_empty() || !val.contains('@') {
+            return false;
+        }
+
+        let parts: Vec<&str> = val.rsplitn(2, '@').collect();
+        let user_part = parts[1];
+        let domain_part = parts[0];
+
+        // validate the length of each part of the email, BEFORE doing the regex
+        // according to RFC5321 the max length of the local part is 64 characters
+        // and the max length of the domain part is 255 characters
+        // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
+        if user_part.length() > 64 || domain_part.length() > 255 {
+            return false;
+        }
+
+        if !EMAIL_USER_RE.is_match(user_part) {
+            return false;
+        }
+
+        if !validate_domain_part(domain_part) {
+            // Still the possibility of an [IDN](https://en.wikipedia.org/wiki/Internationalized_domain_name)
+            return match domain_to_ascii(domain_part) {
+                Ok(d) => validate_domain_part(&d),
+                Err(_) => false,
+            };
+        }
+
+        true
+    }
+
+    fn to_email_string(&self) -> String;
+}
+
+impl ValidateEmail for &str {
+    fn to_email_string(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ValidateEmail for String {
+    fn to_email_string(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ValidateEmail for &String {
+    fn to_email_string(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl<'a> ValidateEmail for Cow<'a, str> {
+    fn to_email_string(&self) -> String {
+        self.to_string()
     }
 }
 
