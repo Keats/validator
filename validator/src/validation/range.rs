@@ -32,7 +32,7 @@ where
     T: PartialEq + PartialOrd,
 {
     fn greater_than(&self, max: T) -> bool {
-        if self > &intomax {
+        if self > &max {
             return true;
         }
 
