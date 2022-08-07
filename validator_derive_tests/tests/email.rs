@@ -69,6 +69,8 @@ fn can_specify_message_for_email() {
 
 #[test]
 fn can_validate_custom_impl_for_email() {
+    use std::borrow::Cow;
+
     #[derive(Debug, Serialize)]
     struct CustomEmail {
         user_part: String,
@@ -82,14 +84,19 @@ fn can_validate_custom_impl_for_email() {
     }
 
     impl validator::ValidateEmail for &CustomEmail {
-        fn to_email_string(&self) -> String {
-            format!("{}@{}", self.user_part, self.domain_part)
+        fn to_email_string(&self) -> Cow<'_, str> {
+            Cow::from(format!("{}@{}", self.user_part, self.domain_part))
         }
     }
 
-    let t = TestStruct {
+    let valid = TestStruct {
         val: CustomEmail { user_part: "username".to_string(), domain_part: "gmail.com".to_owned() },
     };
 
-    assert!(t.validate().is_ok())
+    let invalid = TestStruct {
+        val: CustomEmail { user_part: "abc".to_string(), domain_part: "".to_owned() },
+    };
+
+    assert!(valid.validate().is_ok());
+    assert!(invalid.validate().is_err());
 }

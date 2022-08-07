@@ -77,30 +77,30 @@ pub trait ValidateEmail {
         true
     }
 
-    fn to_email_string(&self) -> String;
+    fn to_email_string<'a>(&'a self) -> Cow<'a, str>;
 }
 
 impl ValidateEmail for &str {
-    fn to_email_string(&self) -> String {
-        self.to_string()
+    fn to_email_string(&self) -> Cow<'_, str> {
+        Cow::from(*self)
     }
 }
 
 impl ValidateEmail for String {
-    fn to_email_string(&self) -> String {
-        self.to_string()
+    fn to_email_string(&self) -> Cow<'_, str> {
+        Cow::from(self)
     }
 }
 
 impl ValidateEmail for &String {
-    fn to_email_string(&self) -> String {
-        self.to_string()
+    fn to_email_string(&self) -> Cow<'_, str> {
+        Cow::from(*self)
     }
 }
 
-impl<'a> ValidateEmail for Cow<'a, str> {
-    fn to_email_string(&self) -> String {
-        self.to_string()
+impl ValidateEmail for Cow<'_, str> {
+    fn to_email_string(&self) -> Cow<'_, str> {
+        self.clone()
     }
 }
 
