@@ -81,7 +81,7 @@ pub use validation::must_match::validate_must_match;
 pub use validation::non_control_character::validate_non_control_character;
 #[cfg(feature = "phone")]
 pub use validation::phone::validate_phone;
-pub use validation::range::validate_range;
+pub use validation::range::{validate_range, ValidateRange};
 
 pub use validation::required::{validate_required, ValidateRequired};
 pub use validation::urls::validate_url;
