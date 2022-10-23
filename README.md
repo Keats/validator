@@ -1,6 +1,25 @@
 # validator
 
-![Build](https://github.com/Keats/validator/workflows/ci/badge.svg)
+<div align="center">
+  <!-- Github Actions -->
+  <img src="https://github.com/Keats/validator/workflows/ci/badge.svg" alt="actions status" />
+  <!-- Version -->
+  <a href="https://crates.io/crates/validator">
+    <img src="https://img.shields.io/crates/v/validator.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Docs -->
+  <a href="https://docs.rs/validator">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/validator">
+    <img src="https://img.shields.io/crates/d/validator.svg?style=flat-square"
+      alt="Download" />
+  </a>
+</div>
+
 
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
@@ -218,8 +237,8 @@ Examples:
 ```
 
 ### does_not_contain
-Pretty much the opposite of contains, provided just for ease-of-use. Tests whether the string does not contain
-the substring given or if a key is NOT present in a hashmap. `does_not_contain` takes 1 string argument.
+Pretty much the opposite of contains, provided just for ease-of-use. Tests whether a container does not contain
+the substring given if it's a string or if a key is NOT present in a hashmap. `does_not_contain` takes 1 string argument.
 
 Examples:
 

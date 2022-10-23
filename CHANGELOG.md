@@ -1,5 +1,11 @@
 ## Changelog
 
+## 0.16.0 (2022/06/27)
+
+- Allow passing code/message to `required`
+- Add `does_not_contain` validator
+- Check email length before validating it
+
 ## 0.15.0 (2022/05/03)
 
 - Allow passing args to schema validator
