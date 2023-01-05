@@ -86,8 +86,11 @@ pub use validation::range::{validate_range, ValidateRange};
 pub use validation::required::{validate_required, ValidateRequired};
 pub use validation::urls::{validate_url, ValidateUrl};
 
-pub use traits::{Contains, HasLen, Validate, ValidateArgs};
-pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
+pub use traits::{Constraints, Contains, HasLen, Validate, ValidateArgs};
+pub use types::{
+    LengthConstraint, ValidationConstraint, ValidationConstraints, ValidationConstraintsKind,
+    ValidationError, ValidationErrors, ValidationErrorsKind,
+};
 
 #[cfg(feature = "derive")]
 pub use validator_derive::Validate;

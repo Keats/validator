@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 #[cfg(feature = "indexmap")]
 use indexmap::{IndexMap, IndexSet};
 
-use crate::types::ValidationErrors;
+use crate::types::{ValidationConstraints, ValidationErrors};
 
 /// Trait to implement if one wants to make the `length` validator
 /// work for more types
@@ -209,4 +209,78 @@ pub trait ValidateArgs<'v_a> {
     type Args;
 
     fn validate_args(&self, args: Self::Args) -> Result<(), ValidationErrors>;
+}
+
+/// Provides an associated function that returns all of the validator constraints applied to its
+/// fields.
+pub trait Constraints {
+    fn constraints() -> ValidationConstraints;
+}
+
+impl<T: Constraints> Constraints for &T {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<T: Constraints> Constraints for &[T] {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<T: Constraints, const N: usize> Constraints for [T; N] {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<T: Constraints> Constraints for Option<T> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<T: Constraints> Constraints for Vec<T> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<K, V: Constraints, S> Constraints for HashMap<K, V, S> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+}
+
+impl<T: Constraints, S> Constraints for HashSet<T, S> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+impl<K, V: Constraints> Constraints for BTreeMap<K, V> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+}
+
+impl<T: Constraints> Constraints for BTreeSet<T> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<K, V: Constraints> Constraints for IndexMap<K, V> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<T: Constraints> Constraints for IndexSet<T> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
 }

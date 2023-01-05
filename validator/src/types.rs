@@ -175,3 +175,137 @@ impl std::error::Error for ValidationErrors {
         None
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum LengthConstraint {
+    Range { min: Option<u64>, max: Option<u64> },
+    Equal(u64),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[non_exhaustive]
+pub enum ValidationConstraint {
+    Email {
+        code: &'static str,
+    },
+    Url {
+        code: &'static str,
+    },
+    Custom {
+        function: &'static str,
+        code: &'static str,
+    },
+    MustMatch {
+        other_field: &'static str,
+        code: &'static str,
+    },
+    Contains {
+        needle: &'static str,
+        code: &'static str,
+    },
+    DoesNotContain {
+        needle: &'static str,
+        code: &'static str,
+    },
+    Regex {
+        name: &'static str,
+        code: &'static str,
+    },
+    Range {
+        min: Option<f64>,
+        max: Option<f64>,
+        code: &'static str,
+    },
+    Length {
+        length: LengthConstraint,
+        code: &'static str,
+    },
+    #[cfg(feature = "card")]
+    CreditCard {
+        code: &'static str,
+    },
+    Nested,
+    #[cfg(feature = "unic")]
+    NonControlCharacter {
+        code: &'static str,
+    },
+    Required {
+        code: &'static str,
+    },
+    RequiredNested {
+        code: &'static str,
+    },
+}
+
+impl ValidationConstraint {
+    pub fn code(&self) -> &'static str {
+        match *self {
+            Self::Email { code, .. } => code,
+            Self::Url { code, .. } => code,
+            Self::Custom { code, .. } => code,
+            Self::MustMatch { code, .. } => code,
+            Self::Contains { code, .. } => code,
+            Self::DoesNotContain { code, .. } => code,
+            Self::Regex { code, .. } => code,
+            Self::Range { code, .. } => code,
+            Self::Length { code, .. } => code,
+            #[cfg(feature = "card")]
+            Self::CreditCard { code, .. } => code,
+            Self::Nested => "nested",
+            #[cfg(feature = "unic")]
+            Self::NonControlCharacter { code, .. } => code,
+            Self::Required { code, .. } => code,
+            Self::RequiredNested { code, .. } => code,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum ValidationConstraintsKind {
+    Struct(Box<ValidationConstraints>),
+    Field(Vec<ValidationConstraint>),
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize)]
+pub struct ValidationConstraints(pub HashMap<&'static str, Vec<ValidationConstraintsKind>>);
+
+impl ValidationConstraints {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+
+    pub fn merge(
+        parent: &mut ValidationConstraints,
+        field: &'static str,
+        child: ValidationConstraints,
+    ) {
+        parent.add_nested(field, ValidationConstraintsKind::Struct(Box::new(child)));
+    }
+
+    pub fn add(&mut self, field: &'static str, constraint: ValidationConstraint) {
+        let entry = self.0.entry(field).or_insert_with(|| Vec::new());
+
+        let kind = entry.iter_mut().find_map(|kind| match kind {
+            ValidationConstraintsKind::Field(field) => Some(field),
+            _ => None,
+        });
+        match kind {
+            Some(field) => {
+                field.push(constraint);
+            }
+            None => {
+                entry.push(ValidationConstraintsKind::Field(vec![constraint]));
+            }
+        };
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    fn add_nested(&mut self, field: &'static str, constraints: ValidationConstraintsKind) {
+        self.0.entry(field).or_insert_with(|| Vec::new()).push(constraints);
+    }
+}
