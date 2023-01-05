@@ -213,6 +213,8 @@ pub trait ValidateArgs<'v_a> {
 
 /// Provides an associated function that returns all of the validator constraints applied to its
 /// fields.
+///
+/// This trait is implemented by deriving `Validate`.
 pub trait Constraints {
     fn constraints() -> ValidationConstraints;
 }

@@ -11,7 +11,7 @@ use crate::validation::{FieldValidation, SchemaValidation};
 /// Pass around all the information needed for creating a validation
 #[derive(Debug)]
 pub struct FieldQuoter {
-    ident: syn::Ident,
+    field: syn::Field,
     /// The field name
     name: String,
     /// The field type
@@ -19,8 +19,8 @@ pub struct FieldQuoter {
 }
 
 impl FieldQuoter {
-    pub fn new(ident: syn::Ident, name: String, _type: String) -> FieldQuoter {
-        FieldQuoter { ident, name, _type }
+    pub fn new(field: syn::Field, name: String, _type: String) -> FieldQuoter {
+        FieldQuoter { field, name, _type }
     }
 
     /// Don't put a & in front a pointer since we are going to pass
@@ -28,7 +28,7 @@ impl FieldQuoter {
     /// Also just use the ident without if it's optional and will go through
     /// a if let first
     pub fn quote_validator_param(&self) -> proc_macro2::TokenStream {
-        let ident = &self.ident;
+        let ident = self.field.ident.as_ref().unwrap();
 
         if self._type.starts_with("Option<") {
             quote!(#ident)
@@ -42,7 +42,7 @@ impl FieldQuoter {
     }
 
     pub fn quote_validator_field(&self) -> proc_macro2::TokenStream {
-        let ident = &self.ident;
+        let ident = self.field.ident.as_ref().unwrap();
 
         if self._type.starts_with("Option<") || is_list(&self._type) || is_map(&self._type) {
             quote!(#ident)
@@ -54,7 +54,7 @@ impl FieldQuoter {
     }
 
     pub fn get_optional_validator_param(&self) -> proc_macro2::TokenStream {
-        let ident = &self.ident;
+        let ident = self.field.ident.as_ref().unwrap();
         if self._type.starts_with("Option<&")
             || self._type.starts_with("Option<Option<&")
             || NUMBER_TYPES.contains(&self._type.as_ref())
@@ -68,7 +68,7 @@ impl FieldQuoter {
     /// Wrap the quoted output of a validation with a if let Some if
     /// the field type is an option
     pub fn wrap_if_option(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-        let field_ident = &self.ident;
+        let field_ident = self.field.ident.as_ref().unwrap();
         let optional_pattern_matched = self.get_optional_validator_param();
         if self._type.starts_with("Option<Option<") {
             return quote!(
@@ -90,7 +90,7 @@ impl FieldQuoter {
     /// Wrap the quoted output of a validation with a for loop if
     /// the field type is a vector
     pub fn wrap_if_collection(&self, tokens: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-        let field_ident = &self.ident;
+        let field_ident = self.field.ident.as_ref().unwrap();
         let field_name = &self.name;
 
         // When we're using an option, we'll have the field unwrapped, so we should not access it
@@ -166,7 +166,7 @@ fn quote_error(validation: &FieldValidation) -> proc_macro2::TokenStream {
 pub fn quote_length_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -196,9 +196,12 @@ pub fn quote_length_validation(
         let max_tokens = option_to_tokens(
             &max.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
         );
-        let equal_tokens = option_to_tokens(
-            &equal.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
-        );
+        let (option_equal, equal_tokens) = {
+            let option_token =
+                equal.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64));
+            let tokens = option_to_tokens(&option_token);
+            (option_token, tokens)
+        };
 
         let quoted_error = quote_error(validation);
         let quoted = quote!(
@@ -217,7 +220,36 @@ pub fn quote_length_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = match option_equal {
+            Some(equal) => {
+                quote!(
+                    constraints.add(
+                        #field_name,
+                        ::validator::ValidationConstraint::Length {
+                            length: ::validator::LengthConstraint::Equal(#equal),
+                            code: #code,
+                        },
+                    );
+                )
+            }
+            None => {
+                quote!(
+                    constraints.add(
+                        #field_name,
+                        ::validator::ValidationConstraint::Length {
+                            length: ::validator::LengthConstraint::Range {
+                                min: #min_tokens,
+                                max: #max_tokens,
+                            },
+                            code: #code,
+                        },
+                    );
+                )
+            }
+        };
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!()
@@ -226,7 +258,7 @@ pub fn quote_length_validation(
 pub fn quote_range_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
@@ -263,7 +295,19 @@ pub fn quote_range_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::Range {
+                    min: #min_tokens,
+                    max: #max_tokens,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!()
@@ -293,7 +337,7 @@ where
 pub fn quote_credit_card_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -306,14 +350,24 @@ pub fn quote_credit_card_validation(
         }
     );
 
-    field_quoter.wrap_if_option(quoted)
+    let code = &validation.code;
+    let constraint_quoted = quote!(
+        constraints.add(
+            #field_name,
+            ::validator::ValidationConstraint::CreditCard {
+                code: #code,
+            },
+        );
+    );
+
+    (field_quoter.wrap_if_option(quoted), constraint_quoted)
 }
 
 #[cfg(feature = "unic")]
 pub fn quote_non_control_character_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -326,13 +380,23 @@ pub fn quote_non_control_character_validation(
         }
     );
 
-    field_quoter.wrap_if_option(quoted)
+    let code = &validation.code;
+    let constraint_quoted = quote!(
+        constraints.add(
+            #field_name,
+            ::validator::ValidationConstraint::NonControlCharacter {
+                code: #code,
+            },
+        );
+    );
+
+    (field_quoter.wrap_if_option(quoted), constraint_quoted)
 }
 
 pub fn quote_url_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -345,13 +409,23 @@ pub fn quote_url_validation(
         }
     );
 
-    field_quoter.wrap_if_option(quoted)
+    let code = &validation.code;
+    let constraint_quoted = quote!(
+        constraints.add(
+            #field_name,
+            ::validator::ValidationConstraint::Url {
+                code: #code,
+            },
+        );
+    );
+
+    (field_quoter.wrap_if_option(quoted), constraint_quoted)
 }
 
 pub fn quote_email_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -364,14 +438,24 @@ pub fn quote_email_validation(
         }
     );
 
-    field_quoter.wrap_if_option(quoted)
+    let code = &validation.code;
+    let constraint_quoted = quote!(
+        constraints.add(
+            #field_name,
+            ::validator::ValidationConstraint::Email {
+                code: #code,
+            },
+        );
+    );
+
+    (field_quoter.wrap_if_option(quoted), constraint_quoted)
 }
 
 pub fn quote_must_match_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
-    let ident = &field_quoter.ident;
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let ident = field_quoter.field.ident.as_ref().unwrap();
     let field_name = &field_quoter.name;
 
     if let Validator::MustMatch(ref other) = validation.validator {
@@ -386,7 +470,19 @@ pub fn quote_must_match_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let other_ident_string = other_ident.to_string();
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::MustMatch {
+                    other_field: #other_ident_string,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!();
@@ -395,7 +491,7 @@ pub fn quote_must_match_validation(
 pub fn quote_custom_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -429,7 +525,18 @@ pub fn quote_custom_validation(
             };
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::Custom {
+                    function: #function,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!();
@@ -438,7 +545,7 @@ pub fn quote_custom_validation(
 pub fn quote_contains_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -453,7 +560,18 @@ pub fn quote_contains_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::Contains {
+                    needle: #needle,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!();
@@ -462,7 +580,7 @@ pub fn quote_contains_validation(
 pub fn quote_regex_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -477,17 +595,38 @@ pub fn quote_regex_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::Regex {
+                    name: #re,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!();
 }
 
-pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::TokenStream {
+pub fn quote_nested_validation(
+    field_quoter: &FieldQuoter,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
     let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
-    field_quoter.wrap_if_option(field_quoter.wrap_if_collection(quoted))
+
+    let ty = &field_quoter.field.ty;
+    let constraints_quoted = quote!(
+        ::validator::ValidationConstraints::merge(
+            &mut constraints, #field_name, <#ty as ::validator::Constraints>::constraints(),
+        );
+    );
+
+    (field_quoter.wrap_if_option(field_quoter.wrap_if_collection(quoted)), constraints_quoted)
 }
 
 pub fn quote_validator(
@@ -495,40 +634,78 @@ pub fn quote_validator(
     validation: &FieldValidation,
     validations: &mut Vec<proc_macro2::TokenStream>,
     nested_validations: &mut Vec<proc_macro2::TokenStream>,
+    constraints: &mut Vec<proc_macro2::TokenStream>,
+    nested_constraints: &mut Vec<proc_macro2::TokenStream>,
 ) {
     match validation.validator {
         Validator::Length { .. } => {
-            validations.push(quote_length_validation(field_quoter, validation))
+            let (validation, constraint) = quote_length_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
         Validator::Range { .. } => {
-            validations.push(quote_range_validation(field_quoter, validation))
+            let (validation, constraint) = quote_range_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
-        Validator::Email => validations.push(quote_email_validation(field_quoter, validation)),
-        Validator::Url => validations.push(quote_url_validation(field_quoter, validation)),
+        Validator::Email => {
+            let (validation, constraint) = quote_email_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
+        }
+        Validator::Url => {
+            let (validation, constraint) = quote_url_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
+        }
         Validator::MustMatch(_) => {
-            validations.push(quote_must_match_validation(field_quoter, validation))
+            let (validation, constraint) = quote_must_match_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
         Validator::Custom { .. } => {
-            validations.push(quote_custom_validation(field_quoter, validation))
+            let (validation, constraint) = quote_custom_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
         Validator::Contains(_) => {
-            validations.push(quote_contains_validation(field_quoter, validation))
+            let (validation, constraint) = quote_contains_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
-        Validator::Regex(_) => validations.push(quote_regex_validation(field_quoter, validation)),
+        Validator::Regex(_) => {
+            let (validation, constraint) = quote_regex_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
+        }
         #[cfg(feature = "card")]
         Validator::CreditCard => {
-            validations.push(quote_credit_card_validation(field_quoter, validation))
+            let (validation, constraint) = quote_credit_card_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
-        Validator::Nested => nested_validations.push(quote_nested_validation(field_quoter)),
+        Validator::Nested => {
+            let (validation, constraint) = quote_nested_validation(field_quoter);
+            nested_validations.push(validation);
+            nested_constraints.push(constraint);
+        }
         #[cfg(feature = "unic")]
         Validator::NonControlCharacter => {
-            validations.push(quote_non_control_character_validation(field_quoter, validation))
+            let (validation, constraint) =
+                quote_non_control_character_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
         Validator::Required | Validator::RequiredNested => {
-            validations.push(quote_required_validation(field_quoter, validation))
+            let (validation, constraint) = quote_required_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
         Validator::DoesNotContain(_) => {
-            validations.push(quote_does_not_contain_validation(field_quoter, validation))
+            let (validation, constraint) =
+                quote_does_not_contain_validation(field_quoter, validation);
+            validations.push(validation);
+            constraints.push(constraint);
         }
     }
 }
@@ -577,9 +754,9 @@ pub fn quote_schema_validations(validation: &[SchemaValidation]) -> Vec<proc_mac
 pub fn quote_required_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
-    let ident = &field_quoter.ident;
+    let ident = &field_quoter.field.ident.as_ref().unwrap();
     let validator_param = quote!(&self.#ident);
 
     let quoted_error = quote_error(validation);
@@ -591,13 +768,23 @@ pub fn quote_required_validation(
         }
     );
 
-    quoted
+    let code = &validation.code;
+    let constraint_quoted = quote!(
+        constraints.add(
+            #field_name,
+            ::validator::ValidationConstraint::Required {
+                code: #code,
+            },
+        );
+    );
+
+    (quoted, constraint_quoted)
 }
 
 pub fn quote_does_not_contain_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_name = &field_quoter.name;
     let validator_param = field_quoter.quote_validator_param();
 
@@ -612,7 +799,18 @@ pub fn quote_does_not_contain_validation(
             }
         );
 
-        return field_quoter.wrap_if_option(quoted);
+        let code = &validation.code;
+        let constraint_quoted = quote!(
+            constraints.add(
+                #field_name,
+                ::validator::ValidationConstraint::DoesNotContain {
+                    needle: #needle,
+                    code: #code,
+                },
+            );
+        );
+
+        return (field_quoter.wrap_if_option(quoted), constraint_quoted);
     }
 
     unreachable!();

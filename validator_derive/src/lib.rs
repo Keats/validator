@@ -35,7 +35,8 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let mut struct_validations = find_struct_validations(&ast.attrs);
     let (arg_type, has_arg) =
         construct_validator_argument_type(&mut fields_validations, &mut struct_validations);
-    let (validations, nested_validations) = quote_field_validations(fields_validations);
+    let (validations, nested_validations, constraints, nested_constraints) =
+        quote_field_validations(fields_validations);
 
     let schema_validations = quote_schema_validations(&struct_validations);
 
@@ -57,6 +58,22 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         quote!()
     };
 
+    let constraints_trait_impl = quote!(
+        impl #impl_generics ::validator::Constraints for #ident #ty_generics #where_clause {
+            #[allow(unused_mut)]
+            #[allow(unused_variable)]
+            fn constraints() -> ::validator::ValidationConstraints {
+                let mut constraints = ::validator::ValidationConstraints::new();
+
+                #(#constraints)*
+
+                #(#nested_constraints)*
+
+                constraints
+            }
+        }
+    );
+
     // Adding the validator lifetime 'v_a
     let mut expanded_generic = ast.generics.clone();
     expanded_generic
@@ -68,6 +85,7 @@ fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     // Implementing ValidateArgs
     let impl_ast = quote!(
         #validate_trait_impl
+        #constraints_trait_impl
 
         // We need this here to prevent formatting lints that can be caused by `quote_spanned!`
         // See: rust-lang/rust-clippy#6249 for more reference
@@ -191,20 +209,33 @@ fn construct_validator_argument_type(
 
 fn quote_field_validations(
     mut fields: Vec<FieldInformation>,
-) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>) {
+) -> (
+    Vec<proc_macro2::TokenStream>,
+    Vec<proc_macro2::TokenStream>,
+    Vec<proc_macro2::TokenStream>,
+    Vec<proc_macro2::TokenStream>,
+) {
     let mut validations = vec![];
     let mut nested_validations = vec![];
+    let mut constraints = vec![];
+    let mut nested_constraints = vec![];
 
     fields.drain(..).for_each(|x| {
-        let field_ident = x.field.ident.clone().unwrap();
-        let field_quoter = FieldQuoter::new(field_ident, x.name, x.field_type);
+        let field_quoter = FieldQuoter::new(x.field, x.name, x.field_type);
 
         for validation in &x.validations {
-            quote_validator(&field_quoter, validation, &mut validations, &mut nested_validations);
+            quote_validator(
+                &field_quoter,
+                validation,
+                &mut validations,
+                &mut nested_validations,
+                &mut constraints,
+                &mut nested_constraints,
+            );
         }
     });
 
-    (validations, nested_validations)
+    (validations, nested_validations, constraints, nested_constraints)
 }
 
 /// Find if a struct has some schema validation and returns the info if so
