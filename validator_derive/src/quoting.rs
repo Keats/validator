@@ -622,7 +622,10 @@ pub fn quote_nested_validation(
     let ty = &field_quoter.field.ty;
     let constraints_quoted = quote!(
         ::validator::ValidationConstraints::merge(
-            &mut constraints, #field_name, <#ty as ::validator::Constraints>::constraints(),
+            &mut constraints,
+            #field_name,
+            <#ty as ::validator::Constraints>::constraints(),
+            <#ty as ::validator::Constraints>::is_collection(),
         );
     );
 

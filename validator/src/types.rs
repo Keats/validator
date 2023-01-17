@@ -264,6 +264,7 @@ impl ValidationConstraint {
 #[serde(untagged)]
 pub enum ValidationConstraintsKind {
     Struct(Box<ValidationConstraints>),
+    Collection(Box<ValidationConstraints>),
     Field(Vec<ValidationConstraint>),
 }
 
@@ -279,12 +280,17 @@ impl ValidationConstraints {
         parent: &mut ValidationConstraints,
         field: &'static str,
         child: ValidationConstraints,
+        is_collection: bool,
     ) {
-        parent.add_nested(field, ValidationConstraintsKind::Struct(Box::new(child)));
+        if is_collection {
+            parent.add_nested(field, ValidationConstraintsKind::Collection(Box::new(child)));
+        } else {
+            parent.add_nested(field, ValidationConstraintsKind::Struct(Box::new(child)));
+        }
     }
 
     pub fn add(&mut self, field: &'static str, constraint: ValidationConstraint) {
-        let entry = self.0.entry(field).or_insert_with(|| Vec::new());
+        let entry = self.0.entry(field).or_insert_with(Vec::new);
 
         let kind = entry.iter_mut().find_map(|kind| match kind {
             ValidationConstraintsKind::Field(field) => Some(field),
@@ -306,6 +312,6 @@ impl ValidationConstraints {
     }
 
     fn add_nested(&mut self, field: &'static str, constraints: ValidationConstraintsKind) {
-        self.0.entry(field).or_insert_with(|| Vec::new()).push(constraints);
+        self.0.entry(field).or_insert_with(Vec::new).push(constraints);
     }
 }

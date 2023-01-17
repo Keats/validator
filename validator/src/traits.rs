@@ -217,6 +217,10 @@ pub trait ValidateArgs<'v_a> {
 /// This trait is implemented by deriving `Validate`.
 pub trait Constraints {
     fn constraints() -> ValidationConstraints;
+
+    fn is_collection() -> bool {
+        false
+    }
 }
 
 impl<T: Constraints> Constraints for &T {
@@ -229,11 +233,19 @@ impl<T: Constraints> Constraints for &[T] {
     fn constraints() -> ValidationConstraints {
         T::constraints()
     }
+
+    fn is_collection() -> bool {
+        true
+    }
 }
 
 impl<T: Constraints, const N: usize> Constraints for [T; N] {
     fn constraints() -> ValidationConstraints {
         T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
     }
 }
 
@@ -247,11 +259,19 @@ impl<T: Constraints> Constraints for Vec<T> {
     fn constraints() -> ValidationConstraints {
         T::constraints()
     }
+
+    fn is_collection() -> bool {
+        true
+    }
 }
 
 impl<K, V: Constraints, S> Constraints for HashMap<K, V, S> {
     fn constraints() -> ValidationConstraints {
         V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
     }
 }
 
@@ -259,17 +279,29 @@ impl<T: Constraints, S> Constraints for HashSet<T, S> {
     fn constraints() -> ValidationConstraints {
         T::constraints()
     }
+
+    fn is_collection() -> bool {
+        true
+    }
 }
 
 impl<K, V: Constraints> Constraints for BTreeMap<K, V> {
     fn constraints() -> ValidationConstraints {
         V::constraints()
     }
+
+    fn is_collection() -> bool {
+        true
+    }
 }
 
 impl<T: Constraints> Constraints for BTreeSet<T> {
     fn constraints() -> ValidationConstraints {
         T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
     }
 }
 
@@ -278,11 +310,19 @@ impl<K, V: Constraints> Constraints for IndexMap<K, V> {
     fn constraints() -> ValidationConstraints {
         V::constraints()
     }
+
+    fn is_collection() -> bool {
+        true
+    }
 }
 
 #[cfg(feature = "indexmap")]
 impl<T: Constraints> Constraints for IndexSet<T> {
     fn constraints() -> ValidationConstraints {
         T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
     }
 }
