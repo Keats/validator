@@ -309,7 +309,7 @@ let test_struct: TestStruct = [...]
 test_struct.validate_args((77, 555)).is_ok();
 ```
 
-It is also possible to pass references by using the lifetime `'v_a` not that this lifetime should only be used for the function parameters like this:
+It is also possible to pass references by using the lifetime `'v_a` note that this lifetime should only be used for the function parameters like this:
 
 ```rust
 fn validate_value(_: &str, arg: &mut Database) -> Result<(), ValidationError> {
