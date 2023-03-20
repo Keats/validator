@@ -144,6 +144,36 @@ impl<T> HasLen for IndexSet<T> {
     }
 }
 
+/// Allows to limit string length in UTF-16 characters
+///
+/// UTF-16 is used in JavaScript and Java.
+pub trait HasLenUTF16 {
+    fn length_utf16(&self) -> u64;
+}
+
+impl HasLenUTF16 for String {
+    fn length_utf16(&self) -> u64 {
+        self.encode_utf16().count() as u64
+    }
+}
+
+impl<'a> HasLenUTF16 for &'a String {
+    fn length_utf16(&self) -> u64 {
+        self.encode_utf16().count() as u64
+    }
+}
+
+impl<'a> HasLenUTF16 for &'a str {
+    fn length_utf16(&self) -> u64 {
+        self.encode_utf16().count() as u64
+    }
+}
+
+impl<'a> HasLenUTF16 for Cow<'a, str> {
+    fn length_utf16(&self) -> u64 {
+        self.encode_utf16().count() as u64
+    }
+}
 /// Trait to implement if one wants to make the `contains` validator
 /// work for more types
 pub trait Contains {

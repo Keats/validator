@@ -31,6 +31,12 @@ pub enum Validator {
         max: Option<ValueOrPath<u64>>,
         equal: Option<ValueOrPath<u64>>,
     },
+    // string value validated against length in UTF-16 characters (string repr in JavaScript, Java)
+    LengthUTF16 {
+        min: Option<ValueOrPath<u64>>,
+        max: Option<ValueOrPath<u64>>,
+        equal: Option<ValueOrPath<u64>>,
+    },
     #[cfg(feature = "card")]
     CreditCard,
     #[cfg(feature = "phone")]
@@ -81,6 +87,7 @@ impl Validator {
             Validator::Regex(_) => "regex",
             Validator::Range { .. } => "range",
             Validator::Length { .. } => "length",
+            Validator::LengthUTF16 { .. } => "length_utf16",
             #[cfg(feature = "card")]
             Validator::CreditCard => "credit_card",
             #[cfg(feature = "phone")]

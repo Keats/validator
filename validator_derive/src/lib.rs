@@ -9,7 +9,9 @@ use quote::ToTokens;
 use quote::{quote, quote_spanned};
 use syn::{parse_quote, spanned::Spanned, GenericParam, Lifetime, LifetimeDef, Type};
 
-use asserts::{assert_has_len, assert_has_range, assert_string_type, assert_type_matches};
+use asserts::{
+    assert_has_len, assert_has_len_utf16, assert_has_range, assert_string_type, assert_type_matches,
+};
 use lit::*;
 use quoting::{quote_schema_validations, quote_validator, FieldQuoter};
 use validation::*;
@@ -508,6 +510,18 @@ fn find_validators_for_field(
                                     "length" => {
                                         assert_has_len(rust_ident.clone(), field_type, &field.ty);
                                         validators.push(extract_length_validation(
+                                            rust_ident.clone(),
+                                            attr,
+                                            &meta_items,
+                                        ));
+                                    }
+                                    "length_utf16" => {
+                                        assert_has_len_utf16(
+                                            rust_ident.clone(),
+                                            field_type,
+                                            &field.ty,
+                                        );
+                                        validators.push(extract_length_utf16_validation(
                                             rust_ident.clone(),
                                             attr,
                                             &meta_items,

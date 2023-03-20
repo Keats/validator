@@ -15,6 +15,19 @@ mod tests {
         assert_eq!(err, "foo: Please provide a valid foo!");
     }
 
+    #[derive(Validate, Clone)]
+    struct FooUTF16 {
+        #[validate(length_utf16(equal = 5, message = "Please provide a valid utf16 foo!"))]
+        foo: String,
+    }
+
+    #[test]
+    fn test_message() {
+        let bad_foo = FooUTF16 { foo: "hi!".into() };
+        let err = format!("{}", bad_foo.validate().unwrap_err());
+        assert_eq!(err, "foo: Please provide a valid utf16 foo!");
+    }
+
     #[derive(Validate)]
     struct Bar {
         #[validate]
