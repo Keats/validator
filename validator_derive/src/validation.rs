@@ -124,6 +124,11 @@ pub fn extract_length_validation(
     }
 }
 
+const RANGE_MIN_KEY: &str = "min";
+const RANGE_EXC_MIN_KEY: &str = "exc_min";
+const RANGE_MAX_KEY: &str = "max";
+const RANGE_EXC_MAX_KEY: &str = "exc_max";
+
 pub fn extract_range_validation(
     field: String,
     attr: &syn::Attribute,
@@ -131,6 +136,8 @@ pub fn extract_range_validation(
 ) -> FieldValidation {
     let mut min = None;
     let mut max = None;
+    let mut exc_min = None;
+    let mut exc_max = None;
 
     let (message, code) = extract_message_and_code("range", &field, meta_items);
 
@@ -145,16 +152,28 @@ pub fn extract_range_validation(
                     let ident = path.get_ident().unwrap();
                     match ident.to_string().as_ref() {
                         "message" | "code" => continue,
-                        "min" => {
+                        RANGE_MIN_KEY => {
                             min = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `min` of `range` validator: only number literals or value paths are allowed")
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_MIN_KEY))
                             };
                         }
-                        "max" => {
+                        RANGE_EXC_MIN_KEY => {
+                            exc_min = match lit_to_f64_or_path(lit) {
+                                Some(s) => Some(s),
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXC_MIN_KEY))
+                            };
+                        }
+                        RANGE_MAX_KEY => {
                             max = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), "invalid argument type for `max` of `range` validator: only number literals or value paths are allowed")
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_MAX_KEY))
+                            };
+                        }
+                        RANGE_EXC_MAX_KEY => {
+                            exc_max = match lit_to_f64_or_path(lit) {
+                                Some(s) => Some(s),
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXC_MAX_KEY))
                             };
                         }
                         v => error(path.span(), &format!(
@@ -173,16 +192,39 @@ pub fn extract_range_validation(
         }
     }
 
-    if min.is_none() && max.is_none() {
-        error(attr.span(), "Validator `range` requires at least 1 argument out of `min` and `max`");
+    if [&min, &max, &exc_min, &exc_max].iter().all(|x| x.is_none()) {
+        error(
+            attr.span(),
+            &format!(
+                "Validator `range` requires at least 1 argument out of `{}`, `{}`, `{}` and `{}`",
+                RANGE_MIN_KEY, RANGE_MAX_KEY, RANGE_EXC_MIN_KEY, RANGE_EXC_MAX_KEY
+            ),
+        );
+    }
+    if collide(&min, &exc_min) || collide(&max, &exc_max) {
+        error(
+            attr.span(),
+            &format!(
+                "Validator `range` cannot contain one of its limits (`{}`, `{}`) and its exclusive counterpart",
+                RANGE_MIN_KEY, RANGE_MAX_KEY
+            )
+        )
     }
 
-    let validator = Validator::Range { min, max };
+    let validator = Validator::Range { min, max, exc_min, exc_max };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
     }
+}
+
+fn collide<T>(first: &Option<T>, second: &Option<T>) -> bool {
+    first.is_some() && second.is_some()
+}
+
+fn lit_to_f64_error_message(val_name: &str) -> String {
+    format!("invalid argument type for `{}` of `range` validator: only number literals or value paths are allowed", val_name)
 }
 
 pub fn extract_custom_validation(

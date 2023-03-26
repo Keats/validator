@@ -2,7 +2,7 @@ use if_chain::if_chain;
 use proc_macro2::{self, Span};
 use quote::quote;
 
-use validator_types::Validator;
+use validator_types::{Validator, ValueOrPath};
 
 use crate::asserts::{COW_TYPE, NUMBER_TYPES};
 use crate::lit::{option_to_tokens, value_or_path_to_tokens};
@@ -230,39 +230,32 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::Range { ref min, ref max } = validation.validator {
-        let min_err_param_quoted = if let Some(v) = min {
-            let v = value_or_path_to_tokens(v);
-            quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
-        } else {
-            quote!()
-        };
-        let max_err_param_quoted = if let Some(v) = max {
-            let v = value_or_path_to_tokens(v);
-            quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
-        } else {
-            quote!()
-        };
+    if let Validator::Range { ref min, ref max, ref exc_min, ref exc_max } = validation.validator {
+        let min_err_param_quoted = err_param_quoted(min, "min");
+        let max_err_param_quoted = err_param_quoted(max, "max");
+        let exc_min_err_param_quoted = err_param_quoted(exc_min, "exc_min");
+        let exc_max_err_param_quoted = err_param_quoted(exc_max, "exc_max");
 
         // Can't interpolate None
-        let min_tokens =
-            min.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
-        let min_tokens = option_to_tokens(&min_tokens);
-
-        let max_tokens =
-            max.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
-        let max_tokens = option_to_tokens(&max_tokens);
+        let min_tokens = generate_tokens(min);
+        let max_tokens = generate_tokens(max);
+        let exc_min_tokens = generate_tokens(exc_min);
+        let exc_max_tokens = generate_tokens(exc_max);
 
         let quoted_error = quote_error(validation);
         let quoted = quote!(
             if !::validator::validate_range(
                 #quoted_ident as f64,
                 #min_tokens,
-                #max_tokens
+                #max_tokens,
+                #exc_min_tokens,
+                #exc_max_tokens,
             ) {
                 #quoted_error
                 #min_err_param_quoted
                 #max_err_param_quoted
+                #exc_min_err_param_quoted
+                #exc_max_err_param_quoted
                 err.add_param(::std::borrow::Cow::from("value"), &#quoted_ident);
                 errors.add(#field_name, err);
             }
@@ -272,6 +265,26 @@ pub fn quote_range_validation(
     }
 
     unreachable!()
+}
+
+fn err_param_quoted<T>(option: &Option<ValueOrPath<T>>, name: &str) -> proc_macro2::TokenStream
+where
+    T: std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq + quote::ToTokens,
+{
+    if let Some(v) = option {
+        let v = value_or_path_to_tokens(v);
+        quote!(err.add_param(::std::borrow::Cow::from(#name), &#v);)
+    } else {
+        quote!()
+    }
+}
+
+fn generate_tokens<T>(value: &Option<ValueOrPath<T>>) -> proc_macro2::TokenStream
+where
+    T: std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq + quote::ToTokens,
+{
+    let tokens = value.clone().map(|x| value_or_path_to_tokens(&x)).map(|x| quote!(#x as f64));
+    option_to_tokens(&tokens)
 }
 
 #[cfg(feature = "card")]
