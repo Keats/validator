@@ -24,6 +24,45 @@ fn can_validate_range_ok() {
 }
 
 #[test]
+fn can_validate_range_exc_min_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(exc_min = 5, max = 10))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_range_exc_max_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = 5, exc_max = 10))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 9 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_exc_min_and_max_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(exc_min = 5, exc_max = 10))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
 fn can_validate_only_min_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
@@ -50,10 +89,49 @@ fn can_validate_only_max_ok() {
 }
 
 #[test]
+fn can_validate_only_exc_min_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(exc_min = 5))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_only_exc_max_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(exc_max = 50))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 49 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
 fn can_validate_range_value_crate_path_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
         #[validate(range(min = "MIN_CONST", max = "MAX_CONST"))]
+        val: usize,
+    }
+
+    let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_exclusive_range_value_crate_path_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(exc_min = "MIN_CONST", max = "MAX_CONST"))]
         val: usize,
     }
 
