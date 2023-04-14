@@ -3,11 +3,40 @@ use url::Url;
 
 /// Validates whether the string given is a url
 #[must_use]
-pub fn validate_url<'a, T>(val: T) -> bool
-where
-    T: Into<Cow<'a, str>>,
-{
-    Url::parse(val.into().as_ref()).is_ok()
+pub fn validate_url<T: ValidateUrl>(val: T) -> bool {
+    val.validate_url()
+}
+
+pub trait ValidateUrl {
+    fn validate_url(&self) -> bool {
+        Url::parse(&self.to_url_string()).is_ok()
+    }
+
+    fn to_url_string<'a>(&'a self) -> Cow<'a, str>;
+}
+
+impl ValidateUrl for &str {
+    fn to_url_string(&self) -> Cow<'_, str> {
+        Cow::from(*self)
+    }
+}
+
+impl ValidateUrl for String {
+    fn to_url_string(&self) -> Cow<'_, str> {
+        Cow::from(self)
+    }
+}
+
+impl ValidateUrl for &String {
+    fn to_url_string(&self) -> Cow<'_, str> {
+        Cow::from(*self)
+    }
+}
+
+impl ValidateUrl for Cow<'_, str> {
+    fn to_url_string(&self) -> Cow<'_, str> {
+        self.clone()
+    }
 }
 
 #[cfg(test)]
