@@ -408,11 +408,9 @@ fn find_validators_for_field(
                             syn::Meta::Path(ref name) => {
                                 match name.get_ident().unwrap().to_string().as_ref() {
                                     "email" => {
-                                        assert_string_type("email", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Email));
                                     }
                                     "url" => {
-                                        assert_string_type("url", field_type, &field.ty);
                                         validators.push(FieldValidation::new(Validator::Url));
                                     }
                                     #[cfg(feature = "phone")]
