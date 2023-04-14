@@ -90,3 +90,33 @@ fn can_specify_message_for_required() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
 }
+
+#[test]
+fn can_validate_custom_impl_for_required() {
+    #[derive(Debug, Serialize)]
+    enum CustomOption<T> {
+        Something(T),
+        Nothing,
+    }
+
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(required)]
+        val: CustomOption<String>,
+    }
+
+    impl<T> validator::ValidateRequired for CustomOption<T> {
+        fn is_some(&self) -> bool {
+            match self {
+                CustomOption::Something(_) => true,
+                CustomOption::Nothing => false,
+            }
+        }
+    }
+
+    let something = TestStruct { val: CustomOption::Something("this is something".to_string()) };
+    let nothing = TestStruct { val: CustomOption::Nothing };
+
+    assert!(something.validate().is_ok());
+    assert!(nothing.validate().is_err());
+}

@@ -2,23 +2,50 @@
 /// optional and will only be validated if they are not `None`
 ///
 #[must_use]
-pub fn validate_range<T>(value: T, min: Option<T>, max: Option<T>) -> bool
+pub fn validate_range<T: ValidateRange<T>>(value: T, min: Option<T>, max: Option<T>) -> bool {
+    value.validate_range(min, max)
+}
+
+pub trait ValidateRange<T> {
+    fn validate_range(&self, min: Option<T>, max: Option<T>) -> bool {
+        if let Some(max) = max {
+            if self.greater_than(max) {
+                return false;
+            }
+        }
+
+        if let Some(min) = min {
+            if self.less_than(min) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn greater_than(&self, max: T) -> bool;
+    fn less_than(&self, min: T) -> bool;
+}
+
+impl<T> ValidateRange<T> for T
 where
-    T: PartialOrd + PartialEq,
+    T: PartialEq + PartialOrd,
 {
-    if let Some(max) = max {
-        if value > max {
-            return false;
+    fn greater_than(&self, max: T) -> bool {
+        if self > &max {
+            return true;
         }
+
+        false
     }
 
-    if let Some(min) = min {
-        if value < min {
-            return false;
+    fn less_than(&self, min: T) -> bool {
+        if self < &min {
+            return true;
         }
-    }
 
-    true
+        false
+    }
 }
 
 #[cfg(test)]
