@@ -388,7 +388,7 @@ For example, the following attributes all work:
 #[validate(length(min = 5, max = 10, code = "code_str"))]
 
 #[validate(regex(path = "static_regex", code = "code_str"))]
-#[validate(custom(function = "custom_fn", code = "code_str"))]
+#[validate(custom(function = "custom_fn"))]
 #[validate(contains(pattern = "pattern_str", code = "code_str"))]
 #[validate(does_not_contain(pattern = "pattern_str", code = "code_str"))]
 #[validate(must_match(other = "match_value", code = "code_str"))]
@@ -406,6 +406,6 @@ For example, the following attributes all work:
 // both attributes
 #[validate(url(message = "message", code = "code_str"))]
 #[validate(email(code = "code_str", message = "message"))]
-#[validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
+#[validate(custom(function = "custom_fn", message = "message_str"))]
 
 ```
