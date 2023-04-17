@@ -54,7 +54,7 @@ struct SignupData {
     first_name: String,
     #[validate(range(min = 18, max = 20))]
     age: u32,
-    #[validate(range(exc_min = 0.0, max = 100.0))]
+    #[validate(range(exclusive_min = 0.0, max = 100.0))]
     height: f32,
 }
 
@@ -199,7 +199,7 @@ const MAX_CONST: u64 = 10;
 ```
 
 ### range
-Tests whether a number is in the given range. `range` takes 1 or 2 arguments, and they can be normal (`min` and `max`) or exclusive (`exc_min`, `exc_max`, unreachable limits).
+Tests whether a number is in the given range. `range` takes 1 or 2 arguments, and they can be normal (`min` and `max`) or exclusive (`exclusive_min`, `exclusive_max`, unreachable limits).
 These can be a number or a value path.
 
 Examples:
@@ -215,8 +215,8 @@ const MIN_CONSTANT: i32 = 0;
 #[validate(range(max = 10.8))]
 #[validate(range(min = "MAX_CONSTANT"))]
 #[validate(range(min = "crate::MAX_CONSTANT"))]
-#[validate(range(exc_min = 0.0, max = 100.0))]
-#[validate(range(exc_max = 10))]
+#[validate(range(exclusive_min = 0.0, max = 100.0))]
+#[validate(range(exclusive_max = 10))]
 ```
 
 ### must_match

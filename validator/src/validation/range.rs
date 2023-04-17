@@ -7,8 +7,8 @@ pub fn validate_range<T>(
     value: T,
     min: Option<T>,
     max: Option<T>,
-    exc_min: Option<T>,
-    exc_max: Option<T>,
+    exclusive_min: Option<T>,
+    exclusive_max: Option<T>,
 ) -> bool
 where
     T: PartialOrd + PartialEq,
@@ -25,14 +25,14 @@ where
         }
     }
 
-    if let Some(exc_max) = exc_max {
-        if value >= exc_max {
+    if let Some(exclusive_max) = exclusive_max {
+        if value >= exclusive_max {
             return false;
         }
     }
 
-    if let Some(exc_min) = exc_min {
-        if value <= exc_min {
+    if let Some(exclusive_min) = exclusive_min {
+        if value <= exclusive_min {
             return false;
         }
     }
@@ -86,13 +86,13 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_range_generic_exc_max_only() {
+    fn test_validate_range_generic_exclusive_max_only() {
         assert!(!validate_range(10, None, None, None, Some(10)));
         assert!(validate_range(9, None, None, None, Some(10)));
     }
 
     #[test]
-    fn test_validate_range_generic_exc_min_only() {
+    fn test_validate_range_generic_exclusive_min_only() {
         assert!(!validate_range(10, None, None, Some(10), None));
         assert!(validate_range(9, None, None, Some(8), None));
     }

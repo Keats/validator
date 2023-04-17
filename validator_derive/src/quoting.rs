@@ -230,17 +230,23 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::Range { ref min, ref max, ref exc_min, ref exc_max } = validation.validator {
+    if let Validator::Range {
+        ref min,
+        ref max,
+        exclusive_min: ref exclusive_min,
+        exclusive_max: ref exclusive_max,
+    } = validation.validator
+    {
         let min_err_param_quoted = err_param_quoted(min, "min");
         let max_err_param_quoted = err_param_quoted(max, "max");
-        let exc_min_err_param_quoted = err_param_quoted(exc_min, "exc_min");
-        let exc_max_err_param_quoted = err_param_quoted(exc_max, "exc_max");
+        let exclusive_min_err_param_quoted = err_param_quoted(exclusive_min, "exclusive_min");
+        let exclusive_max_err_param_quoted = err_param_quoted(exclusive_max, "exclusive_max");
 
         // Can't interpolate None
         let min_tokens = generate_tokens(min);
         let max_tokens = generate_tokens(max);
-        let exc_min_tokens = generate_tokens(exc_min);
-        let exc_max_tokens = generate_tokens(exc_max);
+        let exclusive_min_tokens = generate_tokens(exclusive_min);
+        let exclusive_max_tokens = generate_tokens(exclusive_max);
 
         let quoted_error = quote_error(validation);
         let quoted = quote!(
@@ -248,14 +254,14 @@ pub fn quote_range_validation(
                 #quoted_ident as f64,
                 #min_tokens,
                 #max_tokens,
-                #exc_min_tokens,
-                #exc_max_tokens,
+                #exclusive_min_tokens,
+                #exclusive_max_tokens,
             ) {
                 #quoted_error
                 #min_err_param_quoted
                 #max_err_param_quoted
-                #exc_min_err_param_quoted
-                #exc_max_err_param_quoted
+                #exclusive_min_err_param_quoted
+                #exclusive_max_err_param_quoted
                 err.add_param(::std::borrow::Cow::from("value"), &#quoted_ident);
                 errors.add(#field_name, err);
             }

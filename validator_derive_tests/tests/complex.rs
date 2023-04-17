@@ -167,9 +167,9 @@ fn test_can_validate_option_fields_with_lifetime() {
         name: Option<&'a str>,
         #[validate(length(min = 1, max = 10))]
         address: Option<Option<&'a str>>,
-        #[validate(range(exc_min = 0, max = 100))]
+        #[validate(range(exclusive_min = 0, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = 1, exc_max = 10))]
+        #[validate(range(min = 1, exclusive_max = 10))]
         range: Option<usize>,
         #[validate(email)]
         email: Option<&'a str>,
@@ -217,9 +217,9 @@ fn test_can_validate_option_fields_without_lifetime() {
         ids: Option<Vec<usize>>,
         #[validate(length(min = 1, max = 10))]
         opt_ids: Option<Option<Vec<usize>>>,
-        #[validate(range(exc_min = 0, max = 100))]
+        #[validate(range(exclusive_min = 0, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = 1, exc_max = 10))]
+        #[validate(range(min = 1, exclusive_max = 10))]
         range: Option<usize>,
         #[validate(email)]
         email: Option<String>,
@@ -281,9 +281,9 @@ fn test_works_with_none_values() {
         name: Option<String>,
         #[validate(length(min = 1, max = 10))]
         address: Option<Option<String>>,
-        #[validate(range(exc_min = 0, max = 100))]
+        #[validate(range(exclusive_min = 0, max = 100))]
         age: Option<Option<usize>>,
-        #[validate(range(min = 1, exc_max = 10))]
+        #[validate(range(min = 1, exclusive_max = 10))]
         range: Option<usize>,
     }
 

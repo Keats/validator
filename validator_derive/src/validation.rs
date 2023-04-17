@@ -125,9 +125,9 @@ pub fn extract_length_validation(
 }
 
 const RANGE_MIN_KEY: &str = "min";
-const RANGE_EXC_MIN_KEY: &str = "exc_min";
+const RANGE_EXCLUSIVE_MIN_KEY: &str = "exclusive_min";
 const RANGE_MAX_KEY: &str = "max";
-const RANGE_EXC_MAX_KEY: &str = "exc_max";
+const RANGE_EXCLUSIVE_MAX_KEY: &str = "exclusive_max";
 
 pub fn extract_range_validation(
     field: String,
@@ -136,8 +136,8 @@ pub fn extract_range_validation(
 ) -> FieldValidation {
     let mut min = None;
     let mut max = None;
-    let mut exc_min = None;
-    let mut exc_max = None;
+    let mut exclusive_min = None;
+    let mut exclusive_max = None;
 
     let (message, code) = extract_message_and_code("range", &field, meta_items);
 
@@ -158,10 +158,10 @@ pub fn extract_range_validation(
                                 None => error(lit.span(), &lit_to_f64_error_message(RANGE_MIN_KEY))
                             };
                         }
-                        RANGE_EXC_MIN_KEY => {
-                            exc_min = match lit_to_f64_or_path(lit) {
+                        RANGE_EXCLUSIVE_MIN_KEY => {
+                            exclusive_min = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXC_MIN_KEY))
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXCLUSIVE_MIN_KEY))
                             };
                         }
                         RANGE_MAX_KEY => {
@@ -170,10 +170,10 @@ pub fn extract_range_validation(
                                 None => error(lit.span(), &lit_to_f64_error_message(RANGE_MAX_KEY))
                             };
                         }
-                        RANGE_EXC_MAX_KEY => {
-                            exc_max = match lit_to_f64_or_path(lit) {
+                        RANGE_EXCLUSIVE_MAX_KEY => {
+                            exclusive_max = match lit_to_f64_or_path(lit) {
                                 Some(s) => Some(s),
-                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXC_MAX_KEY))
+                                None => error(lit.span(), &lit_to_f64_error_message(RANGE_EXCLUSIVE_MAX_KEY))
                             };
                         }
                         v => error(path.span(), &format!(
@@ -192,16 +192,16 @@ pub fn extract_range_validation(
         }
     }
 
-    if [&min, &max, &exc_min, &exc_max].iter().all(|x| x.is_none()) {
+    if [&min, &max, &exclusive_min, &exclusive_max].iter().all(|x| x.is_none()) {
         error(
             attr.span(),
             &format!(
                 "Validator `range` requires at least 1 argument out of `{}`, `{}`, `{}` and `{}`",
-                RANGE_MIN_KEY, RANGE_MAX_KEY, RANGE_EXC_MIN_KEY, RANGE_EXC_MAX_KEY
+                RANGE_MIN_KEY, RANGE_MAX_KEY, RANGE_EXCLUSIVE_MIN_KEY, RANGE_EXCLUSIVE_MAX_KEY
             ),
         );
     }
-    if collide(&min, &exc_min) || collide(&max, &exc_max) {
+    if collide(&min, &exclusive_min) || collide(&max, &exclusive_max) {
         error(
             attr.span(),
             &format!(
@@ -211,7 +211,7 @@ pub fn extract_range_validation(
         )
     }
 
-    let validator = Validator::Range { min, max, exc_min, exc_max };
+    let validator = Validator::Range { min, max, exclusive_min, exclusive_max };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),

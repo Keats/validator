@@ -24,10 +24,10 @@ fn can_validate_range_ok() {
 }
 
 #[test]
-fn can_validate_range_exc_min_ok() {
+fn can_validate_range_exclusive_min_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(exc_min = 5, max = 10))]
+        #[validate(range(exclusive_min = 5, max = 10))]
         val: usize,
     }
 
@@ -37,10 +37,10 @@ fn can_validate_range_exc_min_ok() {
 }
 
 #[test]
-fn can_validate_range_exc_max_ok() {
+fn can_validate_range_exclusive_max_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(min = 5, exc_max = 10))]
+        #[validate(range(min = 5, exclusive_max = 10))]
         val: usize,
     }
 
@@ -50,10 +50,10 @@ fn can_validate_range_exc_max_ok() {
 }
 
 #[test]
-fn can_validate_exc_min_and_max_ok() {
+fn can_validate_exclusive_min_and_max_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(exc_min = 5, exc_max = 10))]
+        #[validate(range(exclusive_min = 5, exclusive_max = 10))]
         val: usize,
     }
 
@@ -89,10 +89,10 @@ fn can_validate_only_max_ok() {
 }
 
 #[test]
-fn can_validate_only_exc_min_ok() {
+fn can_validate_only_exclusive_min_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(exc_min = 5))]
+        #[validate(range(exclusive_min = 5))]
         val: usize,
     }
 
@@ -102,10 +102,10 @@ fn can_validate_only_exc_min_ok() {
 }
 
 #[test]
-fn can_validate_only_exc_max_ok() {
+fn can_validate_only_exclusive_max_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(exc_max = 50))]
+        #[validate(range(exclusive_max = 50))]
         val: usize,
     }
 
@@ -131,7 +131,7 @@ fn can_validate_range_value_crate_path_ok() {
 fn can_validate_exclusive_range_value_crate_path_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(range(exc_min = "MIN_CONST", max = "MAX_CONST"))]
+        #[validate(range(exclusive_min = "MIN_CONST", max = "MAX_CONST"))]
         val: usize,
     }
 
