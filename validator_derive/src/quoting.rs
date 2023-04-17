@@ -230,12 +230,8 @@ pub fn quote_range_validation(
     let field_name = &field_quoter.name;
     let quoted_ident = field_quoter.quote_validator_param();
 
-    if let Validator::Range {
-        ref min,
-        ref max,
-        exclusive_min: ref exclusive_min,
-        exclusive_max: ref exclusive_max,
-    } = validation.validator
+    if let Validator::Range { ref min, ref max, ref exclusive_min, ref exclusive_max } =
+        validation.validator
     {
         let min_err_param_quoted = err_param_quoted(min, "min");
         let max_err_param_quoted = err_param_quoted(max, "max");

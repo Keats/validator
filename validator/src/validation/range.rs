@@ -1,43 +1,76 @@
-/// Validates that the given `value` is inside the defined range. The `max` and `min` parameters are
+/// Validates that the given `value` is inside the defined range.
+/// The `max`, `min`, `exclusive_max` and `exclusive_min` parameters are
 /// optional and will only be validated if they are not `None`
 ///
 #[must_use]
-
-pub fn validate_range<T>(
+pub fn validate_range<T: ValidateRange<T>>(
     value: T,
     min: Option<T>,
     max: Option<T>,
     exclusive_min: Option<T>,
     exclusive_max: Option<T>,
-) -> bool
+) -> bool {
+    value.validate_range(min, max, exclusive_min, exclusive_max)
+}
+
+pub trait ValidateRange<T> {
+    fn validate_range(
+        &self,
+        min: Option<T>,
+        max: Option<T>,
+        exclusive_min: Option<T>,
+        exclusive_max: Option<T>,
+    ) -> bool {
+        if let Some(max) = max {
+            if self.greater_than(max) {
+                return false;
+            }
+        }
+
+        if let Some(min) = min {
+            if self.less_than(min) {
+                return false;
+            }
+        }
+
+        if let Some(exclusive_max) = exclusive_max {
+            if !self.less_than(exclusive_max) {
+                return false;
+            }
+        }
+
+        if let Some(exclusive_min) = exclusive_min {
+            if !self.greater_than(exclusive_min) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn greater_than(&self, max: T) -> bool;
+    fn less_than(&self, min: T) -> bool;
+}
+
+impl<T> ValidateRange<T> for T
 where
-    T: PartialOrd + PartialEq,
+    T: PartialEq + PartialOrd,
 {
-    if let Some(max) = max {
-        if value > max {
-            return false;
+    fn greater_than(&self, max: T) -> bool {
+        if self > &max {
+            return true;
         }
+
+        false
     }
 
-    if let Some(min) = min {
-        if value < min {
-            return false;
+    fn less_than(&self, min: T) -> bool {
+        if self < &min {
+            return true;
         }
-    }
 
-    if let Some(exclusive_max) = exclusive_max {
-        if value >= exclusive_max {
-            return false;
-        }
+        false
     }
-
-    if let Some(exclusive_min) = exclusive_min {
-        if value <= exclusive_min {
-            return false;
-        }
-    }
-
-    true
 }
 
 #[cfg(test)]
