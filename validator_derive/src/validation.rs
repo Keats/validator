@@ -201,7 +201,8 @@ pub fn extract_range_validation(
             ),
         );
     }
-    if collide(&min, &exclusive_min) || collide(&max, &exclusive_max) {
+
+    if min.is_some() && exclusive_min.is_some() || max.is_some() && exclusive_max.is_some() {
         error(
             attr.span(),
             &format!(
@@ -210,17 +211,12 @@ pub fn extract_range_validation(
             )
         )
     }
-
     let validator = Validator::Range { min, max, exclusive_min, exclusive_max };
     FieldValidation {
         message,
         code: code.unwrap_or_else(|| validator.code().to_string()),
         validator,
     }
-}
-
-fn collide<T>(first: &Option<T>, second: &Option<T>) -> bool {
-    first.is_some() && second.is_some()
 }
 
 fn lit_to_f64_error_message(val_name: &str) -> String {
