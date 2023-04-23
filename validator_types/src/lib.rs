@@ -24,6 +24,8 @@ pub enum Validator {
     Range {
         min: Option<ValueOrPath<f64>>,
         max: Option<ValueOrPath<f64>>,
+        exclusive_min: Option<ValueOrPath<f64>>,
+        exclusive_max: Option<ValueOrPath<f64>>,
     },
     // Any value that impl HasLen can be validated with Length
     Length {
