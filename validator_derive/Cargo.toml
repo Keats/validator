@@ -14,7 +14,6 @@ readme = "../README.md"
 proc-macro = true
 
 [features]
-phone = ["validator_types/phone"]
 card = ["validator_types/card"]
 unic = ["validator_types/unic"]
 

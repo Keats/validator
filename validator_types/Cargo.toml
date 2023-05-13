@@ -12,7 +12,6 @@ readme = "../README.md"
 
 
 [features]
-phone = []
 card = []
 unic = []
 
