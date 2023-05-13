@@ -12,30 +12,12 @@ pub trait ValidateUrl {
         Url::parse(&self.to_url_string()).is_ok()
     }
 
-    fn to_url_string<'a>(&'a self) -> Cow<'a, str>;
+    fn to_url_string(&self) -> Cow<str>;
 }
 
-impl ValidateUrl for &str {
+impl<T: AsRef<str>> ValidateUrl for T {
     fn to_url_string(&self) -> Cow<'_, str> {
-        Cow::from(*self)
-    }
-}
-
-impl ValidateUrl for String {
-    fn to_url_string(&self) -> Cow<'_, str> {
-        Cow::from(self)
-    }
-}
-
-impl ValidateUrl for &String {
-    fn to_url_string(&self) -> Cow<'_, str> {
-        Cow::from(*self)
-    }
-}
-
-impl ValidateUrl for Cow<'_, str> {
-    fn to_url_string(&self) -> Cow<'_, str> {
-        self.clone()
+        Cow::from(self.as_ref())
     }
 }
 
