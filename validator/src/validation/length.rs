@@ -1,4 +1,7 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet, BTreeMap, BTreeSet}};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+};
 
 #[cfg(feature = "indexmap")]
 use indexmap::{IndexMap, IndexSet};
@@ -20,138 +23,138 @@ pub fn validate_length<T: ValidateLength>(
 
 pub trait ValidateLength {
     fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-		let length = self.length();
+        let length = self.length();
 
-		if let Some(eq) = equal {
-			return length == eq;
-		} else {
-			if let Some(m) = min {
-				if length < m {
-					return false;
-				}
-			}
-			if let Some(m) = max {
-				if length > m {
-					return false;
-				}
-			}
-		}
-	
-		true
-	}
+        if let Some(eq) = equal {
+            return length == eq;
+        } else {
+            if let Some(m) = min {
+                if length < m {
+                    return false;
+                }
+            }
+            if let Some(m) = max {
+                if length > m {
+                    return false;
+                }
+            }
+        }
 
-	fn length(&self) -> u64;
+        true
+    }
+
+    fn length(&self) -> u64;
 }
 
 impl ValidateLength for String {
-	fn length(&self) -> u64 {
-		self.chars().count() as u64
-	}
+    fn length(&self) -> u64 {
+        self.chars().count() as u64
+    }
 }
 
 impl<'a> ValidateLength for &'a String {
     fn length(&self) -> u64 {
-		self.chars().count() as u64
-	}
+        self.chars().count() as u64
+    }
 }
 
 impl<'a> ValidateLength for &'a str {
     fn length(&self) -> u64 {
-		self.chars().count() as u64
-	}
+        self.chars().count() as u64
+    }
 }
 
 impl<'a> ValidateLength for Cow<'a, str> {
     fn length(&self) -> u64 {
-		self.chars().count() as u64
-	}
+        self.chars().count() as u64
+    }
 }
 
 impl<T> ValidateLength for Vec<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<'a, T> ValidateLength for &'a Vec<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<T> ValidateLength for &[T] {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<T, const N: usize> ValidateLength for [T; N] {
-	fn length(&self) -> u64 {
-		N as u64
-	}
+    fn length(&self) -> u64 {
+        N as u64
+    }
 }
 
 impl<T, const N: usize> ValidateLength for &[T; N] {
     fn length(&self) -> u64 {
-		N as u64
-	}
+        N as u64
+    }
 }
 
 impl<'a, K, V, S> ValidateLength for &'a HashMap<K, V, S> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<K, V, S> ValidateLength for HashMap<K, V, S> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<'a, T, S> ValidateLength for &'a HashSet<T, S> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<'a, K, V> ValidateLength for &'a BTreeMap<K, V> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<'a, T> ValidateLength for &'a BTreeSet<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 impl<T> ValidateLength for BTreeSet<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 #[cfg(feature = "indexmap")]
 impl<'a, K, V> ValidateLength for &'a IndexMap<K, V> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 #[cfg(feature = "indexmap")]
 impl<'a, T> ValidateLength for &'a IndexSet<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 #[cfg(feature = "indexmap")]
 impl<T> ValidateLength for IndexSet<T> {
     fn length(&self) -> u64 {
-		self.len() as u64
-	}
+        self.len() as u64
+    }
 }
 
 #[cfg(test)]
@@ -198,7 +201,6 @@ mod tests {
     fn test_validate_length_unicode_chars() {
         assert!(validate_length("日本", None, None, Some(2)));
     }
-
 
     #[test]
     fn test_validate_length_trait_equal_overrides_min_max() {
