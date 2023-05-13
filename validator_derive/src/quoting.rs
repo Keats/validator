@@ -309,26 +309,6 @@ pub fn quote_credit_card_validation(
     field_quoter.wrap_if_option(quoted)
 }
 
-#[cfg(feature = "phone")]
-pub fn quote_phone_validation(
-    field_quoter: &FieldQuoter,
-    validation: &FieldValidation,
-) -> proc_macro2::TokenStream {
-    let field_name = &field_quoter.name;
-    let validator_param = field_quoter.quote_validator_param();
-
-    let quoted_error = quote_error(validation);
-    let quoted = quote!(
-        if !::validator::validate_phone(#validator_param) {
-            #quoted_error
-            err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
-            errors.add(#field_name, err);
-        }
-    );
-
-    field_quoter.wrap_if_option(quoted)
-}
-
 #[cfg(feature = "unic")]
 pub fn quote_non_control_character_validation(
     field_quoter: &FieldQuoter,
@@ -539,8 +519,6 @@ pub fn quote_validator(
         Validator::CreditCard => {
             validations.push(quote_credit_card_validation(field_quoter, validation))
         }
-        #[cfg(feature = "phone")]
-        Validator::Phone => validations.push(quote_phone_validation(field_quoter, validation)),
         Validator::Nested => nested_validations.push(quote_nested_validation(field_quoter)),
         #[cfg(feature = "unic")]
         Validator::NonControlCharacter => {

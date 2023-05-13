@@ -404,7 +404,7 @@ fn find_validators_for_field(
                 for meta_item in meta_items {
                     match *meta_item {
                         syn::NestedMeta::Meta(ref item) => match *item {
-                            // email, url, phone, credit_card, non_control_character
+                            // email, url, credit_card, non_control_character
                             syn::Meta::Path(ref name) => {
                                 match name.get_ident().unwrap().to_string().as_ref() {
                                     "email" => {
@@ -412,11 +412,6 @@ fn find_validators_for_field(
                                     }
                                     "url" => {
                                         validators.push(FieldValidation::new(Validator::Url));
-                                    }
-                                    #[cfg(feature = "phone")]
-                                    "phone" => {
-                                        assert_string_type("phone", field_type, &field.ty);
-                                        validators.push(FieldValidation::new(Validator::Phone));
                                     }
                                     #[cfg(feature = "card")]
                                     "credit_card" => {
@@ -528,7 +523,6 @@ fn find_validators_for_field(
                                     }
                                     "email"
                                     | "url"
-                                    | "phone"
                                     | "credit_card"
                                     | "non_control_character"
                                     | "required" => {
