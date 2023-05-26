@@ -35,17 +35,9 @@ struct SignupData {
     #[validate(range(min = 18, max = 20))]
     age: u32,
     #[validate]
-    phone: Phone,
-    #[validate]
     card: Option<Card>,
     #[validate]
     preferences: Vec<Preference>,
-}
-
-#[derive(Debug, Validate, Deserialize)]
-struct Phone {
-    #[validate(phone)]
-    number: String,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -71,7 +63,6 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
-        phone: Phone { number: "+14152370800".to_string() },
         card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
         preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
@@ -86,7 +77,6 @@ fn failed_validation_points_to_original_field_name() {
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
-        phone: Phone { number: "123 invalid".to_string() },
         card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
         preferences: vec![Preference { name: "abc".to_string(), value: true }],
     };
@@ -101,21 +91,6 @@ fn failed_validation_points_to_original_field_name() {
         assert_eq!(err[0].code, "length");
     } else {
         panic!("Expected field validation errors");
-    }
-    assert!(errs.contains_key("phone"));
-    if let ValidationErrorsKind::Struct(ref errs) = errs["phone"] {
-        unwrap_map(errs, |errs| {
-            assert_eq!(errs.len(), 1);
-            assert!(errs.contains_key("number"));
-            if let ValidationErrorsKind::Field(ref errs) = errs["number"] {
-                assert_eq!(errs.len(), 1);
-                assert_eq!(errs[0].code, "phone");
-            } else {
-                panic!("Expected field validation errors");
-            }
-        });
-    } else {
-        panic!("Expected struct validation errors");
     }
     assert!(errs.contains_key("card"));
     if let ValidationErrorsKind::Struct(ref errs) = errs["card"] {
@@ -261,7 +236,6 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
-            phone: Phone { number: "+14152370800".to_string() },
             card: None,
             preferences: Vec::new(),
         };
