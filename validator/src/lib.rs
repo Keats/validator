@@ -10,8 +10,6 @@
 //! struct SignupData {
 //!     #[validate(email)]
 //!     mail: String,
-//!     #[validate(phone)]
-//!     phone: String,
 //!     #[validate(url)]
 //!     site: String,
 //!     #[validate(length(min = 1), custom = "validate_unique_username")]
@@ -49,7 +47,6 @@
 //! | `custom`                |                                                       |
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
-//! | `phone`                 | (Requires the feature `phone` to be enabled)          |
 //! | `non_control_character` | (Required the feature `unic` to be enabled)           |
 //! | `nested`                | (Uses the validation of the field type it self)       |
 //! | `required`              |                                                       |
@@ -79,8 +76,6 @@ pub use validation::length::{validate_length, ValidateLength};
 pub use validation::must_match::validate_must_match;
 #[cfg(feature = "unic")]
 pub use validation::non_control_character::validate_non_control_character;
-#[cfg(feature = "phone")]
-pub use validation::phone::validate_phone;
 pub use validation::range::{validate_range, ValidateRange};
 
 pub use validation::required::{validate_required, ValidateRequired};

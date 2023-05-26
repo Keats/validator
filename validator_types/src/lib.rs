@@ -35,8 +35,6 @@ pub enum Validator {
     },
     #[cfg(feature = "card")]
     CreditCard,
-    #[cfg(feature = "phone")]
-    Phone,
     Nested,
     #[cfg(feature = "unic")]
     NonControlCharacter,
@@ -85,8 +83,6 @@ impl Validator {
             Validator::Length { .. } => "length",
             #[cfg(feature = "card")]
             Validator::CreditCard => "credit_card",
-            #[cfg(feature = "phone")]
-            Validator::Phone => "phone",
             Validator::Nested => "nested",
             #[cfg(feature = "unic")]
             Validator::NonControlCharacter => "non_control_character",
