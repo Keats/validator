@@ -45,8 +45,6 @@ use validator::{Validate, ValidationError};
 struct SignupData {
     #[validate(email)]
     mail: String,
-    #[validate(phone)]
-    phone: String,
     #[validate(url)]
     site: String,
     #[validate(length(min = 1), custom = "validate_unique_username")]
@@ -127,8 +125,6 @@ struct SignupData {
 struct ContactDetails {
     #[validate(email)]
     mail: String,
-    #[validate(phone)]
-    phone: String
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -275,13 +271,6 @@ Examples:
 ```rust
 #[validate(credit_card)]
 ```
-
-### phone
-Tests whether the String is a valid phone number (in international format, ie.
-containing the country indicator like `+14152370800` for an US number — where `4152370800`
-is the national number equivalent, which is seen as invalid).
-To use this validator, you must enable the `phone` feature for the `validator` crate.
-This validator doesn't take any arguments: `#[validate(phone)]`;
 
 ### custom
 Calls one of your functions to perform a custom validation. The field reference will be given as a parameter to the function,
