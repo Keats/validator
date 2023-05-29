@@ -415,7 +415,6 @@ fn find_validators_for_field(
                                     }
                                     #[cfg(feature = "card")]
                                     "credit_card" => {
-                                        assert_string_type("credit_card", field_type, &field.ty);
                                         validators
                                             .push(FieldValidation::new(Validator::CreditCard));
                                     }
