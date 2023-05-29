@@ -1,12 +1,23 @@
-use std::borrow::Cow;
 use unic_ucd_common::control;
 
 #[must_use]
-pub fn validate_non_control_character<'a, T>(alphabetic: T) -> bool
-where
-    T: Into<Cow<'a, str>> + Clone,
-{
-    alphabetic.into().chars().all(|code| !control::is_control(code))
+pub fn validate_non_control_character<T: ValidateNonControlCharacter>(val: T) -> bool {
+    val.validate_non_control_character()
+}
+
+pub trait ValidateNonControlCharacter {
+    #[must_use]
+    fn validate_non_control_character(&self) -> bool {
+        self.to_non_control_character_iterator().all(|code| !control::is_control(code))
+    }
+
+    fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_>;
+}
+
+impl<T: AsRef<str>> ValidateNonControlCharacter for T {
+    fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
+        Box::new(self.as_ref().chars())
+    }
 }
 
 #[cfg(test)]
