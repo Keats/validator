@@ -67,7 +67,7 @@ mod types;
 mod validation;
 
 #[cfg(feature = "card")]
-pub use validation::cards::validate_credit_card;
+pub use validation::cards::{validate_credit_card, ValidateCreditCard};
 pub use validation::contains::validate_contains;
 pub use validation::does_not_contain::validate_does_not_contain;
 pub use validation::email::{validate_email, ValidateEmail};
