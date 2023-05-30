@@ -3,11 +3,25 @@ use std::borrow::Cow;
 use card_validate::Validate as CardValidate;
 
 #[must_use]
-pub fn validate_credit_card<'a, T>(card: T) -> bool
-where
-    T: Into<Cow<'a, str>>,
+pub fn validate_credit_card<T: ValidateCreditCard>(card: T) -> bool
 {
-    CardValidate::from(&card.into()).is_ok()
+    card.validate_credit_card()
+}
+
+pub trait ValidateCreditCard {
+    #[must_use]
+    fn validate_credit_card(&self) -> bool {
+        let card_string = self.to_credit_card_string();
+        CardValidate::from(&card_string).is_ok()
+    }
+
+    fn to_credit_card_string(&self) -> Cow<str>;
+}
+
+impl<T: AsRef<str>> ValidateCreditCard for T {
+    fn to_credit_card_string(&self) -> Cow<str> {
+        Cow::from(self.as_ref())
+    }
 }
 
 #[cfg(test)]
