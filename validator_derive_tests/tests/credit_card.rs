@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use serde::Serialize;
 use validator::Validate;
 
 #[test]
@@ -64,4 +67,35 @@ fn can_specify_message_for_credit_card() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+}
+
+#[test]
+fn can_validate_custom_impl_for_credit_card() {
+    #[derive(Debug, Serialize)]
+    struct CustomCreditCard {
+        bin: &'static str,
+        ian: &'static str,
+        check: char,
+    }
+
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(credit_card)]
+        val: CustomCreditCard,
+    }
+
+    impl validator::ValidateCreditCard for &CustomCreditCard {
+        fn to_credit_card_string(&self) -> Cow<str> {
+            Cow::from(format!("{}{}{}", &self.bin, &self.ian, &self.check,))
+        }
+    }
+
+    let valid =
+        TestStruct { val: CustomCreditCard { bin: "4242", ian: "42424242424", check: '2' } };
+
+    let invalid =
+        TestStruct { val: CustomCreditCard { bin: "4242", ian: "42424242424", check: '1' } };
+
+    assert!(valid.validate().is_ok());
+    assert!(invalid.validate().is_err());
 }
