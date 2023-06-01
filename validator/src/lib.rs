@@ -75,7 +75,9 @@ pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6};
 pub use validation::length::{validate_length, ValidateLength};
 pub use validation::must_match::validate_must_match;
 #[cfg(feature = "unic")]
-pub use validation::non_control_character::validate_non_control_character;
+pub use validation::non_control_character::{
+    validate_non_control_character, ValidateNonControlCharacter,
+};
 pub use validation::range::{validate_range, ValidateRange};
 
 pub use validation::required::{validate_required, ValidateRequired};

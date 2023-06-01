@@ -1,3 +1,4 @@
+use serde::Serialize;
 use validator::Validate;
 
 #[test]
@@ -64,4 +65,31 @@ fn can_specify_message_for_non_control_character() {
     assert!(errs.contains_key("val"));
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
+}
+
+#[test]
+fn can_validate_custom_impl_for_non_control_character() {
+    #[derive(Debug, Serialize)]
+    struct CustomNonControlCharacter {
+        char: char,
+    }
+
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(non_control_character)]
+        val: CustomNonControlCharacter,
+    }
+
+    impl validator::ValidateNonControlCharacter for &CustomNonControlCharacter {
+        fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
+            Box::new(std::iter::once(self.char))
+        }
+    }
+
+    let valid = TestStruct { val: CustomNonControlCharacter { char: 'a' } };
+
+    let invalid = TestStruct { val: CustomNonControlCharacter { char: '\u{000c}' } };
+
+    assert!(valid.validate().is_ok());
+    assert!(invalid.validate().is_err());
 }
