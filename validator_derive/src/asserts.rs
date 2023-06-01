@@ -60,16 +60,6 @@ pub static NUMBER_TYPES: [&str; 38] = [
     "Option<Option<f64>>",
 ];
 
-pub fn assert_string_type(name: &str, type_name: &str, field_type: &syn::Type) {
-    if !type_name.contains("String") && !type_name.contains("str") {
-        abort!(
-            field_type.span(),
-            "`{}` validator can only be used on String, &str, Cow<'_,str> or an Option of those",
-            name
-        );
-    }
-}
-
 pub fn assert_type_matches(
     field_name: String,
     field_type: &str,
