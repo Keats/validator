@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use lazy_static::lazy_static;
+use lazy_regex::lazy_regex;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -157,9 +158,7 @@ fn failed_validation_points_to_original_field_name() {
 
 #[test]
 fn test_can_validate_option_fields_with_lifetime() {
-    lazy_static! {
-        static ref RE2: Regex = Regex::new(r"[a-z]{2}").unwrap();
-    }
+    static RE2: Lazy<Regex> = lazy_regex!(r"[a-z]{2}");
 
     #[derive(Debug, Validate)]
     struct PutStruct<'a> {
@@ -203,9 +202,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    lazy_static! {
-        static ref RE2: Regex = Regex::new(r"[a-z]{2}").unwrap();
-    }
+    static RE2: Lazy<Regex> = lazy_regex!(r"[a-z]{2}");
 
     #[derive(Debug, Validate)]
     struct PutStruct {

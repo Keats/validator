@@ -1,16 +1,14 @@
 use proc_macro2::Span;
 use regex::Regex;
 
-use lazy_static::lazy_static;
+use lazy_regex::lazy_regex;
+use once_cell::sync::Lazy;
 use proc_macro_error::abort;
 use syn::spanned::Spanned;
 
-lazy_static! {
-    pub static ref COW_TYPE: Regex = Regex::new(r"Cow<'[a-z]+,str>").unwrap();
-    pub static ref LEN_TYPE: Regex =
-        Regex::new(r"(Option<)?((Vec|HashMap|HashSet|BTreeMap|BTreeSet|IndexMap|IndexSet)<|\[)")
-            .unwrap();
-}
+pub static COW_TYPE: Lazy<Regex> = lazy_regex!(r"Cow<'[a-z]+,str>");
+pub static LEN_TYPE: Lazy<Regex> =
+    lazy_regex!(r"(Option<)?((Vec|HashMap|HashSet|BTreeMap|BTreeSet|IndexMap|IndexSet)<|\[)");
 
 static CUSTOM_ARG_LIFETIME: &str = "v_a";
 

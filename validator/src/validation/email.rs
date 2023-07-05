@@ -1,21 +1,21 @@
-use idna::domain_to_ascii;
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::borrow::Cow;
+
+use idna::domain_to_ascii;
+use lazy_regex::lazy_regex;
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 use crate::{validation::ip::validate_ip, HasLen};
 
-lazy_static! {
-    // Regex from the specs
-    // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
-    // It will mark esoteric email addresses like quoted string as invalid
-    static ref EMAIL_USER_RE: Regex = Regex::new(r"^(?i)[a-z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap();
-    static ref EMAIL_DOMAIN_RE: Regex = Regex::new(
-        r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
-    ).unwrap();
-    // literal form, ipv4 or ipv6 address (SMTP 4.1.3)
-    static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"(?i)\[([A-f0-9:\.]+)\]\z").unwrap();
-}
+// Regex from the specs
+// https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
+// It will mark esoteric email addresses like quoted string as invalid
+static EMAIL_USER_RE: Lazy<Regex> = lazy_regex!(r"^(?i)[a-z0-9.!#$%&'*+/=?^_`{|}~-]+\z");
+static EMAIL_DOMAIN_RE: Lazy<Regex> = lazy_regex!(
+    r"(?i)^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
+);
+// literal form, ipv4 or ipv6 address (SMTP 4.1.3)
+static EMAIL_LITERAL_RE: Lazy<Regex> = lazy_regex!(r"(?i)\[([A-f0-9:\.]+)\]\z");
 
 /// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
 /// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses

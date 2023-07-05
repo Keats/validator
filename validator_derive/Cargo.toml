@@ -26,6 +26,7 @@ proc-macro-error = "1"
 if_chain = "1"
 validator_types = { version = "0.16", path = "../validator_types" }
 regex = "1.5.5"
-lazy_static = "1"
+lazy-regex = "2.5.0"
+once_cell = "1.18.0"
 
 
