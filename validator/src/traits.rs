@@ -187,6 +187,37 @@ impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> 
     }
 }
 
+/// Trait to implement if one wants to make the `starts_with` validator
+/// work for more types
+pub trait StartsWith {
+    #[must_use]
+    fn has_element(&self, needle: &str) -> bool;
+}
+
+impl StartsWith for String {
+    fn has_element(&self, needle: &str) -> bool {
+        self.starts_with(needle)
+    }
+}
+
+impl<'a> StartsWith for &'a String {
+    fn has_element(&self, needle: &str) -> bool {
+        self.starts_with(needle)
+    }
+}
+
+impl<'a> StartsWith for &'a str {
+    fn has_element(&self, needle: &str) -> bool {
+        self.starts_with(needle)
+    }
+}
+
+impl<'a> StartsWith for Cow<'a, str> {
+    fn has_element(&self, needle: &str) -> bool {
+        self.starts_with(needle)
+    }
+}
+
 /// This is the original trait that was implemented by deriving `Validate`. It will still be
 /// implemented for struct validations that don't take custom arguments. The call is being
 /// forwarded to the `ValidateArgs<'v_a>` trait.

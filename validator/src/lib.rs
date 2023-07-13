@@ -47,6 +47,7 @@
 //! | `contains`              |                                                       |
 //! | `does_not_contain`      |                                                       |
 //! | `custom`                |                                                       |
+//! | `starts_with`           |                                                       |
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
 //! | `phone`                 | (Requires the feature `phone` to be enabled)          |
@@ -84,9 +85,10 @@ pub use validation::phone::validate_phone;
 pub use validation::range::validate_range;
 
 pub use validation::required::validate_required;
+pub use validation::starts_with::validate_starts_with;
 pub use validation::urls::validate_url;
 
-pub use traits::{Contains, HasLen, Validate, ValidateArgs};
+pub use traits::{Contains, HasLen, StartsWith, Validate, ValidateArgs};
 pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 #[cfg(feature = "derive")]

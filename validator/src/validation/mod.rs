@@ -12,4 +12,5 @@ pub mod non_control_character;
 pub mod phone;
 pub mod range;
 pub mod required;
+pub mod starts_with;
 pub mod urls;
