@@ -24,7 +24,7 @@ proc-macro2 = "1"
 proc-macro-error = "1"
 if_chain = "1"
 validator_types = { version = "0.16", path = "../validator_types" }
-regex = "1.5.5"
+regex = { version = "1.5.5", default-features = false, features = ["std"] }
 lazy_static = "1"
 
 
