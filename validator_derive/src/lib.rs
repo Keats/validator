@@ -134,7 +134,10 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let input: DeriveInput = parse_macro_input!(input);
 
     // Parse the input to the ValidationData struct defined above
-    let validation_data = ValidationData::from_derive_input(&input).unwrap();
+    let validation_data = match ValidationData::from_derive_input(&input) {
+        Ok(data) => data,
+        Err(e) => return e.write_errors().into(),
+    };
 
     // Get all the fields to quote them below
     let validation_field = validation_data.data.take_struct().unwrap().fields;
