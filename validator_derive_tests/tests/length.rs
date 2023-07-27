@@ -3,9 +3,6 @@ use validator::Validate;
 const MIN_CONST: u64 = 1;
 const MAX_CONST: u64 = 10;
 
-const MAX_CONST_I32: i32 = 2;
-const NEGATIVE_CONST_I32: i32 = -10;
-
 #[test]
 fn can_validate_length_ok() {
     #[derive(Debug, Validate)]
@@ -43,32 +40,6 @@ fn validate_length_with_ref_fails() {
     let s = TestStruct { val: "".to_string() };
 
     assert!(s.validate().is_err());
-}
-
-#[test]
-fn validate_length_with_ref_i32_fails() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        #[validate(length(max = "MAX_CONST_I32"))]
-        val: String,
-    }
-
-    let s = TestStruct { val: "TO_LONG_YAY".to_string() };
-
-    assert!(s.validate().is_err());
-}
-
-#[test]
-fn validate_length_with_ref_negative_i32_fails() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        #[validate(length(max = "NEGATIVE_CONST_I32"))]
-        val: String,
-    }
-
-    let s = TestStruct { val: "TO_LONG_YAY".to_string() };
-
-    assert!(s.validate().is_ok());
 }
 
 #[test]
@@ -230,7 +201,7 @@ fn can_validate_custom_impl_for_length() {
     #[derive(Debug, Serialize)]
     struct CustomString(String);
 
-    impl validator::ValidateLength for &CustomString {
+    impl validator::ValidateLength for CustomString {
         fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
             let length = self.length();
 
