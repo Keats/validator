@@ -2,6 +2,7 @@
 #![allow(unused)]
 
 use darling::ast::Data;
+use darling::util::Override;
 use darling::{FromDeriveInput, FromField, FromMeta};
 use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
@@ -29,7 +30,7 @@ struct ValidateField {
     card: Option<Card>,
     contains: Option<Contains>,
     does_not_contain: Option<DoesNotContain>,
-    email: Option<Email>,
+    email: Override<Email>,
     ip: Option<Ip>,
     length: Option<Length>,
     must_match: Option<MustMatch>,
@@ -47,7 +48,14 @@ impl ToTokens for ValidateField {
         let field_name_str = self.ident.clone().unwrap().to_string();
 
         let length = length_tokens(self.length.clone(), &field_name, &field_name_str);
-        let email = email_tokens(self.email.clone(), &field_name, &field_name_str);
+        let email = email_tokens(
+            match self.email.clone() {
+                Override::Inherit => Some(Email::default()),
+                Override::Explicit(email) => Some(email),
+            },
+            &field_name,
+            &field_name_str,
+        );
 
         tokens.extend(quote! {
             #length
