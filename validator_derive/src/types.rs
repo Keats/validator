@@ -40,9 +40,9 @@ pub struct Ip {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct Length {
-    pub min: Option<u64>,
-    pub max: Option<u64>,
-    pub equal: Option<u64>,
+    pub min: Option<Expr>,
+    pub max: Option<Expr>,
+    pub equal: Option<Expr>,
     pub message: Option<String>,
     pub code: Option<String>,
 }

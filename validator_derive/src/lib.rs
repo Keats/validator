@@ -7,9 +7,13 @@ use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Expr};
 
+use tokens::email::email_tokens;
+use tokens::length::length_tokens;
 use types::*;
 
+mod tokens;
 mod types;
+mod utils;
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`
@@ -39,77 +43,16 @@ struct ValidateField {
 impl ToTokens for ValidateField {
     // Move all the token generation to seperate functions in seperate modules?
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        // Length validation tokens
-        if let Some(length) = &self.length {
-            let (min, min_err) = if let Some(v) = length.min {
-                (quote!(Some(#v)), quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);))
-            } else {
-                (quote!(None), quote!())
-            };
-            let (max, max_err) = if let Some(v) = length.max {
-                (quote!(Some(#v)), quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);))
-            } else {
-                (quote!(None), quote!())
-            };
-            let (equal, equal_err) = if let Some(v) = length.equal {
-                (quote!(Some(#v)), quote!(err.add_param(::std::borrow::Cow::from("equal"), &#v);))
-            } else {
-                (quote!(None), quote!())
-            };
+        let field_name = self.ident.clone().unwrap();
+        let field_name_str = self.ident.clone().unwrap().to_string();
 
-            let message = if let Some(m) = &length.message {
-                quote!(
-                    err.message = Some(::std::borrow::Cow::from(#m));
-                )
-            } else {
-                quote!()
-            };
+        let length = length_tokens(self.length.clone(), &field_name, &field_name_str);
+        let email = email_tokens(self.email.clone(), &field_name, &field_name_str);
 
-            let field_name = self.ident.clone().unwrap();
-            let field_name_str = &self.ident.clone().unwrap().to_string();
-
-            // We don't need to use the `validate_length()` function
-            // As the type we're validating _should_ already implement this function
-            // If it doesn't, a compile error should show up about "T doesn't impl this trait"
-            tokens.extend(quote! {
-                use ::validator::ValidateLength;
-                if !self.#field_name.validate_length(#min, #max, #equal) {
-                    let mut err = ::validator::ValidationError::new("length");
-                    #message
-                    #min_err
-                    #max_err
-                    #equal_err
-                    err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
-                    errors.add(#field_name_str, err);
-                }
-            })
-        }
-
-        // Email validation tokens
-        if let Some(email) = &self.email {
-            let message = if let Some(m) = &email.message {
-                quote!(
-                    err.message = Some(::std::borrow::Cow::from(#m));
-                )
-            } else {
-                quote!()
-            };
-
-            let field_name = self.ident.clone().unwrap();
-            let field_name_str = &self.ident.clone().unwrap().to_string();
-
-            tokens.extend(quote! {
-                use ::validator::ValidateEmail;
-                if !self.#field_name.validate_email() {
-                    let mut err = ::validator::ValidationError::new("email");
-                    #message
-                    err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
-                    errors.add(#field_name_str, err);
-                }
-            })
-        }
-
-        // To be expanded with all other validations
+        tokens.extend(quote! {
+            #length
+            #email
+        });
     }
 }
 
