@@ -7,22 +7,9 @@ use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Expr};
 
-// Structs to hold the validation information and to provide attributes
-// The name of a field here corresponds to an attribute like
-// #[validate(length(min = 1, max = 10, equal = 8, message = ""))]
-//                   ^^^      ^^^       ^^^^^      ^^^^^^^
-#[derive(Debug, Clone, FromMeta)]
-struct Length {
-    min: Option<u64>,
-    max: Option<u64>,
-    equal: Option<u64>,
-    message: Option<String>,
-}
+use types::*;
 
-#[derive(Debug, Clone, FromMeta)]
-struct Email {
-    message: Option<String>,
-}
+mod types;
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`
@@ -35,8 +22,17 @@ struct Email {
 struct ValidateField {
     ident: Option<syn::Ident>,
     ty: syn::Type,
+    card: Option<Card>,
+    contains: Option<Contains>,
+    does_not_contain: Option<DoesNotContain>,
     email: Option<Email>,
+    ip: Option<Ip>,
     length: Option<Length>,
+    must_match: Option<MustMatch>,
+    non_control_character: Option<NonControlCharacter>,
+    range: Option<Range>,
+    required: Option<Required>,
+    url: Option<Url>,
 }
 
 // The field gets converted to tokens in the same format as it was before
