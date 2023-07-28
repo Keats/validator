@@ -5,12 +5,10 @@ use crate::types::Length;
 use crate::utils::{quote_code, quote_message};
 
 pub fn length_tokens(
-    length: Option<Length>,
+    length: Length,
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let length = if let Some(l) = length { l } else { return quote!() };
-
     let (min, min_err) = if let Some(v) = length.min {
         (quote!(Some(#v)), quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);))
     } else {

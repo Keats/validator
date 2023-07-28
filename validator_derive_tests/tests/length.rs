@@ -201,28 +201,7 @@ fn can_validate_custom_impl_for_length() {
     #[derive(Debug, Serialize)]
     struct CustomString(String);
 
-    impl validator::ValidateLength for CustomString {
-        fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
-            let length = self.length();
-
-            if let Some(eq) = equal {
-                return length == eq;
-            } else {
-                if let Some(m) = min {
-                    if length < m {
-                        return false;
-                    }
-                }
-                if let Some(m) = max {
-                    if length > m {
-                        return false;
-                    }
-                }
-            }
-
-            true
-        }
-
+    impl validator::ValidateLength<u64> for CustomString {
         fn length(&self) -> u64 {
             self.0.chars().count() as u64
         }

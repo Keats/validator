@@ -30,7 +30,7 @@ struct ValidateField {
     card: Option<Card>,
     contains: Option<Contains>,
     does_not_contain: Option<DoesNotContain>,
-    email: Override<Email>,
+    email: Option<Override<Email>>,
     ip: Option<Ip>,
     length: Option<Length>,
     must_match: Option<MustMatch>,
@@ -47,15 +47,24 @@ impl ToTokens for ValidateField {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
 
-        let length = length_tokens(self.length.clone(), &field_name, &field_name_str);
-        let email = email_tokens(
-            match self.email.clone() {
-                Override::Inherit => Some(Email::default()),
-                Override::Explicit(email) => Some(email),
-            },
-            &field_name,
-            &field_name_str,
-        );
+        let length = if let Some(length) = self.length.clone() {
+            length_tokens(length, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
+        let email = if let Some(email) = self.email.clone() {
+            email_tokens(
+                match email {
+                    Override::Inherit => Email::default(),
+                    Override::Explicit(email) => email,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
 
         tokens.extend(quote! {
             #length

@@ -5,12 +5,10 @@ use crate::types::Email;
 use crate::utils::{quote_code, quote_message};
 
 pub fn email_tokens(
-    email: Option<Email>,
+    email: Email,
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let email = if let Some(e) = email { e } else { return quote!() };
-
     let message = quote_message(email.message);
     let code = quote_code(email.code, "email");
 

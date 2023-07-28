@@ -12,7 +12,7 @@ use indexmap::{IndexMap, IndexSet};
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
 #[must_use]
-pub fn validate_length<T: ValidateLength>(
+pub fn validate_length<T: ValidateLength<u64>>(
     value: T,
     min: Option<u64>,
     max: Option<u64>,
@@ -21,8 +21,11 @@ pub fn validate_length<T: ValidateLength>(
     value.validate_length(min, max, equal)
 }
 
-pub trait ValidateLength {
-    fn validate_length(&self, min: Option<u64>, max: Option<u64>, equal: Option<u64>) -> bool {
+pub trait ValidateLength<T>
+where
+    T: PartialEq + PartialOrd,
+{
+    fn validate_length(&self, min: Option<T>, max: Option<T>, equal: Option<T>) -> bool {
         let length = self.length();
 
         if let Some(eq) = equal {
@@ -43,115 +46,115 @@ pub trait ValidateLength {
         true
     }
 
-    fn length(&self) -> u64;
+    fn length(&self) -> T;
 }
 
-impl ValidateLength for String {
+impl ValidateLength<u64> for String {
     fn length(&self) -> u64 {
         self.chars().count() as u64
     }
 }
 
-impl<'a> ValidateLength for &'a String {
+impl<'a> ValidateLength<u64> for &'a String {
     fn length(&self) -> u64 {
         self.chars().count() as u64
     }
 }
 
-impl<'a> ValidateLength for &'a str {
+impl<'a> ValidateLength<u64> for &'a str {
     fn length(&self) -> u64 {
         self.chars().count() as u64
     }
 }
 
-impl<'a> ValidateLength for Cow<'a, str> {
+impl<'a> ValidateLength<u64> for Cow<'a, str> {
     fn length(&self) -> u64 {
         self.chars().count() as u64
     }
 }
 
-impl<T> ValidateLength for Vec<T> {
+impl<T> ValidateLength<u64> for Vec<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<'a, T> ValidateLength for &'a Vec<T> {
+impl<'a, T> ValidateLength<u64> for &'a Vec<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<T> ValidateLength for &[T] {
+impl<T> ValidateLength<u64> for &[T] {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<T, const N: usize> ValidateLength for [T; N] {
+impl<T, const N: usize> ValidateLength<u64> for [T; N] {
     fn length(&self) -> u64 {
         N as u64
     }
 }
 
-impl<T, const N: usize> ValidateLength for &[T; N] {
+impl<T, const N: usize> ValidateLength<u64> for &[T; N] {
     fn length(&self) -> u64 {
         N as u64
     }
 }
 
-impl<'a, K, V, S> ValidateLength for &'a HashMap<K, V, S> {
+impl<'a, K, V, S> ValidateLength<u64> for &'a HashMap<K, V, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<K, V, S> ValidateLength for HashMap<K, V, S> {
+impl<K, V, S> ValidateLength<u64> for HashMap<K, V, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<'a, T, S> ValidateLength for &'a HashSet<T, S> {
+impl<'a, T, S> ValidateLength<u64> for &'a HashSet<T, S> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<'a, K, V> ValidateLength for &'a BTreeMap<K, V> {
+impl<'a, K, V> ValidateLength<u64> for &'a BTreeMap<K, V> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<'a, T> ValidateLength for &'a BTreeSet<T> {
+impl<'a, T> ValidateLength<u64> for &'a BTreeSet<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
-impl<T> ValidateLength for BTreeSet<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, K, V> ValidateLength for &'a IndexMap<K, V> {
+impl<T> ValidateLength<u64> for BTreeSet<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
 #[cfg(feature = "indexmap")]
-impl<'a, T> ValidateLength for &'a IndexSet<T> {
+impl<'a, K, V> ValidateLength<u64> for &'a IndexMap<K, V> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
 }
 
 #[cfg(feature = "indexmap")]
-impl<T> ValidateLength for IndexSet<T> {
+impl<'a, T> ValidateLength<u64> for &'a IndexSet<T> {
+    fn length(&self) -> u64 {
+        self.len() as u64
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<T> ValidateLength<u64> for IndexSet<T> {
     fn length(&self) -> u64 {
         self.len() as u64
     }
