@@ -129,4 +129,19 @@ mod tests {
         assert!(!validate_range(10, None, None, Some(10), None));
         assert!(validate_range(9, None, None, Some(8), None));
     }
+
+    #[test]
+    fn test_validate_range_with_enums() {
+        #[derive(PartialEq, PartialOrd)]
+        enum Test {
+            One,
+            Two,
+            Three,
+            Four,
+            Five,
+        }
+
+        assert!(validate_range(Test::Three, Some(Test::One), Some(Test::Four), None, None));
+        assert!(!validate_range(Test::Five, Some(Test::One), Some(Test::Four), None, None));
+    }
 }
