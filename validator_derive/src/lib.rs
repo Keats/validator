@@ -12,6 +12,7 @@ use tokens::cards::credit_card_tokens;
 use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
+use tokens::non_control_character::non_control_char_tokens;
 use tokens::url::url_tokens;
 use types::*;
 
@@ -37,7 +38,7 @@ struct ValidateField {
     ip: Option<Override<Ip>>,
     length: Option<Length>,
     must_match: Option<MustMatch>,
-    non_control_character: Option<NonControlCharacter>,
+    non_control_character: Option<Override<NonControlCharacter>>,
     range: Option<Range>,
     required: Option<Required>,
     url: Option<Override<Url>>,
@@ -70,6 +71,7 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Credit card validation
         let card = if let Some(credit_card) = self.credit_card.clone() {
             credit_card_tokens(
                 match credit_card {
@@ -83,6 +85,7 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Url validation
         let url = if let Some(url) = self.url.clone() {
             url_tokens(
                 match url {
@@ -96,11 +99,26 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Ip address validation
         let ip = if let Some(ip) = self.ip.clone() {
             ip_tokens(
                 match ip {
                     Override::Inherit => Ip::default(),
                     Override::Explicit(i) => i,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
+
+        // Non control character validation
+        let ncc = if let Some(ncc) = self.non_control_character.clone() {
+            non_control_char_tokens(
+                match ncc {
+                    Override::Inherit => NonControlCharacter::default(),
+                    Override::Explicit(n) => n,
                 },
                 &field_name,
                 &field_name_str,
@@ -115,6 +133,7 @@ impl ToTokens for ValidateField {
             #card
             #url
             #ip
+            #ncc
         });
     }
 }
