@@ -34,8 +34,8 @@ pub struct Email {
 
 #[derive(Debug, Clone, FromMeta, Default)]
 pub struct Ip {
-    pub v4: bool,
-    pub v6: bool,
+    pub v4: Option<bool>,
+    pub v6: Option<bool>,
     pub message: Option<String>,
     pub code: Option<String>,
 }
