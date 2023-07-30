@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::fmt::Display;
 use std::net::IpAddr;
 use std::str::FromStr;
 
