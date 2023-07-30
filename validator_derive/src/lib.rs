@@ -10,6 +10,7 @@ use syn::{parse_macro_input, DeriveInput, Expr};
 
 use tokens::cards::credit_card_tokens;
 use tokens::email::email_tokens;
+use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
 use tokens::url::url_tokens;
 use types::*;
@@ -33,7 +34,7 @@ struct ValidateField {
     contains: Option<Contains>,
     does_not_contain: Option<DoesNotContain>,
     email: Option<Override<Email>>,
-    ip: Option<Ip>,
+    ip: Option<Override<Ip>>,
     length: Option<Length>,
     must_match: Option<MustMatch>,
     non_control_character: Option<NonControlCharacter>,
@@ -95,11 +96,25 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        let ip = if let Some(ip) = self.ip.clone() {
+            ip_tokens(
+                match ip {
+                    Override::Inherit => Ip::default(),
+                    Override::Explicit(i) => i,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
             #card
             #url
+            #ip
         });
     }
 }
