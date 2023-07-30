@@ -11,6 +11,7 @@ use syn::{parse_macro_input, DeriveInput, Expr};
 use tokens::cards::credit_card_tokens;
 use tokens::email::email_tokens;
 use tokens::length::length_tokens;
+use tokens::url::url_tokens;
 use types::*;
 
 mod tokens;
@@ -38,7 +39,7 @@ struct ValidateField {
     non_control_character: Option<NonControlCharacter>,
     range: Option<Range>,
     required: Option<Required>,
-    url: Option<Url>,
+    url: Option<Override<Url>>,
 }
 
 // The field gets converted to tokens in the same format as it was before
@@ -81,10 +82,24 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        let url = if let Some(url) = self.url.clone() {
+            url_tokens(
+                match url {
+                    Override::Inherit => Url::default(),
+                    Override::Explicit(u) => u,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
             #card
+            #url
         });
     }
 }

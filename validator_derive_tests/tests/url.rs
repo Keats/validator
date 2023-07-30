@@ -87,7 +87,7 @@ fn can_validate_custom_impl_for_url() {
         val: CustomUrl,
     }
 
-    impl validator::ValidateUrl for &CustomUrl {
+    impl validator::ValidateUrl for CustomUrl {
         fn to_url_string(&self) -> Cow<'_, str> {
             Cow::from(format!(
                 "{}://{}.{}.{}",

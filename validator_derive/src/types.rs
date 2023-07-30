@@ -77,7 +77,7 @@ pub struct Required {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct Url {
     pub message: Option<String>,
     pub code: Option<String>,
