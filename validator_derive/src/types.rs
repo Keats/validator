@@ -6,7 +6,7 @@ use syn::Expr;
 // #[validate(card(message = "something's wrong", code = "1234"))]
 //                 ^^^^^^^                        ^^^^
 //
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct Card {
     pub message: Option<String>,
     pub code: Option<String>,
@@ -32,7 +32,7 @@ pub struct Email {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct Ip {
     pub message: Option<String>,
     pub code: Option<String>,
@@ -55,7 +55,7 @@ pub struct MustMatch {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct NonControlCharacter {
     pub message: Option<String>,
     pub code: Option<String>,

@@ -8,6 +8,7 @@ use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Expr};
 
+use tokens::cards::credit_card_tokens;
 use tokens::email::email_tokens;
 use tokens::length::length_tokens;
 use types::*;
@@ -27,7 +28,7 @@ mod utils;
 struct ValidateField {
     ident: Option<syn::Ident>,
     ty: syn::Type,
-    card: Option<Card>,
+    credit_card: Option<Override<Card>>,
     contains: Option<Contains>,
     does_not_contain: Option<DoesNotContain>,
     email: Option<Override<Email>>,
@@ -42,22 +43,36 @@ struct ValidateField {
 
 // The field gets converted to tokens in the same format as it was before
 impl ToTokens for ValidateField {
-    // Move all the token generation to seperate functions in seperate modules?
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
 
+        // Length validation
         let length = if let Some(length) = self.length.clone() {
             length_tokens(length, &field_name, &field_name_str)
         } else {
             quote!()
         };
 
+        // Email validation
         let email = if let Some(email) = self.email.clone() {
             email_tokens(
                 match email {
                     Override::Inherit => Email::default(),
-                    Override::Explicit(email) => email,
+                    Override::Explicit(e) => e,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
+
+        let card = if let Some(credit_card) = self.credit_card.clone() {
+            credit_card_tokens(
+                match credit_card {
+                    Override::Inherit => Card::default(),
+                    Override::Explicit(c) => c,
                 },
                 &field_name,
                 &field_name_str,
@@ -69,6 +84,7 @@ impl ToTokens for ValidateField {
         tokens.extend(quote! {
             #length
             #email
+            #card
         });
     }
 }
