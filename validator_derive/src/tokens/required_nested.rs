@@ -22,7 +22,7 @@ pub fn required_nested_tokens(
         }
 
         if let Some(ref #field_name) = self.#field_name {
-            let nested_result = #field_name.validate();
+            errors.merge(#field_name_str, #field_name.validate());
         }
     }
 }
