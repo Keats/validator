@@ -9,6 +9,8 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Expr};
 
 use tokens::cards::credit_card_tokens;
+use tokens::contains::contains_tokens;
+use tokens::does_not_contain::does_not_contain_tokens;
 use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
@@ -165,6 +167,18 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        let contains = if let Some(contains) = self.contains.clone() {
+            contains_tokens(contains, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
+        let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
+            does_not_contain_tokens(does_not_contain, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
@@ -175,6 +189,8 @@ impl ToTokens for ValidateField {
             #range
             #required
             #required_nested
+            #contains
+            #does_not_contain
         });
     }
 }

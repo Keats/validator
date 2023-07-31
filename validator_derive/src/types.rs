@@ -14,14 +14,14 @@ pub struct Card {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct Contains {
-    pub needle: Option<String>,
+    pub pattern: Option<String>,
     pub message: Option<String>,
     pub code: Option<String>,
 }
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct DoesNotContain {
-    pub needle: Option<String>,
+    pub pattern: Option<String>,
     pub message: Option<String>,
     pub code: Option<String>,
 }
