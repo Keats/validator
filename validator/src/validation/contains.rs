@@ -1,4 +1,5 @@
-use crate::traits::Contains;
+use std::borrow::Cow;
+use std::collections::HashMap;
 
 /// Validates whether the value contains the needle
 /// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>
@@ -6,6 +7,47 @@ use crate::traits::Contains;
 #[must_use]
 pub fn validate_contains<T: Contains>(val: T, needle: &str) -> bool {
     val.has_element(needle)
+}
+
+pub trait Contains {
+    #[must_use]
+    fn has_element(&self, needle: &str) -> bool;
+}
+
+impl Contains for String {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
+impl<'a> Contains for &'a String {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
+impl<'a> Contains for &'a str {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
+impl<'a> Contains for Cow<'a, str> {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains(needle)
+    }
+}
+
+impl<S, H: ::std::hash::BuildHasher> Contains for HashMap<String, S, H> {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains_key(needle)
+    }
+}
+
+impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> {
+    fn has_element(&self, needle: &str) -> bool {
+        self.contains_key(needle)
+    }
 }
 
 #[cfg(test)]
