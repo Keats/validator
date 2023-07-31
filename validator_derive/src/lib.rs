@@ -13,6 +13,7 @@ use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
 use tokens::non_control_character::non_control_char_tokens;
+use tokens::range::range_tokens;
 use tokens::url::url_tokens;
 use types::*;
 
@@ -127,6 +128,13 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Range validation
+        let range = if let Some(range) = self.range.clone() {
+            range_tokens(range, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
@@ -134,6 +142,7 @@ impl ToTokens for ValidateField {
             #url
             #ip
             #ncc
+            #range
         });
     }
 }
