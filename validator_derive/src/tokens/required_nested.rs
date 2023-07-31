@@ -4,7 +4,7 @@ use syn::Ident;
 use crate::types::Required;
 use crate::utils::{quote_code, quote_message};
 
-pub fn required_tokens(
+pub fn required_nested_tokens(
     required: Required,
     field_name: &Ident,
     field_name_str: &str,
@@ -19,6 +19,10 @@ pub fn required_tokens(
             #message
             err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
             errors.add(#field_name_str, err);
+        }
+
+        if let Some(ref #field_name) = self.#field_name {
+            let nested_result = #field_name.validate();
         }
     }
 }

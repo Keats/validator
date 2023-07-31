@@ -73,7 +73,7 @@ pub struct Range {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct Required {
     pub message: Option<String>,
     pub code: Option<String>,

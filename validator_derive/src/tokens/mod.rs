@@ -8,4 +8,5 @@ pub mod must_match;
 pub mod non_control_character;
 pub mod range;
 pub mod required;
+pub mod required_nested;
 pub mod url;

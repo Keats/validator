@@ -14,6 +14,7 @@ use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
 use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
+use tokens::required::required_tokens;
 use tokens::url::url_tokens;
 use types::*;
 
@@ -41,7 +42,8 @@ struct ValidateField {
     must_match: Option<MustMatch>,
     non_control_character: Option<Override<NonControlCharacter>>,
     range: Option<Range>,
-    required: Option<Required>,
+    required: Option<Override<Required>>,
+    required_nested: Option<Override<Required>>,
     url: Option<Override<Url>>,
 }
 
@@ -135,6 +137,20 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Required validation
+        let required = if let Some(required) = self.required.clone() {
+            required_tokens(
+                match required {
+                    Override::Inherit => Required::default(),
+                    Override::Explicit(r) => r,
+                },
+                &field_name,
+                &field_name_str,
+            )
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
@@ -143,6 +159,7 @@ impl ToTokens for ValidateField {
             #ip
             #ncc
             #range
+            #required
         });
     }
 }
