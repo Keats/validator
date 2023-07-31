@@ -1,51 +1,43 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 
-/// Validates whether the value contains the needle
-/// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>
-/// by default.
-#[must_use]
-pub fn validate_contains<T: Contains>(val: T, needle: &str) -> bool {
-    val.has_element(needle)
+pub trait ValidateContains {
+    fn validate_contains(&self, needle: &str) -> bool;
 }
 
-pub trait Contains {
-    #[must_use]
-    fn has_element(&self, needle: &str) -> bool;
-}
-
-impl Contains for String {
-    fn has_element(&self, needle: &str) -> bool {
+impl ValidateContains for String {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains(needle)
     }
 }
 
-impl<'a> Contains for &'a String {
-    fn has_element(&self, needle: &str) -> bool {
+impl ValidateContains for &String {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains(needle)
     }
 }
 
-impl<'a> Contains for &'a str {
-    fn has_element(&self, needle: &str) -> bool {
+impl<'a> ValidateContains for &'a str {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains(needle)
     }
 }
 
-impl<'a> Contains for Cow<'a, str> {
-    fn has_element(&self, needle: &str) -> bool {
+impl<'a> ValidateContains for Cow<'a, str> {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains(needle)
     }
 }
 
-impl<S, H: ::std::hash::BuildHasher> Contains for HashMap<String, S, H> {
-    fn has_element(&self, needle: &str) -> bool {
+impl<S, H: BuildHasher> ValidateContains for HashMap<String, S, H> {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains_key(needle)
     }
 }
 
-impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> {
-    fn has_element(&self, needle: &str) -> bool {
+impl<'a, S, H: BuildHasher> ValidateContains for &'a HashMap<String, S, H> {
+    fn validate_contains(&self, needle: &str) -> bool {
         self.contains_key(needle)
     }
 }
@@ -59,41 +51,41 @@ mod tests {
 
     #[test]
     fn test_validate_contains_string() {
-        assert!(validate_contains("hey", "e"));
+        assert!("hey".validate_contains("e"));
     }
 
     #[test]
     fn test_validate_contains_string_can_fail() {
-        assert!(!validate_contains("hey", "o"));
+        assert!("hey".validate_contains("o"));
     }
 
     #[test]
     fn test_validate_contains_hashmap_key() {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
-        assert!(validate_contains(map, "hey"));
+        assert!(map.validate_contains("hey"));
     }
 
     #[test]
     fn test_validate_contains_hashmap_key_can_fail() {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
-        assert!(!validate_contains(map, "bob"));
+        assert!(!map.validate_contains("bob"));
     }
 
     #[test]
     fn test_validate_contains_cow() {
         let test: Cow<'static, str> = "hey".into();
-        assert!(validate_contains(test, "e"));
+        assert!(test.validate_contains("e"));
         let test: Cow<'static, str> = String::from("hey").into();
-        assert!(validate_contains(test, "e"));
+        assert!(test.validate_contains("e"));
     }
 
     #[test]
     fn test_validate_contains_cow_can_fail() {
         let test: Cow<'static, str> = "hey".into();
-        assert!(!validate_contains(test, "o"));
+        assert!(!test.validate_contains("o"));
         let test: Cow<'static, str> = String::from("hey").into();
-        assert!(!validate_contains(test, "o"));
+        assert!(!test.validate_contains("o"));
     }
 }

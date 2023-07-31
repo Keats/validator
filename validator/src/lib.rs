@@ -68,8 +68,8 @@ mod validation;
 
 #[cfg(feature = "card")]
 pub use validation::cards::{validate_credit_card, ValidateCreditCard};
-pub use validation::contains::validate_contains;
-pub use validation::does_not_contain::validate_does_not_contain;
+pub use validation::contains::ValidateContains;
+pub use validation::does_not_contain::ValidateDoesNotContain;
 pub use validation::email::{validate_email, ValidateEmail};
 pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6, ValidateIp};
 pub use validation::length::{validate_length, ValidateLength};
@@ -83,7 +83,7 @@ pub use validation::range::{validate_range, ValidateRange};
 pub use validation::required::{validate_required, ValidateRequired};
 pub use validation::urls::{validate_url, ValidateUrl};
 
-pub use traits::{Contains, HasLen, Validate, ValidateArgs};
+pub use traits::{HasLen, Validate, ValidateArgs};
 pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 #[cfg(feature = "derive")]

@@ -138,10 +138,9 @@ mod tests {
             Two,
             Three,
             Four,
-            Five,
         }
 
-        assert!(validate_range(Test::Three, Some(Test::One), Some(Test::Four), None, None));
-        assert!(!validate_range(Test::Five, Some(Test::One), Some(Test::Four), None, None));
+        assert!(validate_range(Test::Two, Some(Test::One), Some(Test::Three), None, None));
+        assert!(!validate_range(Test::Four, Some(Test::One), Some(Test::Three), None, None));
     }
 }
