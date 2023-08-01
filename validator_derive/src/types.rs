@@ -51,8 +51,7 @@ pub struct Length {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct MustMatch {
-    pub a: Option<Expr>,
-    pub b: Option<Expr>,
+    pub other: Option<Expr>,
     pub message: Option<String>,
     pub code: Option<String>,
 }

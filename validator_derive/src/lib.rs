@@ -14,6 +14,7 @@ use tokens::does_not_contain::does_not_contain_tokens;
 use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
+use tokens::must_match::must_match_tokens;
 use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
 use tokens::required::required_tokens;
@@ -154,6 +155,7 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Required nested validation
         let required_nested = if let Some(required_nested) = self.required_nested.clone() {
             required_nested_tokens(
                 match required_nested {
@@ -167,14 +169,23 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Contains validation
         let contains = if let Some(contains) = self.contains.clone() {
             contains_tokens(contains, &field_name, &field_name_str)
         } else {
             quote!()
         };
 
+        // Does not contain validation
         let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
             does_not_contain_tokens(does_not_contain, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
+        // Must match validation
+        let must_match = if let Some(must_match) = self.must_match.clone() {
+            must_match_tokens(must_match, &field_name, &field_name_str)
         } else {
             quote!()
         };
@@ -191,6 +202,7 @@ impl ToTokens for ValidateField {
             #required_nested
             #contains
             #does_not_contain
+            #must_match
         });
     }
 }
