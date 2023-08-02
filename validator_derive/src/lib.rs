@@ -10,6 +10,7 @@ use syn::{parse_macro_input, DeriveInput, Expr, Lit};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
+use tokens::custom::custom_tokens;
 use tokens::does_not_contain::does_not_contain_tokens;
 use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
@@ -51,6 +52,7 @@ struct ValidateField {
     required_nested: Option<Override<Required>>,
     url: Option<Override<Url>>,
     regex: Option<Regex>,
+    custom: Option<Custom>,
 }
 
 // The field gets converted to tokens in the same format as it was before
@@ -192,8 +194,16 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Regex validation
         let regex = if let Some(regex) = self.regex.clone() {
             regex_tokens(regex, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
+        // Custom validation
+        let custom = if let Some(custom) = self.custom.clone() {
+            custom_tokens(custom, &field_name, &field_name_str)
         } else {
             quote!()
         };
@@ -212,6 +222,7 @@ impl ToTokens for ValidateField {
             #does_not_contain
             #must_match
             #regex
+            #custom
         });
     }
 }

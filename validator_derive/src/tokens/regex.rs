@@ -9,17 +9,13 @@ pub fn regex_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let (path, path_err) = if let Some(v) = regex.path {
-        (quote!(#v), quote!(err.add_param(::std::borrow::Cow::from("regex"), &#v);))
-    } else {
-        panic!("`path` attribute is required")
-    };
+    let path = regex.path;
+    let path_err = quote!(err.add_param(::std::borrow::Cow::from("regex"), &#path););
 
     let message = quote_message(regex.message);
     let code = quote_code(regex.code, "regex");
 
     quote! {
-        use ::validator::ValidateEmail;
         if !#path.is_match(&self.#field_name) {
             #code
             #message

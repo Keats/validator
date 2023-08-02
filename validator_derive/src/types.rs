@@ -86,7 +86,14 @@ pub struct Url {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct Regex {
-    pub path: Option<Expr>,
+    pub path: Expr,
+    pub message: Option<String>,
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Clone, FromMeta)]
+pub struct Custom {
+    pub function: Expr,
     pub message: Option<String>,
     pub code: Option<String>,
 }

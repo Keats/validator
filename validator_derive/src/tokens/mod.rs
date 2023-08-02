@@ -1,5 +1,6 @@
 pub mod cards;
 pub mod contains;
+pub mod custom;
 pub mod does_not_contain;
 pub mod email;
 pub mod ip;
