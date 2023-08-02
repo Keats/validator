@@ -6,7 +6,7 @@ use darling::util::Override;
 use darling::{FromDeriveInput, FromField, FromMeta};
 use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Expr};
+use syn::{parse_macro_input, DeriveInput, Expr, Lit};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -17,6 +17,7 @@ use tokens::length::length_tokens;
 use tokens::must_match::must_match_tokens;
 use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
+use tokens::regex::regex_tokens;
 use tokens::required::required_tokens;
 use tokens::required_nested::required_nested_tokens;
 use tokens::url::url_tokens;
@@ -49,6 +50,7 @@ struct ValidateField {
     required: Option<Override<Required>>,
     required_nested: Option<Override<Required>>,
     url: Option<Override<Url>>,
+    regex: Option<Regex>,
 }
 
 // The field gets converted to tokens in the same format as it was before
@@ -190,6 +192,12 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        let regex = if let Some(regex) = self.regex.clone() {
+            regex_tokens(regex, &field_name, &field_name_str)
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
@@ -203,6 +211,7 @@ impl ToTokens for ValidateField {
             #contains
             #does_not_contain
             #must_match
+            #regex
         });
     }
 }

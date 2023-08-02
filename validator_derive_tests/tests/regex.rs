@@ -10,7 +10,7 @@ lazy_static! {
 fn can_validate_valid_regex() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex = "crate::RE2")]
+        #[validate(regex(path = "crate::RE2"))]
         val: String,
     }
 
@@ -23,7 +23,7 @@ fn can_validate_valid_regex() {
 fn bad_value_for_regex_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(regex = "crate::RE2")]
+        #[validate(regex(path = "crate::RE2"))]
         val: String,
     }
 

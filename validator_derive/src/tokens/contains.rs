@@ -12,7 +12,7 @@ pub fn contains_tokens(
     let (needle, needle_err) = if let Some(v) = contains.pattern {
         (quote!(#v), quote!(err.add_param(::std::borrow::Cow::from("needle"), &#v);))
     } else {
-        (quote!(None), quote!())
+        panic!("`pattern` attribute is required")
     };
 
     let message = quote_message(contains.message);

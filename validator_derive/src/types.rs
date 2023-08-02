@@ -83,3 +83,10 @@ pub struct Url {
     pub message: Option<String>,
     pub code: Option<String>,
 }
+
+#[derive(Debug, Clone, FromMeta)]
+pub struct Regex {
+    pub path: Option<Expr>,
+    pub message: Option<String>,
+    pub code: Option<String>,
+}

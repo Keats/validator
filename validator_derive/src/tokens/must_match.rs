@@ -12,7 +12,7 @@ pub fn must_match_tokens(
     let (other, other_err) = if let Some(v) = must_match.other {
         (quote!(self.#v), quote!(err.add_param(::std::borrow::Cow::from("other"), &self.#v);))
     } else {
-        (quote!(None), quote!())
+        panic!("`other` attribute is required")
     };
 
     let message = quote_message(must_match.message);
