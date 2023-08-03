@@ -1,12 +1,15 @@
 // #![recursion_limit = "128"]
 #![allow(unused)]
 
+use std::collections::HashMap;
+
 use darling::ast::Data;
 use darling::util::Override;
 use darling::{FromDeriveInput, FromField, FromMeta};
+use proc_macro2::TokenStream;
 use proc_macro_error::proc_macro_error;
-use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Expr, Lit};
+use quote::{format_ident, quote, ToTokens};
+use syn::{parse_macro_input, DeriveInput, Expr, Ident, Lit};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -34,7 +37,7 @@ mod utils;
 // #[validate(email(message = "asdfg"))]
 //            ^^^^^
 //
-#[derive(Debug, FromField)]
+#[derive(Debug, FromField, Clone)]
 #[darling(attributes(validate))]
 struct ValidateField {
     ident: Option<syn::Ident>,
@@ -252,23 +255,63 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     // Get all the fields to quote them below
     let validation_field = validation_data.data.take_struct().unwrap().fields;
 
+    let args = validation_field.iter().fold(vec![], |mut acc, f| {
+        if let Some(c) = &f.custom {
+            acc.extend(c.arg.clone());
+            acc
+        } else {
+            acc
+        }
+    });
+
+    let args_ident: Vec<Ident> = args.iter().map(|a| a.ident()).collect();
+
     let ident = validation_data.ident;
     let (imp, ty, gen) = validation_data.generics.split_for_impl();
 
-    quote! {
-        impl #imp ::validator::Validate for #ident #ty #gen {
-            fn validate (&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                let mut errors = ::validator::ValidationErrors::new();
+    let arg_struct_name = format_ident!("{}{}", ident, "Args");
 
-                #(#validation_field)*
+    if args.is_empty() {
+        quote! {
+            impl #imp ::validator::Validate for #ident #ty #gen {
+                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                    let mut errors = ::validator::ValidationErrors::new();
 
-                if errors.is_empty() {
-                    ::std::result::Result::Ok(())
-                } else {
-                    ::std::result::Result::Err(errors)
+                    #(#validation_field)*
+
+                    if errors.is_empty() {
+                        ::std::result::Result::Ok(())
+                    } else {
+                        ::std::result::Result::Err(errors)
+                    }
                 }
             }
         }
+        .into()
+    } else {
+        quote!(
+            pub struct #arg_struct_name {
+                #(pub #args,)*
+            }
+
+            impl #imp ::validator::ValidateArgs for #ident #ty #gen {
+                type Args = #arg_struct_name;
+
+                fn validate(&self, args: Self::Args) -> Result<(), ::validator::ValidationErrors> {
+                    let mut errors = ::validator::ValidationErrors::new();
+
+                    let #arg_struct_name { #(#args_ident: #args_ident, )* } = args;
+
+                    #(#validation_field)*
+
+                    if errors.is_empty() {
+                        ::std::result::Result::Ok(())
+                    } else {
+                        ::std::result::Result::Err(errors)
+                    }
+                }
+            }
+        )
+        .into()
     }
-    .into()
 }

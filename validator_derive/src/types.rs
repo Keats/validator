@@ -1,5 +1,6 @@
-use darling::FromMeta;
-use syn::Expr;
+use darling::{Error, FromMeta};
+use quote::ToTokens;
+use syn::{Expr, FnArg, Lit, TypeParam};
 
 // Structs to hold the validation information and to provide attributes
 // The name of a field here corresponds to an attribute like
@@ -94,6 +95,39 @@ pub struct Regex {
 #[derive(Debug, Clone, FromMeta)]
 pub struct Custom {
     pub function: Expr,
+    #[darling(multiple)]
+    pub arg: Vec<Arg>,
     pub message: Option<String>,
     pub code: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Arg(FnArg);
+
+impl Arg {
+    pub fn ident(&self) -> syn::Ident {
+        match self.0.clone() {
+            FnArg::Typed(t) => match *t.pat {
+                syn::Pat::Ident(i) => i.ident,
+                _ => todo!(),
+            },
+            _ => todo!(),
+        }
+    }
+}
+
+impl FromMeta for Arg {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        if let Ok(fn_arg) = syn::parse_str::<FnArg>(value) {
+            darling::Result::Ok(Arg(fn_arg))
+        } else {
+            darling::Result::Err(darling::Error::unknown_value(value))
+        }
+    }
+}
+
+impl ToTokens for Arg {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        self.0.to_tokens(tokens)
+    }
 }

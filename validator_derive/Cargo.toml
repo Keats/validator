@@ -18,7 +18,7 @@ card = ["validator_types/card"]
 unic = ["validator_types/unic"]
 
 [dependencies]
-syn = { version = "2" }
+syn = "2"
 quote = "1"
 proc-macro2 = "1"
 proc-macro-error = "1"

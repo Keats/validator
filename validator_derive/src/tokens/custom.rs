@@ -1,7 +1,7 @@
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::Ident;
 
-use crate::types::Custom;
+use crate::types::{Arg, Custom};
 use crate::utils::{quote_code, quote_message};
 
 pub fn custom_tokens(
@@ -22,8 +22,15 @@ pub fn custom_tokens(
         quote!()
     };
 
+    let args = if custom.arg.is_empty() {
+        quote!(&self.#field_name)
+    } else {
+        let args: Vec<Ident> = custom.arg.iter().map(|a| a.ident()).collect();
+        quote!(&self.#field_name, #(#args, )*)
+    };
+
     quote! {
-        match #function(&self.#field_name) {
+        match #function(#args) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code
