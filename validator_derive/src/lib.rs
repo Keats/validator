@@ -297,9 +297,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         fields_with_custom_validations.iter().map(|f| f.ty.clone()).collect();
 
     let where_clause_for_fn = if fields_with_custom_validations.len() > 1 {
-        quote!(#(#generics_for_closures: Fn(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
+        quote!(#(#generics_for_closures: FnOnce(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
     } else {
-        quote!(#(#generics_for_closures: Fn(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
+        quote!(#(#generics_for_closures: FnOnce(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
     };
 
     let ident = validation_data.ident;
