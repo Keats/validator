@@ -1,6 +1,6 @@
-use darling::{Error, FromMeta};
-use quote::ToTokens;
-use syn::{Expr, FnArg, Generics, Ident, Lifetime, Lit, Path, TypeParam};
+use darling::FromMeta;
+
+use syn::Expr;
 
 // Structs to hold the validation information and to provide attributes
 // The name of a field here corresponds to an attribute like
@@ -94,6 +94,12 @@ pub struct Regex {
 
 #[derive(Debug, Clone, FromMeta, Default)]
 pub struct Custom {
+    pub message: Option<String>,
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Clone, FromMeta, Default)]
+pub struct Schema {
     pub message: Option<String>,
     pub code: Option<String>,
 }

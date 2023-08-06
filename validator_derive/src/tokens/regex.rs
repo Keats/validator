@@ -10,8 +10,6 @@ pub fn regex_tokens(
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let path = regex.path;
-    let path_err = quote!(err.add_param(::std::borrow::Cow::from("regex"), &#path););
-
     let message = quote_message(regex.message);
     let code = quote_code(regex.code, "regex");
 

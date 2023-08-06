@@ -11,4 +11,5 @@ pub mod range;
 pub mod regex;
 pub mod required;
 pub mod required_nested;
+pub mod schema;
 pub mod url;

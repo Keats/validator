@@ -1,16 +1,11 @@
 // #![recursion_limit = "128"]
-#![allow(unused)]
 
-use std::collections::HashMap;
-
-use convert_case::{Case, Casing};
 use darling::ast::Data;
 use darling::util::Override;
-use darling::{FromDeriveInput, FromField, FromMeta};
-use proc_macro2::TokenStream;
+use darling::{FromDeriveInput, FromField};
 use proc_macro_error::proc_macro_error;
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Expr, Ident, Lit, LitStr, Path, Type};
+use syn::{parse_macro_input, DeriveInput, Ident, Type};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -27,8 +22,6 @@ use tokens::required::required_tokens;
 use tokens::required_nested::required_nested_tokens;
 use tokens::url::url_tokens;
 use types::*;
-
-use crate::utils::{ident_from_expr, ident_from_path, lit_to_str};
 
 mod tokens;
 mod types;

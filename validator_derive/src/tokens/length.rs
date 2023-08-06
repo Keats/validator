@@ -1,4 +1,4 @@
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::Ident;
 
 use crate::types::Length;
