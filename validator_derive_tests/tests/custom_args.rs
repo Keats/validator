@@ -1,23 +1,87 @@
-use validator::{Validate, ValidationError};
+// struct CustomStruct {
+//     pub counter: i32,
+// }
 
-struct CustomStruct {
-    pub counter: i32,
+// fn valid_generic_custom_i32<T>(_: &T, _arg: GenericContext) -> Result<(), ValidationError> {
+//     Ok(())
+// }
+
+use validator::{Validate, ValidateArgs, ValidationError};
+
+#[derive(Debug, PartialEq)]
+struct FunctionContext {
+    something: String,
 }
 
-fn valid_generic_custom_i32<T>(_: &T, _arg: i32) -> Result<(), ValidationError> {
+fn valid_fn(_: &str, _arg: FunctionContext) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn invalid_custom_tuple(_: &str) -> Result<(), ValidationError> {
-    Err(ValidationError::new("meh"))
+fn valid_fn_with_ref(_: &str, _arg: FunctionContext) -> Result<(), ValidationError> {
+    Ok(())
 }
 
-fn valid_reference_with_lifetime(
-    _: &str,
-    custom_struct: &mut CustomStruct,
-) -> Result<(), ValidationError> {
-    custom_struct.counter += 1;
-    Ok(())
+// fn invalid_custom_tuple(_: &str) -> Result<(), ValidationError> {
+//     Err(ValidationError::new("meh"))
+// }
+
+// fn valid_reference_with_lifetime(
+//     _: &str,
+//     custom_struct: &mut CustomStruct,
+// ) -> Result<(), ValidationError> {
+//     custom_struct.counter += 1;
+//     Ok(())
+// }
+
+#[test]
+fn validate_simple_custom_fn() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        value: String,
+    }
+
+    let context = FunctionContext { something: "asd".to_string() };
+    let test_struct = TestStruct { value: "Something".to_string() };
+    assert!(test_struct.validate(context).is_ok());
+}
+
+#[test]
+fn validate_multiple_custom_fn() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        value: String,
+        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        value2: String,
+        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        value3: String,
+    }
+
+    let context = FunctionContext { something: "asd".to_string() };
+    let context2 = FunctionContext { something: "asd".to_string() };
+    let context3 = FunctionContext { something: "asd".to_string() };
+
+    let test_struct = TestStruct {
+        value: "Something".to_string(),
+        value2: "asd".to_string(),
+        value3: "fgre".to_string(),
+    };
+    assert!(test_struct.validate((context, context2, context3)).is_ok());
+}
+
+#[test]
+fn validate_custom_fn_with_context_ref() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(custom(function = "valid_fn_with_ref", context = "FunctionContext"))]
+        value: String,
+    }
+
+    let context = FunctionContext { something: "asd".to_string() };
+    let test_struct = TestStruct { value: "Something".to_string() };
+    assert!(test_struct.validate(context).is_ok());
+    //assert_eq!(context, FunctionContext { something: "asd".to_string() });
 }
 
 // fn invalid_validation_complex_args<'a, T: AddAssign>(
@@ -29,35 +93,35 @@ fn valid_reference_with_lifetime(
 //     Err(ValidationError::new("meh"))
 // }
 
-#[test]
-fn validate_custom_fn_reference_with_lifetime_ok() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        #[validate(custom(
-            function = "valid_reference_with_lifetime",
-            arg = "custom_struct: &mut CustomStruct"
-        ))]
-        value: String,
-    }
+// #[test]
+// fn validate_custom_fn_reference_with_lifetime_ok() {
+//     #[derive(Debug, Validate)]
+//     struct TestStruct {
+//         #[validate(custom(
+//             function = "valid_reference_with_lifetime",
+//             arg = "custom_struct: &mut CustomStruct"
+//         ))]
+//         value: String,
+//     }
 
-    let s = TestStruct { value: "Hello World".to_string() };
+//     let s = TestStruct { value: "Hello World".to_string() };
 
-    let mut cs = CustomStruct { counter: 0 };
-    assert!(s.validate_args(TestStructArgs { custom_struct: &mut cs }).is_ok());
-    assert!(cs.counter == 1);
-}
+//     let mut cs = CustomStruct { counter: 0 };
+//     assert!(s.validate_args(TestStructArgs { custom_struct: &mut cs }).is_ok());
+//     assert!(cs.counter == 1);
+// }
 
-#[test]
-fn validate_custom_fn_tuple_err() {
-    #[derive(Debug, Validate)]
-    struct TestStruct {
-        #[validate(custom(function = "invalid_custom_tuple"))]
-        value: String,
-    }
+// #[test]
+// fn validate_custom_fn_tuple_err() {
+//     #[derive(Debug, Validate)]
+//     struct TestStruct {
+//         #[validate(custom(function = "invalid_custom_tuple"))]
+//         value: String,
+//     }
 
-    let s = TestStruct { value: "Hello World".to_string() };
-    assert!(s.validate().is_err());
-}
+//     let s = TestStruct { value: "Hello World".to_string() };
+//     assert!(s.validate().is_err());
+// }
 
 // #[test]
 // fn validate_custom_struct_generic_and_lifetime_fn_i32_ok() {

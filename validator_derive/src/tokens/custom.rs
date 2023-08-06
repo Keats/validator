@@ -1,8 +1,9 @@
-use quote::{quote, ToTokens};
+use convert_case::{Case, Casing};
+use quote::{format_ident, quote, ToTokens};
 use syn::Ident;
 
-use crate::types::{Arg, Custom};
-use crate::utils::{quote_code, quote_message};
+use crate::types::Custom;
+use crate::utils::{ident_from_expr, ident_from_path, lit_to_str, quote_code, quote_message};
 
 pub fn custom_tokens(
     custom: Custom,
@@ -22,11 +23,12 @@ pub fn custom_tokens(
         quote!()
     };
 
-    let args = if custom.arg.is_empty() {
-        quote!(&self.#field_name)
+    let args = if let Some(context) = custom.context {
+        let snake_case_context =
+            format_ident!("{}_{}", field_name, context.to_string().to_case(Case::Snake));
+        quote!(&self.#field_name, #snake_case_context)
     } else {
-        let args: Vec<Ident> = custom.arg.iter().map(|a| a.ident()).collect();
-        quote!(&self.#field_name, #(#args, )*)
+        quote!(&self.#field_name)
     };
 
     quote! {
