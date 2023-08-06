@@ -1,6 +1,6 @@
 use darling::{Error, FromMeta};
 use quote::ToTokens;
-use syn::{Expr, FnArg, Ident, Lit, Path, TypeParam};
+use syn::{Expr, FnArg, Generics, Ident, Lifetime, Lit, Path, TypeParam};
 
 // Structs to hold the validation information and to provide attributes
 // The name of a field here corresponds to an attribute like
@@ -92,10 +92,8 @@ pub struct Regex {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta)]
+#[derive(Debug, Clone, FromMeta, Default)]
 pub struct Custom {
-    pub function: Expr,
-    pub context: Option<Expr>,
     pub message: Option<String>,
     pub code: Option<String>,
 }

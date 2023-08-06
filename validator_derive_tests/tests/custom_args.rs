@@ -6,18 +6,18 @@
 //     Ok(())
 // }
 
-use validator::{Validate, ValidateArgs, ValidationError};
+use validator::{Validate, ValidationError};
 
-#[derive(Debug, PartialEq)]
-struct FunctionContext {
-    something: String,
-}
-
-fn valid_fn(_: &str, _arg: FunctionContext) -> Result<(), ValidationError> {
+fn valid_fn(_: String, _arg: i32) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn valid_fn_with_ref(_: &str, _arg: FunctionContext) -> Result<(), ValidationError> {
+fn valid_fn_with_ref(_: String, _arg: &i32) -> Result<(), ValidationError> {
+    Ok(())
+}
+
+fn valid_fn_with_mut_ref(_: String, arg: &mut i32) -> Result<(), ValidationError> {
+    *arg += 1;
     Ok(())
 }
 
@@ -37,51 +37,50 @@ fn valid_fn_with_ref(_: &str, _arg: FunctionContext) -> Result<(), ValidationErr
 fn validate_simple_custom_fn() {
     #[derive(Validate)]
     struct TestStruct {
-        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        #[validate(custom)]
         value: String,
     }
 
-    let context = FunctionContext { something: "asd".to_string() };
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(context).is_ok());
+    assert!(test_struct.validate(|v| valid_fn(v, 123)).is_ok());
 }
 
 #[test]
 fn validate_multiple_custom_fn() {
     #[derive(Validate)]
     struct TestStruct {
-        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        #[validate(custom)]
         value: String,
-        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        #[validate(custom)]
         value2: String,
-        #[validate(custom(function = "valid_fn", context = "FunctionContext"))]
+        #[validate(custom)]
         value3: String,
     }
-
-    let context = FunctionContext { something: "asd".to_string() };
-    let context2 = FunctionContext { something: "asd".to_string() };
-    let context3 = FunctionContext { something: "asd".to_string() };
 
     let test_struct = TestStruct {
         value: "Something".to_string(),
         value2: "asd".to_string(),
         value3: "fgre".to_string(),
     };
-    assert!(test_struct.validate((context, context2, context3)).is_ok());
+    assert!(test_struct
+        .validate(|s| valid_fn(s, 123), |s| valid_fn(s, 456), |s| valid_fn(s, 789))
+        .is_ok());
 }
 
 #[test]
-fn validate_custom_fn_with_context_ref() {
+fn validate_custom_fn_with_ref() {
     #[derive(Validate)]
     struct TestStruct {
-        #[validate(custom(function = "valid_fn_with_ref", context = "FunctionContext"))]
+        #[validate(custom)]
         value: String,
     }
 
-    let context = FunctionContext { something: "asd".to_string() };
+    let val = 123;
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(context).is_ok());
-    //assert_eq!(context, FunctionContext { something: "asd".to_string() });
+    assert!(test_struct.validate(|s| valid_fn_with_ref(s, &val)).is_ok());
+
+    // test reference
+    assert_eq!(val, 123);
 }
 
 // fn invalid_validation_complex_args<'a, T: AddAssign>(

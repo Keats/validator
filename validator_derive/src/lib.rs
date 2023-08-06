@@ -10,7 +10,7 @@ use darling::{FromDeriveInput, FromField, FromMeta};
 use proc_macro2::TokenStream;
 use proc_macro_error::proc_macro_error;
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Expr, Ident, Lit, LitStr, Path};
+use syn::{parse_macro_input, DeriveInput, Expr, Ident, Lit, LitStr, Path, Type};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -58,7 +58,7 @@ struct ValidateField {
     required_nested: Option<Override<Required>>,
     url: Option<Override<Url>>,
     regex: Option<Regex>,
-    custom: Option<Custom>,
+    custom: Option<Override<Custom>>,
 }
 
 // The field gets converted to tokens in the same format as it was before
@@ -209,7 +209,14 @@ impl ToTokens for ValidateField {
 
         // Custom validation
         let custom = if let Some(custom) = self.custom.clone() {
-            custom_tokens(custom, &field_name, &field_name_str)
+            custom_tokens(
+                match custom {
+                    Override::Inherit => Custom::default(),
+                    Override::Explicit(c) => c,
+                },
+                &field_name,
+                &field_name_str,
+            )
         } else {
             quote!()
         };
@@ -258,50 +265,47 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     // Get all the fields to quote them below
     let validation_field = validation_data.data.take_struct().unwrap().fields;
 
-    let fields_with_custom_contexts: Vec<(&Expr, &Ident)> = validation_field
+    let fields_with_custom_validations: Vec<&ValidateField> =
+        validation_field.iter().filter(|f| f.custom.is_some()).collect();
+
+    let custom_validation_closures: Vec<Ident> = fields_with_custom_validations
         .iter()
-        .filter_map(|f| {
-            if let (Some(custom), Some(field_name)) = (&f.custom, &f.ident) {
-                if let Some(context) = &custom.context {
-                    Some((context, field_name))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
+        .map(|f| format_ident!("{}_closure", f.ident.clone().unwrap()))
         .collect();
 
-    let custom_contexts: Vec<&Expr> = fields_with_custom_contexts.iter().map(|f| f.0).collect();
-
-    let custom_contexts_type = if custom_contexts.len() > 1 {
-        quote!((#(#custom_contexts, )*))
-    } else {
-        quote!(#(#custom_contexts)*)
+    let generics_for_closures = match custom_validation_closures.len() {
+        0 => vec![],
+        1 => vec![quote!(T)],
+        2 => vec![quote!(T), quote!(U)],
+        3 => vec![quote!(T), quote!(U), quote!(V)],
+        _ => todo!(),
     };
 
-    let snake_case_contexts: Vec<Ident> = fields_with_custom_contexts
-        .iter()
-        .map(|(context, field_name)| {
-            format_ident!(
-                "{}_{}",
-                field_name,
-                ident_from_expr(context).to_string().to_case(Case::Snake)
-            )
-        })
-        .collect();
-
-    let snake_case_contexts_for_destructure = if snake_case_contexts.len() > 1 {
-        quote!((#(#snake_case_contexts, )*))
+    let generics_for_fn = if fields_with_custom_validations.len() > 1 {
+        quote!(#(#generics_for_closures, )*)
     } else {
-        quote!(#(#snake_case_contexts)*)
+        quote!(#(#generics_for_closures)*)
+    };
+
+    let args_for_fn = if fields_with_custom_validations.len() > 1 {
+        quote!(#(#custom_validation_closures: #generics_for_closures, )*)
+    } else {
+        quote!(#(#custom_validation_closures: #generics_for_closures)*)
+    };
+
+    let types_for_closures: Vec<Type> =
+        fields_with_custom_validations.iter().map(|f| f.ty.clone()).collect();
+
+    let where_clause_for_fn = if fields_with_custom_validations.len() > 1 {
+        quote!(#(#generics_for_closures: Fn(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
+    } else {
+        quote!(#(#generics_for_closures: Fn(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
     };
 
     let ident = validation_data.ident;
     let (imp, ty, gen) = validation_data.generics.split_for_impl();
 
-    if custom_contexts.is_empty() {
+    if fields_with_custom_validations.is_empty() {
         quote! {
             impl #imp ::validator::Validate for #ident #ty #gen {
                 fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
@@ -320,13 +324,17 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .into()
     } else {
         quote!(
-            impl<'v_a> #imp ::validator::ValidateArgs<'v_a> for #ident #ty #gen {
-                type Args = #custom_contexts_type;
+            pub trait ValidateArgs {
+                fn validate<#generics_for_fn>(&self, #args_for_fn)
+                -> ::std::result::Result<(), ::validator::ValidationErrors>
+                where #where_clause_for_fn;
+            }
 
-                fn validate(&self, args: Self::Args) -> Result<(), ::validator::ValidationErrors> {
+            impl #imp ValidateArgs for #ident #ty #gen {
+                 fn validate<#generics_for_fn>(&self, #args_for_fn)
+                -> ::std::result::Result<(), ::validator::ValidationErrors>
+                where #where_clause_for_fn {
                     let mut errors = ::validator::ValidationErrors::new();
-
-                    let #snake_case_contexts_for_destructure = args;
 
                     #(#validation_field)*
 

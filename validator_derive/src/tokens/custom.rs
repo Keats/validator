@@ -10,8 +10,7 @@ pub fn custom_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let function = custom.function;
-    let function_err = quote!(err.add_param(::std::borrow::Cow::from("custom"), &#function););
+    let closure = format_ident!("{}_closure", field_name);
 
     let message = quote_message(custom.message);
 
@@ -23,19 +22,8 @@ pub fn custom_tokens(
         quote!()
     };
 
-    let args = if let Some(context) = custom.context {
-        let snake_case_context = format_ident!(
-            "{}_{}",
-            field_name,
-            ident_from_expr(&context).to_string().to_case(Case::Snake)
-        );
-        quote!(&self.#field_name, #snake_case_context)
-    } else {
-        quote!(&self.#field_name)
-    };
-
     quote! {
-        match #function(#args) {
+        match #closure(self.#field_name.clone()) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code
