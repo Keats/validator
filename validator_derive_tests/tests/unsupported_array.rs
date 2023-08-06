@@ -28,13 +28,13 @@ fn can_validate_custom_with_unsupported_array() {
     struct TestStruct {
         #[validate(email)]
         val: String,
-        #[validate(custom = "valid_custom_fn")]
+        #[validate(custom)]
         array: [u8; 2],
     }
 
     let s = TestStruct { val: "bob@bob.com".to_string(), array: [1u8, 1u8] };
 
-    assert!(s.validate().is_ok());
+    assert!(s.validate(valid_custom_fn).is_ok());
 }
 
 #[test]
@@ -43,13 +43,13 @@ fn can_fail_custom_with_unsupported_array() {
     struct TestStruct {
         #[validate(email)]
         val: String,
-        #[validate(custom = "valid_custom_fn")]
+        #[validate(custom)]
         array: [u8; 2],
     }
 
     let s = TestStruct { val: "bob@bob.com".to_string(), array: [0u8, 1u8] };
 
-    let res = s.validate();
+    let res = s.validate(valid_custom_fn);
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();

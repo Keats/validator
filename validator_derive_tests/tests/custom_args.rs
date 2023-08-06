@@ -8,15 +8,15 @@ struct TestArg {
     val: String,
 }
 
-fn valid_fn(_: String, _arg: TestArg) -> Result<(), ValidationError> {
+fn valid_fn(_: &String, _arg: TestArg) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn valid_fn_with_ref(_: String, _arg: &TestArg) -> Result<(), ValidationError> {
+fn valid_fn_with_ref(_: &String, _arg: &TestArg) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn valid_fn_with_mut_ref(_: String, arg: &mut TestArg) -> Result<(), ValidationError> {
+fn valid_fn_with_mut_ref(_: &String, arg: &mut TestArg) -> Result<(), ValidationError> {
     arg.val = "new value".to_string();
     Ok(())
 }
@@ -108,7 +108,7 @@ fn validate_custom_fn_with_complex_args() {
     }
 
     let test_struct = TestStruct { value: "test".to_string() };
-    let closure = |_val: String, mut arg: Arg<u32>| -> Result<(), ValidationError> {
+    let closure = |_val: &String, mut arg: Arg<u32>| -> Result<(), ValidationError> {
         arg.counter += 1;
         Ok(())
     };
@@ -129,7 +129,7 @@ fn validate_custom_fn_with_multiple_args() {
     }
 
     let closure =
-        |_: String, mut arg: Arg, _foo: &Path, _str: &str| -> Result<(), ValidationError> {
+        |_: &String, mut arg: Arg, _foo: &Path, _str: &str| -> Result<(), ValidationError> {
             arg.counter += 1;
             Ok(())
         };

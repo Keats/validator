@@ -1,5 +1,6 @@
 // #![recursion_limit = "128"]
 
+use convert_case::{Case, Casing};
 use darling::ast::Data;
 use darling::util::Override;
 use darling::{FromDeriveInput, FromField};
@@ -20,6 +21,7 @@ use tokens::range::range_tokens;
 use tokens::regex::regex_tokens;
 use tokens::required::required_tokens;
 use tokens::required_nested::required_nested_tokens;
+use tokens::schema::schema_tokens;
 use tokens::url::url_tokens;
 use types::*;
 
@@ -242,6 +244,7 @@ struct ValidationData {
     ident: syn::Ident,
     generics: syn::Generics,
     data: Data<(), ValidateField>,
+    schema: Option<Override<Schema>>,
 }
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -261,44 +264,68 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let fields_with_custom_validations: Vec<&ValidateField> =
         validation_field.iter().filter(|f| f.custom.is_some()).collect();
 
-    let custom_validation_closures: Vec<Ident> = fields_with_custom_validations
+    let mut custom_validation_closures: Vec<Ident> = fields_with_custom_validations
         .iter()
         .map(|f| format_ident!("{}_closure", f.ident.clone().unwrap()))
         .collect();
+
+    let schema = if let Some(schema) = &validation_data.schema {
+        custom_validation_closures.push(format_ident!(
+            "{}_schema_closure",
+            validation_data.ident.to_string().to_case(Case::Snake)
+        ));
+
+        // Schema validation
+        schema_tokens(
+            match schema {
+                Override::Inherit => Schema::default(),
+                Override::Explicit(s) => s.clone(),
+            },
+            &validation_data.ident.clone(),
+        )
+    } else {
+        quote!()
+    };
 
     let generics_for_closures = match custom_validation_closures.len() {
         0 => vec![],
         1 => vec![quote!(T)],
         2 => vec![quote!(T), quote!(U)],
         3 => vec![quote!(T), quote!(U), quote!(V)],
+        4 => vec![quote!(T), quote!(U), quote!(V), quote!(Z)],
         _ => todo!(),
     };
 
-    let generics_for_fn = if fields_with_custom_validations.len() > 1 {
+    let generics_for_fn = if custom_validation_closures.len() > 1 {
         quote!(#(#generics_for_closures, )*)
     } else {
         quote!(#(#generics_for_closures)*)
     };
 
-    let args_for_fn = if fields_with_custom_validations.len() > 1 {
+    let args_for_fn = if custom_validation_closures.len() > 1 {
         quote!(#(#custom_validation_closures: #generics_for_closures, )*)
     } else {
         quote!(#(#custom_validation_closures: #generics_for_closures)*)
     };
 
-    let types_for_closures: Vec<Type> =
+    let mut types_for_closures: Vec<Type> =
         fields_with_custom_validations.iter().map(|f| f.ty.clone()).collect();
 
-    let where_clause_for_fn = if fields_with_custom_validations.len() > 1 {
-        quote!(#(#generics_for_closures: FnOnce(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
+    if validation_data.schema.is_some() {
+        types_for_closures
+            .push(syn::parse_str::<Type>(&validation_data.ident.to_string()).unwrap());
+    }
+
+    let where_clause_for_fn = if custom_validation_closures.len() > 1 {
+        quote!(#(#generics_for_closures: FnOnce(&#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
     } else {
-        quote!(#(#generics_for_closures: FnOnce(#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
+        quote!(#(#generics_for_closures: FnOnce(&#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
     };
 
     let ident = validation_data.ident;
     let (imp, ty, gen) = validation_data.generics.split_for_impl();
 
-    if fields_with_custom_validations.is_empty() {
+    if custom_validation_closures.is_empty() {
         quote! {
             impl #imp ::validator::Validate for #ident #ty #gen {
                 fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
@@ -317,17 +344,13 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .into()
     } else {
         quote!(
-            pub trait ValidateArgs {
-                fn validate<#generics_for_fn>(&self, #args_for_fn)
-                -> ::std::result::Result<(), ::validator::ValidationErrors>
-                where #where_clause_for_fn;
-            }
-
-            impl #imp ValidateArgs for #ident #ty #gen {
-                 fn validate<#generics_for_fn>(&self, #args_for_fn)
+            impl #imp #ident #ty #gen {
+                pub fn validate<#generics_for_fn>(&self, #args_for_fn)
                 -> ::std::result::Result<(), ::validator::ValidationErrors>
                 where #where_clause_for_fn {
                     let mut errors = ::validator::ValidationErrors::new();
+
+                    #schema
 
                     #(#validation_field)*
 

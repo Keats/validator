@@ -22,7 +22,7 @@ pub fn custom_tokens(
     };
 
     quote! {
-        match #closure(self.#field_name.clone()) {
+        match #closure(&self.#field_name) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code

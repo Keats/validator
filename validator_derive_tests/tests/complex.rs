@@ -23,13 +23,13 @@ fn validate_signup(data: &SignupData) -> Result<(), ValidationError> {
 }
 
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema(function = "validate_signup", skip_on_field_errors = false))]
+#[validate(schema)]
 struct SignupData {
     #[validate(email)]
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = 1), custom = "validate_unique_username")]
+    #[validate(length(min = 1), custom)]
     #[serde(rename = "firstName")]
     first_name: String,
     #[validate(range(min = 18, max = 20))]
@@ -67,7 +67,9 @@ fn is_fine_with_many_valid_validations() {
         preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
 
-    assert!(signup.validate().is_ok());
+    assert!(signup
+        .validate(|username| validate_unique_username(&username), validate_signup)
+        .is_ok());
 }
 
 #[test]
@@ -80,7 +82,7 @@ fn failed_validation_points_to_original_field_name() {
         card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
         preferences: vec![Preference { name: "abc".to_string(), value: true }],
     };
-    let res = signup.validate();
+    let res = signup.validate(|username| validate_unique_username(username), validate_signup);
     // println!("{}", serde_json::to_string(&res).unwrap());
     assert!(res.is_err());
     let err = res.unwrap_err();
@@ -150,15 +152,15 @@ fn test_can_validate_option_fields_with_lifetime() {
         email: Option<&'a str>,
         #[validate(url)]
         url: Option<&'a str>,
-        #[validate(contains = "@")]
+        #[validate(contains(pattern = "@"))]
         text: Option<&'a str>,
-        #[validate(regex = "RE2")]
+        #[validate(regex(path = "RE2"))]
         re: Option<&'a str>,
-        #[validate(custom = "check_str")]
+        #[validate(custom)]
         custom: Option<&'a str>,
     }
 
-    fn check_str(_: &str) -> Result<(), ValidationError> {
+    fn check_str(_: &Option<&str>) -> Result<(), ValidationError> {
         Ok(())
     }
 
@@ -173,7 +175,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         re: Some("hi"),
         custom: Some("hey"),
     };
-    assert!(s.validate().is_ok());
+    assert!(s.validate(|s| check_str(s)).is_ok());
 }
 
 #[test]
@@ -200,15 +202,15 @@ fn test_can_validate_option_fields_without_lifetime() {
         email: Option<String>,
         #[validate(url)]
         url: Option<String>,
-        #[validate(contains = "@")]
+        #[validate(contains(pattern = "@"))]
         text: Option<String>,
-        #[validate(regex = "RE2")]
+        #[validate(regex(path = "RE2"))]
         re: Option<String>,
-        #[validate(custom = "check_str")]
+        #[validate(custom)]
         custom: Option<String>,
     }
 
-    fn check_str(_: &str) -> Result<(), ValidationError> {
+    fn check_str(_: &Option<String>) -> Result<(), ValidationError> {
         Ok(())
     }
 
@@ -225,11 +227,15 @@ fn test_can_validate_option_fields_without_lifetime() {
         re: Some("hi".to_string()),
         custom: Some("hey".to_string()),
     };
-    assert!(s.validate().is_ok());
+    assert!(s.validate(check_str).is_ok());
 }
 
 #[test]
 fn test_works_with_question_mark_operator() {
+    fn check_str(_: &String) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
     fn some_fn() -> Result<(), ValidationErrors> {
         let signup = SignupData {
             mail: "invalid_email".to_string(),
@@ -240,7 +246,7 @@ fn test_works_with_question_mark_operator() {
             preferences: Vec::new(),
         };
 
-        signup.validate()?;
+        signup.validate(|s| validate_unique_username(&s), validate_signup)?;
         Ok(())
     }
 

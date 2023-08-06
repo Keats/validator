@@ -1,10 +1,10 @@
 use validator::{Validate, ValidationError};
 
-fn valid_custom_fn(_: String) -> Result<(), ValidationError> {
+fn valid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn invalid_custom_fn(_: String) -> Result<(), ValidationError> {
+fn invalid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Err(ValidationError::new("meh"))
 }
 
