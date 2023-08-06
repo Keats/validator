@@ -5,7 +5,6 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use indexmap::{IndexMap, IndexSet};
 
 use crate::types::ValidationErrors;
-use crate::ValidationError;
 
 /// Trait to implement if one wants to make the `length` validator
 /// work for more types
@@ -167,22 +166,4 @@ pub trait ValidateArgs<'v_a> {
     type Args;
 
     fn validate(&self, args: Self::Args) -> Result<(), ValidationErrors>;
-}
-
-pub trait ValidateCustom {
-    type Closures;
-
-    fn validate(&self, closures: Self::Closures) -> Result<(), ValidationErrors>;
-}
-
-struct TestStruct {
-    value: String,
-}
-
-impl ValidateCustom for TestStruct {
-    type Closures = Box<dyn Fn() -> Result<(), ValidationError>>;
-
-    fn validate(&self, closures: Self::Closures) -> Result<(), ValidationErrors> {
-        todo!()
-    }
 }
