@@ -258,7 +258,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     // Get all the fields to quote them below
     let validation_field = validation_data.data.take_struct().unwrap().fields;
 
-    let fields_with_custom_contexts: Vec<(&String, &Ident)> = validation_field
+    let fields_with_custom_contexts: Vec<(&Expr, &Ident)> = validation_field
         .iter()
         .filter_map(|f| {
             if let (Some(custom), Some(field_name)) = (&f.custom, &f.ident) {
@@ -273,7 +273,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         })
         .collect();
 
-    let custom_contexts: Vec<&String> = fields_with_custom_contexts.iter().map(|f| f.0).collect();
+    let custom_contexts: Vec<&Expr> = fields_with_custom_contexts.iter().map(|f| f.0).collect();
 
     let custom_contexts_type = if custom_contexts.len() > 1 {
         quote!((#(#custom_contexts, )*))
@@ -284,7 +284,11 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let snake_case_contexts: Vec<Ident> = fields_with_custom_contexts
         .iter()
         .map(|(context, field_name)| {
-            format_ident!("{}_{}", field_name, context.to_case(Case::Snake))
+            format_ident!(
+                "{}_{}",
+                field_name,
+                ident_from_expr(context).to_string().to_case(Case::Snake)
+            )
         })
         .collect();
 

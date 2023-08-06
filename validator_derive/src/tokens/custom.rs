@@ -24,8 +24,11 @@ pub fn custom_tokens(
     };
 
     let args = if let Some(context) = custom.context {
-        let snake_case_context =
-            format_ident!("{}_{}", field_name, context.to_string().to_case(Case::Snake));
+        let snake_case_context = format_ident!(
+            "{}_{}",
+            field_name,
+            ident_from_expr(&context).to_string().to_case(Case::Snake)
+        );
         quote!(&self.#field_name, #snake_case_context)
     } else {
         quote!(&self.#field_name)
