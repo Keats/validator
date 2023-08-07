@@ -57,19 +57,61 @@ where
     T: PartialEq + PartialOrd,
 {
     fn greater_than(&self, max: T) -> bool {
-        if self > &max {
-            return true;
-        }
-
-        false
+        self > &max
     }
 
     fn less_than(&self, min: T) -> bool {
-        if self < &min {
-            return true;
-        }
+        self < &min
+    }
+}
 
-        false
+impl<T> ValidateRange<T> for Option<T>
+where
+    T: PartialEq + PartialOrd,
+{
+    fn greater_than(&self, max: T) -> bool {
+        if let Some(v) = self {
+            v > &max
+        } else {
+            true
+        }
+    }
+
+    fn less_than(&self, min: T) -> bool {
+        if let Some(v) = self {
+            v < &min
+        } else {
+            true
+        }
+    }
+}
+
+impl<T> ValidateRange<T> for Option<Option<T>>
+where
+    T: PartialEq + PartialOrd,
+{
+    fn greater_than(&self, max: T) -> bool {
+        if let Some(v) = self {
+            if let Some(v) = v {
+                v > &max
+            } else {
+                true
+            }
+        } else {
+            true
+        }
+    }
+
+    fn less_than(&self, min: T) -> bool {
+        if let Some(v) = self {
+            if let Some(v) = v {
+                v < &min
+            } else {
+                true
+            }
+        } else {
+            true
+        }
     }
 }
 

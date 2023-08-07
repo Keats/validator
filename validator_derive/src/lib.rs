@@ -61,6 +61,7 @@ impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
+        let mut imports = quote!();
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {

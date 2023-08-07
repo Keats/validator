@@ -234,3 +234,15 @@ fn can_pass_reference_as_validate() {
     validate(&val).unwrap_err();
     assert_eq!(val.num_field, 10);
 }
+
+#[test]
+fn can_validatie_option() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(range(min = 100))]
+        num_field: Option<u32>,
+    }
+
+    let t = TestStruct { num_field: Some(101) };
+    assert!(t.validate().is_ok());
+}

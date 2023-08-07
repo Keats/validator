@@ -1,5 +1,7 @@
 use quote::quote;
 
+use crate::ValidationData;
+
 pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     if let Some(m) = message {
         quote!(
