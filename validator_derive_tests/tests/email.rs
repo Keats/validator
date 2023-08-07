@@ -84,8 +84,8 @@ fn can_validate_custom_impl_for_email() {
     }
 
     impl validator::ValidateEmail for CustomEmail {
-        fn to_email_string(&self) -> Cow<'_, str> {
-            Cow::from(format!("{}@{}", self.user_part, self.domain_part))
+        fn to_email_string(&self) -> Option<Cow<'_, str>> {
+            Some(Cow::from(format!("{}@{}", self.user_part, self.domain_part)))
         }
     }
 

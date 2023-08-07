@@ -31,7 +31,7 @@ fn validate_schema_fn_reference_with_lifetime_ok() {
 
 #[test]
 fn validate_schema_fn_err() {
-    fn invalid_custom_tuple(_: &TestStruct, arg1: i64, arg2: i64) -> Result<(), ValidationError> {
+    fn invalid_custom_tuple(_: &TestStruct, _arg1: i64, _arg2: i64) -> Result<(), ValidationError> {
         Err(ValidationError::new("meh"))
     }
 

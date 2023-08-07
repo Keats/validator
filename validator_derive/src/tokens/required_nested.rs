@@ -21,7 +21,7 @@ pub fn required_nested_tokens(
         }
 
         if let Some(ref #field_name) = self.#field_name {
-            errors.merge(#field_name_str, #field_name.validate());
+            errors.merge_self(#field_name_str, #field_name.validate());
         }
     }
 }

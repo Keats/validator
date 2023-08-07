@@ -58,9 +58,7 @@ impl ValidationErrors {
         }
     }
 
-    /// Returns the combined outcome of a struct's validation result along with the nested
-    /// validation result for one of its fields.
-    pub fn merge(
+    pub fn merge_self(
         &mut self,
         field: &'static str,
         child: Result<(), ValidationErrors>,
@@ -70,6 +68,24 @@ impl ValidationErrors {
             Err(errors) => {
                 self.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
                 self
+            }
+        }
+    }
+
+    /// Returns the combined outcome of a struct's validation result along with the nested
+    /// validation result for one of its fields.
+    pub fn merge(
+        parent: Result<(), ValidationErrors>,
+        field: &'static str,
+        child: Result<(), ValidationErrors>,
+    ) -> Result<(), ValidationErrors> {
+        match child {
+            Ok(()) => parent,
+            Err(errors) => {
+                parent.and_then(|_| Err(ValidationErrors::new())).map_err(|mut parent_errors| {
+                    parent_errors.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
+                    parent_errors
+                })
             }
         }
     }

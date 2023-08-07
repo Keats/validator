@@ -88,11 +88,11 @@ fn can_validate_custom_impl_for_url() {
     }
 
     impl validator::ValidateUrl for CustomUrl {
-        fn to_url_string(&self) -> Cow<'_, str> {
-            Cow::from(format!(
+        fn to_url_string(&self) -> Option<Cow<'_, str>> {
+            Some(Cow::from(format!(
                 "{}://{}.{}.{}",
                 self.scheme, self.subdomain, self.domain, self.top_level_domain
-            ))
+            )))
         }
     }
 
