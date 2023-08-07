@@ -13,7 +13,6 @@ pub fn required_tokens(
     let code = quote_code(required.code, "required");
 
     quote! {
-        use ::validator::ValidateRequired;
         if !self.#field_name.validate_required() {
             #code
             #message

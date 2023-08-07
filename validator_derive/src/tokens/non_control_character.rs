@@ -13,7 +13,6 @@ pub fn non_control_char_tokens(
     let code = quote_code(non_control_char.code, "non_control_character");
 
     quote! {
-        use ::validator::ValidateNonControlCharacter;
         if !self.#field_name.validate_non_control_character() {
             #code
             #message

@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::ValidationData;
+use crate::ValidateField;
 
 pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     if let Some(m) = message {
@@ -22,4 +22,92 @@ pub fn quote_code(code: Option<String>, default: &str) -> proc_macro2::TokenStre
             let mut err = ::validator::ValidationError::new(#default);
         )
     }
+}
+
+pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream {
+    let mut length = quote!();
+    let mut email = quote!();
+    let mut card = quote!();
+    let mut url = quote!();
+    let mut ip = quote!();
+    let mut ncc = quote!();
+    let mut range = quote!();
+    let mut reqired = quote!();
+    let mut contains = quote!();
+    let mut does_not_contain = quote!();
+
+    for f in fields {
+        if f.length.is_some() {
+            length = quote!(
+                use validator::ValidateLength;
+            );
+        }
+
+        if f.email.is_some() {
+            email = quote!(
+                use validator::ValidateEmail;
+            );
+        }
+
+        if f.credit_card.is_some() {
+            card = quote!(
+                use validator::ValidateCreditCard;
+            );
+        }
+
+        if f.url.is_some() {
+            url = quote!(
+                use validator::ValidateUrl;
+            );
+        }
+
+        if f.ip.is_some() {
+            ip = quote!(
+                use validator::ValidateIp;
+            );
+        }
+
+        if f.non_control_character.is_some() {
+            ncc = quote!(
+                use validator::ValidateNonControlCharacter;
+            );
+        }
+
+        if f.range.is_some() {
+            range = quote!(
+                use validator::ValidateRange;
+            );
+        }
+
+        if f.required.is_some() || f.required_nested.is_some() {
+            reqired = quote!(
+                use validator::ValidateRequired;
+            );
+        }
+
+        if f.contains.is_some() {
+            contains = quote!(
+                use validator::ValidateContains;
+            );
+        }
+
+        if f.does_not_contain.is_some() {
+            does_not_contain = quote!(
+                use validator::ValidateDoesNotContain;
+            );
+        }
+    }
+
+    quote!(
+        #length
+        #email
+        #card
+        #url
+        #ip
+        #ncc
+        #range
+        #reqired
+        #contains
+        #does_not_contain
+    )
 }

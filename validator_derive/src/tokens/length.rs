@@ -29,7 +29,6 @@ pub fn length_tokens(
     let code = quote_code(length.code, "length");
 
     quote! {
-        use ::validator::ValidateLength;
         if !self.#field_name.validate_length(#min, #max, #equal) {
             #code
             #message

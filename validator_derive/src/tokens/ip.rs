@@ -35,7 +35,6 @@ pub fn ip_tokens(ip: Ip, field_name: &Ident, field_name_str: &str) -> proc_macro
     };
 
     quote! {
-        use ::validator::ValidateIp;
         if !self.#field_name.#version {
             #code
             #message

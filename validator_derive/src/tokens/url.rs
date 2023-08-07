@@ -9,7 +9,6 @@ pub fn url_tokens(url: Url, field_name: &Ident, field_name_str: &str) -> proc_ma
     let code = quote_code(url.code, "url");
 
     quote! {
-        use ::validator::ValidateUrl;
         if !self.#field_name.validate_url() {
             #code
             #message

@@ -13,7 +13,6 @@ pub fn email_tokens(
     let code = quote_code(email.code, "email");
 
     quote! {
-        use ::validator::ValidateEmail;
         if !self.#field_name.validate_email() {
             #code
             #message

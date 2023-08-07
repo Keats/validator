@@ -9,17 +9,14 @@ pub fn contains_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let (needle, needle_err) = if let Some(v) = contains.pattern {
-        (quote!(#v), quote!(err.add_param(::std::borrow::Cow::from("needle"), &#v);))
-    } else {
-        panic!("`pattern` attribute is required")
-    };
+    let p = contains.pattern;
+    let (needle, needle_err) =
+        (quote!(#p), quote!(err.add_param(::std::borrow::Cow::from("needle"), &#p);));
 
     let message = quote_message(contains.message);
     let code = quote_code(contains.code, "contains");
 
     quote! {
-        use ::validator::ValidateContains;
         if !self.#field_name.validate_contains(#needle) {
             #code
             #message

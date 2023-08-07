@@ -37,7 +37,6 @@ pub fn range_tokens(
     let code = quote_code(range.code, "range");
 
     quote! {
-        use ::validator::ValidateRange;
         if !self.#field_name.validate_range(#min, #max, #ex_min, #ex_max) {
             #code
             #message

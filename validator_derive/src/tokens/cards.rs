@@ -13,7 +13,6 @@ pub fn credit_card_tokens(
     let code = quote_code(credit_card.code, "credit_card");
 
     quote! {
-        use ::validator::ValidateCreditCard;
         if !self.#field_name.validate_credit_card() {
             #code
             #message

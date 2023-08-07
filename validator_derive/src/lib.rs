@@ -3,7 +3,7 @@
 use convert_case::{Case, Casing};
 use darling::ast::Data;
 use darling::util::Override;
-use darling::{FromDeriveInput, FromField};
+use darling::FromDeriveInput;
 use proc_macro_error::proc_macro_error;
 use quote::{format_ident, quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Ident, Type};
@@ -24,44 +24,17 @@ use tokens::required_nested::required_nested_tokens;
 use tokens::schema::schema_tokens;
 use tokens::url::url_tokens;
 use types::*;
+use utils::quote_use_stmts;
 
 mod tokens;
 mod types;
 mod utils;
-
-// This struct holds all the validation information on a field
-// The "ident" and "ty" fields are populated by `darling`
-// The others are our attributes for example:
-// #[validate(email(message = "asdfg"))]
-//            ^^^^^
-//
-#[derive(Debug, FromField, Clone)]
-#[darling(attributes(validate))]
-struct ValidateField {
-    ident: Option<syn::Ident>,
-    ty: syn::Type,
-    credit_card: Option<Override<Card>>,
-    contains: Option<Contains>,
-    does_not_contain: Option<DoesNotContain>,
-    email: Option<Override<Email>>,
-    ip: Option<Override<Ip>>,
-    length: Option<Length>,
-    must_match: Option<MustMatch>,
-    non_control_character: Option<Override<NonControlCharacter>>,
-    range: Option<Range>,
-    required: Option<Override<Required>>,
-    required_nested: Option<Override<Required>>,
-    url: Option<Override<Url>>,
-    regex: Option<Regex>,
-    custom: Option<Override<Custom>>,
-}
 
 // The field gets converted to tokens in the same format as it was before
 impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
-        let mut imports = quote!();
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {
@@ -260,10 +233,11 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     };
 
     // Get all the fields to quote them below
-    let validation_field = validation_data.data.take_struct().unwrap().fields;
+    let validation_fields = validation_data.data.take_struct().unwrap().fields;
+    let use_statements = quote_use_stmts(&validation_fields);
 
     let fields_with_custom_validations: Vec<&ValidateField> =
-        validation_field.iter().filter(|f| f.custom.is_some()).collect();
+        validation_fields.iter().filter(|f| f.custom.is_some()).collect();
 
     let mut custom_validation_closures: Vec<Ident> = fields_with_custom_validations
         .iter()
@@ -330,9 +304,11 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote! {
             impl #imp ::validator::Validate for #ident #ty #gen {
                 fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                    #use_statements
+
                     let mut errors = ::validator::ValidationErrors::new();
 
-                    #(#validation_field)*
+                    #(#validation_fields)*
 
                     if errors.is_empty() {
                         ::std::result::Result::Ok(())
@@ -349,11 +325,13 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                 pub fn validate<#generics_for_fn>(&self, #args_for_fn)
                 -> ::std::result::Result<(), ::validator::ValidationErrors>
                 where #where_clause_for_fn {
+                    #use_statements
+
                     let mut errors = ::validator::ValidationErrors::new();
 
                     #schema
 
-                    #(#validation_field)*
+                    #(#validation_fields)*
 
                     if errors.is_empty() {
                         ::std::result::Result::Ok(())

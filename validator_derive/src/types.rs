@@ -1,6 +1,34 @@
-use darling::FromMeta;
+use darling::util::Override;
+use darling::{FromField, FromMeta};
 
 use syn::Expr;
+
+// This struct holds all the validation information on a field
+// The "ident" and "ty" fields are populated by `darling`
+// The others are our attributes for example:
+// #[validate(email(message = "asdfg"))]
+//            ^^^^^
+//
+#[derive(Debug, FromField, Clone)]
+#[darling(attributes(validate))]
+pub struct ValidateField {
+    pub ident: Option<syn::Ident>,
+    pub ty: syn::Type,
+    pub credit_card: Option<Override<Card>>,
+    pub contains: Option<Contains>,
+    pub does_not_contain: Option<DoesNotContain>,
+    pub email: Option<Override<Email>>,
+    pub ip: Option<Override<Ip>>,
+    pub length: Option<Length>,
+    pub must_match: Option<MustMatch>,
+    pub non_control_character: Option<Override<NonControlCharacter>>,
+    pub range: Option<Range>,
+    pub required: Option<Override<Required>>,
+    pub required_nested: Option<Override<Required>>,
+    pub url: Option<Override<Url>>,
+    pub regex: Option<Regex>,
+    pub custom: Option<Override<Custom>>,
+}
 
 // Structs to hold the validation information and to provide attributes
 // The name of a field here corresponds to an attribute like
@@ -15,14 +43,14 @@ pub struct Card {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct Contains {
-    pub pattern: Option<String>,
+    pub pattern: String,
     pub message: Option<String>,
     pub code: Option<String>,
 }
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct DoesNotContain {
-    pub pattern: Option<String>,
+    pub pattern: String,
     pub message: Option<String>,
     pub code: Option<String>,
 }
@@ -52,7 +80,7 @@ pub struct Length {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct MustMatch {
-    pub other: Option<Expr>,
+    pub other: Expr,
     pub message: Option<String>,
     pub code: Option<String>,
 }
