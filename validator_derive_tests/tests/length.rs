@@ -202,8 +202,8 @@ fn can_validate_custom_impl_for_length() {
     struct CustomString(String);
 
     impl validator::ValidateLength<u64> for CustomString {
-        fn length(&self) -> u64 {
-            self.0.chars().count() as u64
+        fn length(&self) -> Option<u64> {
+            Some(self.0.chars().count() as u64)
         }
     }
 
