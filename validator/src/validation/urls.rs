@@ -9,15 +9,103 @@ pub fn validate_url<T: ValidateUrl>(val: T) -> bool {
 
 pub trait ValidateUrl {
     fn validate_url(&self) -> bool {
-        Url::parse(&self.to_url_string()).is_ok()
+        if let Some(u) = self.to_url_string() {
+            Url::parse(&u).is_ok()
+        } else {
+            true
+        }
     }
 
-    fn to_url_string(&self) -> Cow<str>;
+    fn to_url_string(&self) -> Option<Cow<str>>;
 }
 
-impl<T: AsRef<str>> ValidateUrl for T {
-    fn to_url_string(&self) -> Cow<'_, str> {
-        Cow::from(self.as_ref())
+impl ValidateUrl for String {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        Some(Cow::from(self))
+    }
+}
+
+impl ValidateUrl for Option<String> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            Some(Cow::from(u))
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateUrl for Option<Option<String>> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            if let Some(u) = u {
+                Some(Cow::from(u))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateUrl for &String {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        Some(Cow::from(self.as_str()))
+    }
+}
+
+impl ValidateUrl for Option<&String> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            Some(Cow::from(*u))
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateUrl for Option<Option<&String>> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            if let Some(u) = u {
+                Some(Cow::from(*u))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> ValidateUrl for &'a str {
+    fn to_url_string(&self) -> Option<Cow<'_, str>> {
+        Some(Cow::from(*self))
+    }
+}
+
+impl<'a> ValidateUrl for Option<&'a str> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            Some(Cow::from(*u))
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> ValidateUrl for Option<Option<&'a str>> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            if let Some(u) = u {
+                Some(Cow::from(*u))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 
