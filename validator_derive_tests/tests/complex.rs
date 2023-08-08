@@ -35,9 +35,9 @@ struct SignupData {
     #[validate(range(min = 18, max = 20))]
     age: u32,
     #[validate]
-    card: Option<Card>,
+    _card: Option<Card>,
     #[validate]
-    preferences: Vec<Preference>,
+    _preferences: Vec<Preference>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -63,12 +63,12 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
-        card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
-        preferences: vec![Preference { name: "marketing".to_string(), value: false }],
+        _card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
+        _preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
 
     assert!(signup
-        .validate(|username| validate_unique_username(&username), validate_signup)
+        .validate(|username| validate_unique_username(username), validate_signup)
         .is_ok());
 }
 
@@ -79,8 +79,8 @@ fn failed_validation_points_to_original_field_name() {
         site: "http://hello.com".to_string(),
         first_name: "".to_string(),
         age: 18,
-        card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
-        preferences: vec![Preference { name: "abc".to_string(), value: true }],
+        _card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
+        _preferences: vec![Preference { name: "abc".to_string(), value: true }],
     };
     let res = signup.validate(|username| validate_unique_username(username), validate_signup);
     // println!("{}", serde_json::to_string(&res).unwrap());
@@ -175,7 +175,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         re: Some("hi"),
         custom: Some("hey"),
     };
-    assert!(s.validate(|s| check_str(s)).is_ok());
+    assert!(s.validate(check_str).is_ok());
 }
 
 #[test]
@@ -232,7 +232,7 @@ fn test_can_validate_option_fields_without_lifetime() {
 
 #[test]
 fn test_works_with_question_mark_operator() {
-    fn check_str(_: &String) -> Result<(), ValidationError> {
+    fn _check_str(_: &String) -> Result<(), ValidationError> {
         Ok(())
     }
 
@@ -242,11 +242,11 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
-            card: None,
-            preferences: Vec::new(),
+            _card: None,
+            _preferences: Vec::new(),
         };
 
-        signup.validate(|s| validate_unique_username(&s), validate_signup)?;
+        signup.validate(|s| validate_unique_username(s), validate_signup)?;
         Ok(())
     }
 

@@ -13,7 +13,7 @@ struct Root<'a> {
     value: String,
 
     #[validate]
-    a: &'a A,
+    _a: &'a A,
 }
 
 #[derive(Debug, Validate)]
@@ -22,7 +22,7 @@ struct A {
     value: String,
 
     #[validate]
-    b: B,
+    _b: B,
 }
 
 #[derive(Debug, Validate)]
@@ -34,14 +34,14 @@ struct B {
 #[derive(Debug, Validate)]
 struct ParentWithOptionalChild {
     #[validate]
-    child: Option<Child>,
+    _child: Option<Child>,
 }
 
 #[derive(Debug, Validate)]
 struct ParentWithVectorOfChildren {
     #[validate]
     #[validate(length(min = 1))]
-    child: Vec<Child>,
+    _child: Vec<Child>,
 }
 
 #[derive(Debug, Validate)]
@@ -117,7 +117,7 @@ struct Child {
 fn is_fine_with_nested_validations() {
     let root = Root {
         value: "valid".to_string(),
-        a: &A { value: "valid".to_string(), b: B { value: "valid".to_string() } },
+        _a: &A { value: "valid".to_string(), _b: B { value: "valid".to_string() } },
     };
 
     assert!(root.validate().is_ok());
@@ -127,7 +127,7 @@ fn is_fine_with_nested_validations() {
 fn failed_validation_points_to_original_field_names() {
     let root = Root {
         value: String::new(),
-        a: &A { value: String::new(), b: B { value: String::new() } },
+        _a: &A { value: String::new(), _b: B { value: String::new() } },
     };
 
     let res = root.validate();
@@ -176,7 +176,7 @@ fn failed_validation_points_to_original_field_names() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    let instance = ParentWithOptionalChild { child: Some(Child { value: String::new() }) };
+    let instance = ParentWithOptionalChild { _child: Some(Child { value: String::new() }) };
 
     let res = instance.validate();
     assert!(res.is_err());
@@ -205,12 +205,12 @@ fn test_can_validate_option_fields_with_lifetime() {
     #[derive(Debug, Validate)]
     struct ParentWithLifetimeAndOptionalChild<'a> {
         #[validate]
-        child: Option<&'a Child>,
+        _child: Option<&'a Child>,
     }
 
     let child = Child { value: String::new() };
 
-    let instance = ParentWithLifetimeAndOptionalChild { child: Some(&child) };
+    let instance = ParentWithLifetimeAndOptionalChild { _child: Some(&child) };
 
     let res = instance.validate();
     assert!(res.is_err());
@@ -236,7 +236,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_works_with_none_values() {
-    let instance = ParentWithOptionalChild { child: None };
+    let instance = ParentWithOptionalChild { _child: None };
 
     let res = instance.validate();
     assert!(res.is_ok());
@@ -245,7 +245,7 @@ fn test_works_with_none_values() {
 #[test]
 fn test_can_validate_vector_fields() {
     let instance = ParentWithVectorOfChildren {
-        child: vec![
+        _child: vec![
             Child { value: "valid".to_string() },
             Child { value: String::new() },
             Child { value: "valid".to_string() },
@@ -595,7 +595,7 @@ fn test_can_validate_option_set_fields() {
 
 #[test]
 fn test_field_validations_take_priority_over_nested_validations() {
-    let instance = ParentWithVectorOfChildren { child: Vec::new() };
+    let instance = ParentWithVectorOfChildren { _child: Vec::new() };
 
     let res = instance.validate();
     assert!(res.is_err());
