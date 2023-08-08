@@ -9,5 +9,6 @@ pub mod must_match;
 #[cfg(feature = "unic")]
 pub mod non_control_character;
 pub mod range;
+pub mod regex;
 pub mod required;
 pub mod urls;

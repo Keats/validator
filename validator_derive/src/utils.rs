@@ -35,6 +35,7 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
     let mut reqired = quote!();
     let mut contains = quote!();
     let mut does_not_contain = quote!();
+    let mut regex = quote!();
 
     for f in fields {
         if f.length.is_some() {
@@ -96,6 +97,12 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
                 use validator::ValidateDoesNotContain;
             );
         }
+
+        if f.regex.is_some() {
+            regex = quote!(
+                use validator::ValidateRegex;
+            );
+        }
     }
 
     quote!(
@@ -109,5 +116,6 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
         #reqired
         #contains
         #does_not_contain
+        #regex
     )
 }

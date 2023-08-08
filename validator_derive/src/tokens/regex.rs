@@ -14,7 +14,7 @@ pub fn regex_tokens(
     let code = quote_code(regex.code, "regex");
 
     quote! {
-        if !#path.is_match(&self.#field_name) {
+        if !&self.#field_name.validate_regex(&#path) {
             #code
             #message
             err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
