@@ -14,14 +14,14 @@ readme = "../README.md"
 url = "2"
 regex = "1"
 lazy_static = "1"
-idna = "0.2"
+idna = "0.4"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
 validator_derive = { version = "0.16", path = "../validator_derive", optional = true }
-card-validate = { version = "2.2", optional = true }
+card-validate = { version = "2.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
-indexmap = { version = "1", features = ["serde-1"], optional = true }
+indexmap = { version = "2.0.0", features = ["serde"], optional = true }
 
 [features]
 card = ["card-validate", "validator_derive/card"]
