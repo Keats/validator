@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_validate_contains_string_can_fail() {
-        assert!("hey".validate_contains("o"));
+        assert!(!"hey".validate_contains("o"));
     }
 
     #[test]

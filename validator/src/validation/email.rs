@@ -170,6 +170,36 @@ impl<'a> ValidateEmail for Option<Option<&'a str>> {
     }
 }
 
+impl ValidateEmail for Cow<'_, str> {
+    fn to_email_string(&self) -> Option<Cow<'_, str>> {
+        Some(self.clone())
+    }
+}
+
+impl ValidateEmail for Option<Cow<'_, str>> {
+    fn to_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            Some(u.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateEmail for Option<Option<Cow<'_, str>>> {
+    fn to_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            if let Some(u) = u {
+                Some(u.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;

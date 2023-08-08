@@ -109,6 +109,36 @@ impl<'a> ValidateUrl for Option<Option<&'a str>> {
     }
 }
 
+impl ValidateUrl for Cow<'_, str> {
+    fn to_url_string(&self) -> Option<Cow<'_, str>> {
+        Some(self.clone())
+    }
+}
+
+impl ValidateUrl for Option<Cow<'_, str>> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            Some(u.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateUrl for Option<Option<Cow<'_, str>>> {
+    fn to_url_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            if let Some(u) = u {
+                Some(u.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
