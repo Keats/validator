@@ -40,7 +40,7 @@ pub enum ValidationErrorsKind {
 }
 
 #[derive(Default, Debug, Serialize, Clone, PartialEq)]
-pub struct ValidationErrors(HashMap<&'static str, ValidationErrorsKind>);
+pub struct ValidationErrors(pub HashMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
     pub fn new() -> ValidationErrors {
@@ -114,6 +114,16 @@ impl ValidationErrors {
                 parent_errors.add_nested(field, ValidationErrorsKind::List(errors));
                 parent_errors
             })
+        }
+    }
+
+    pub fn add_non_nested(&mut self, field: &'static str, error: Result<(), ValidationErrors>) {
+        if let Err(e) = error {
+            if let Some(f) = e.0.get(field) {
+                if !self.0.contains_key(field) {
+                    self.0.insert(field, f.clone());
+                }
+            }
         }
     }
 

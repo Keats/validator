@@ -36,6 +36,7 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
     let mut contains = quote!();
     let mut does_not_contain = quote!();
     let mut regex = quote!();
+    let mut nested = quote!();
 
     for f in fields {
         if f.length.is_some() {
@@ -103,6 +104,12 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
                 use validator::ValidateRegex;
             );
         }
+
+        if f.nested.is_some() {
+            nested = quote!(
+                use validator::ValidateNested;
+            );
+        }
     }
 
     quote!(
@@ -117,5 +124,6 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
         #contains
         #does_not_contain
         #regex
+        #nested
     )
 }

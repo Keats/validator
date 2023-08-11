@@ -74,6 +74,7 @@ pub use validation::email::{validate_email, ValidateEmail};
 pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6, ValidateIp};
 pub use validation::length::{validate_length, ValidateLength};
 pub use validation::must_match::validate_must_match;
+pub use validation::nested::ValidateNested;
 #[cfg(feature = "unic")]
 pub use validation::non_control_character::{
     validate_non_control_character, ValidateNonControlCharacter,

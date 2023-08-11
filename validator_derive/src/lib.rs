@@ -16,6 +16,7 @@ use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
 use tokens::must_match::must_match_tokens;
+use tokens::nested::nested_tokens;
 use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
 use tokens::regex::regex_tokens;
@@ -190,6 +191,16 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        let nested = if let Some(n) = self.nested {
+            if n {
+                nested_tokens(&field_name, &field_name_str)
+            } else {
+                quote!()
+            }
+        } else {
+            quote!()
+        };
+
         tokens.extend(quote! {
             #length
             #email
@@ -205,6 +216,7 @@ impl ToTokens for ValidateField {
             #must_match
             #regex
             #custom
+            #nested
         });
     }
 }
@@ -212,7 +224,7 @@ impl ToTokens for ValidateField {
 // The main struct we get from parsing the attributes
 // The "supports(struct_named)" should guarantee to only have this
 // macro work with structs with named fields I think?
-#[derive(FromDeriveInput)]
+#[derive(Debug, FromDeriveInput)]
 #[darling(attributes(validate), supports(struct_named))]
 struct ValidationData {
     ident: syn::Ident,
@@ -226,14 +238,24 @@ struct ValidationData {
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
 
-    // Parse the input to the ValidationData struct defined above
+    // parse the input to the ValidationData struct defined above
     let validation_data = match ValidationData::from_derive_input(&input) {
         Ok(data) => data,
         Err(e) => return e.write_errors().into(),
     };
 
-    // Get all the fields to quote them below
-    let validation_fields = validation_data.data.take_struct().unwrap().fields;
+    // get all the fields to quote them below
+    let validation_fields: Vec<ValidateField> = validation_data
+        .data
+        .take_struct()
+        .unwrap()
+        .fields
+        .into_iter()
+        // skip fields with #[validate(skip)] attribute
+        .filter(|f| if let Some(s) = f.skip { !s } else { true })
+        .collect();
+
+    // generate `use` statements for all used validator traits
     let use_statements = quote_use_stmts(&validation_fields);
 
     let fields_with_custom_validations: Vec<&ValidateField> =

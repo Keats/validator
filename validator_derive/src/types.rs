@@ -28,6 +28,8 @@ pub struct ValidateField {
     pub url: Option<Override<Url>>,
     pub regex: Option<Regex>,
     pub custom: Option<Override<Custom>>,
+    pub skip: Option<bool>,
+    pub nested: Option<bool>,
 }
 
 // Structs to hold the validation information and to provide attributes
