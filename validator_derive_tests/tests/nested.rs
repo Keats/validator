@@ -731,6 +731,7 @@ fn test_field_validations_take_priority_over_nested_validations() {
     let instance = ParentWithVectorOfChildren { child: Vec::new() };
 
     let res = instance.validate();
+
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.errors();

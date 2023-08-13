@@ -10,8 +10,15 @@ impl<T> ValidateNested for T
 where
     T: Validate,
 {
-    fn validate_nested(&self, _field_name: &'static str) -> Result<(), ValidationErrors> {
-        self.validate()
+    fn validate_nested(&self, field_name: &'static str) -> Result<(), ValidationErrors> {
+        let res = self.validate();
+
+        if let Err(e) = res {
+            let new_err = ValidationErrorsKind::Struct(Box::new(e));
+            Err(ValidationErrors(HashMap::from([(field_name, new_err)])))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -19,9 +26,9 @@ impl<T> ValidateNested for Option<T>
 where
     T: Validate,
 {
-    fn validate_nested(&self, _field_name: &'static str) -> Result<(), ValidationErrors> {
+    fn validate_nested(&self, field_name: &'static str) -> Result<(), ValidationErrors> {
         if let Some(s) = self {
-            s.validate()
+            s.validate_nested(field_name)
         } else {
             Ok(())
         }
@@ -32,10 +39,10 @@ impl<T> ValidateNested for Option<Option<T>>
 where
     T: Validate,
 {
-    fn validate_nested(&self, _field_name: &'static str) -> Result<(), ValidationErrors> {
+    fn validate_nested(&self, field_name: &'static str) -> Result<(), ValidationErrors> {
         if let Some(s) = self {
             if let Some(s) = s {
-                s.validate()
+                s.validate_nested(field_name)
             } else {
                 Ok(())
             }

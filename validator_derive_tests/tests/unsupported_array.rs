@@ -1,4 +1,4 @@
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
 fn valid_custom_fn(arr: &[u8; 2]) -> Result<(), ValidationError> {
     match arr[0] == 1 {

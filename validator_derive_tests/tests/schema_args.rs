@@ -1,6 +1,6 @@
 use std::ops::AddAssign;
 
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
 struct CustomStruct {
     pub counter: i32,

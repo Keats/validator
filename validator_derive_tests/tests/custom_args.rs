@@ -1,7 +1,7 @@
 use std::ops::AddAssign;
 use std::path::Path;
 
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
 #[derive(Debug, PartialEq)]
 struct TestArg {
@@ -56,11 +56,11 @@ fn validate_multiple_custom_fn() {
     let test_arg3 = TestArg { val: "test".to_string() };
 
     assert!(test_struct
-        .validate(
+        .validate((
             |s| valid_fn(s, test_arg1),
             |s| valid_fn(s, test_arg2),
             |s| valid_fn(s, test_arg3)
-        )
+        ))
         .is_ok());
 }
 

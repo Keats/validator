@@ -1,4 +1,4 @@
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
 #[test]
 fn can_validate_schema_fn_ok() {

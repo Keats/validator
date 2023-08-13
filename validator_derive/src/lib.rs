@@ -261,6 +261,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let fields_with_custom_validations: Vec<&ValidateField> =
         validation_fields.iter().filter(|f| f.custom.is_some()).collect();
 
+    // prepare closure idents based on the fields that require them
     let mut custom_validation_closures: Vec<Ident> = fields_with_custom_validations
         .iter()
         .map(|f| format_ident!("{}_closure", f.ident.clone().unwrap()))
@@ -293,16 +294,18 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         _ => todo!(),
     };
 
-    let generics_for_fn = if custom_validation_closures.len() > 1 {
+    // generate generics for the impl for ValidateArgs
+    let generics_for_impl = if custom_validation_closures.len() > 1 {
         quote!(#(#generics_for_closures, )*)
     } else {
         quote!(#(#generics_for_closures)*)
     };
 
-    let args_for_fn = if custom_validation_closures.len() > 1 {
-        quote!(#(#custom_validation_closures: #generics_for_closures, )*)
+    // put the generics in a tuple if there's more than one
+    let generics_in_parens = if custom_validation_closures.len() > 1 {
+        quote!((#(#generics_for_closures, )*))
     } else {
-        quote!(#(#custom_validation_closures: #generics_for_closures)*)
+        quote!(#(#generics_for_closures)*)
     };
 
     let mut types_for_closures: Vec<Type> =
@@ -319,12 +322,27 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!(#(#generics_for_closures: FnOnce(&#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
     };
 
+    // prepare a destructure parens if there's more than one custom validation
+    let destructure_for_args = if custom_validation_closures.len() > 1 {
+        quote!((#(#custom_validation_closures, )*))
+    } else {
+        quote!(#(#custom_validation_closures)*)
+    };
+
     let ident = validation_data.ident;
-    let (imp, ty, gen) = validation_data.generics.split_for_impl();
+    let generics = &validation_data.generics.params;
+    let (imp, ty, whr) = validation_data.generics.split_for_impl();
+
+    // prepare the impl<...> block with generics
+    let arg_imp = if generics.is_empty() {
+        quote!(<#generics_for_impl>)
+    } else {
+        quote!(<#generics, #generics_for_impl>)
+    };
 
     if custom_validation_closures.is_empty() {
         quote! {
-            impl #imp ::validator::Validate for #ident #ty #gen {
+            impl #imp ::validator::Validate for #ident #ty #whr {
                 fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                     #use_statements
 
@@ -343,13 +361,16 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .into()
     } else {
         quote!(
-            impl #imp #ident #ty #gen {
-                pub fn validate<#generics_for_fn>(&self, #args_for_fn)
+            impl #arg_imp ::validator::ValidateArgs<#generics_in_parens> for #ident #ty #whr
+            where #where_clause_for_fn {
+                fn validate(&self, args: #generics_in_parens)
                 -> ::std::result::Result<(), ::validator::ValidationErrors>
-                where #where_clause_for_fn {
+                 {
                     #use_statements
 
                     let mut errors = ::validator::ValidationErrors::new();
+
+                    let #destructure_for_args = args;
 
                     #schema
 

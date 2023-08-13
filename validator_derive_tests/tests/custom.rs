@@ -1,4 +1,4 @@
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
 fn valid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Ok(())

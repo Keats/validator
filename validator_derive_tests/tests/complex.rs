@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 
-use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
+use validator::{Validate, ValidateArgs, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
     if username == "xXxShad0wxXx" {
@@ -68,7 +68,7 @@ fn is_fine_with_many_valid_validations() {
     };
 
     assert!(signup
-        .validate(|username| validate_unique_username(username), validate_signup)
+        .validate((|username| validate_unique_username(username), validate_signup))
         .is_ok());
 }
 
@@ -247,7 +247,7 @@ fn test_works_with_question_mark_operator() {
             _preferences: Vec::new(),
         };
 
-        signup.validate(|s| validate_unique_username(s), validate_signup)?;
+        signup.validate((|s| validate_unique_username(s), validate_signup))?;
         Ok(())
     }
 
