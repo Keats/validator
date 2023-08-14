@@ -3,43 +3,28 @@ on: [push, pull_request]
 
 jobs:
   test_validator:
-    name: test validator
-    runs-on: ${{ matrix.os }}
+    name: Continuous integration
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [pinned, stable, nightly]
         include:
-          - build: pinned
-            os: ubuntu-20.04
-            rust: 1.56.1
-          - build: stable
-            os: ubuntu-20.04
-            rust: stable
-          - build: nightly
-            os: ubuntu-20.04
-            rust: nightly
+          - rust: 1.70.0 # MSRV
+          - rust: stable
+          - rust: beta
+          - rust: nightly
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Install Rust
-        uses: hecrj/setup-rust-action@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          rust-version: ${{ matrix.rust }}
+          toolchain: ${{ matrix.rust }}
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
       - name: Build System Info
         run: rustc --version
-
-      - name: tests validator with all features
-        run: cd validator && cargo test --all-features
-      - name: tests validator with no features
-        run: cd validator && cargo test --no-default-features
-
-  test_validator_derive:
-    name: test validator_derive
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: tests validator_derive with all features
-        run: cd validator_derive_tests && cargo test
+      - name: Tests
+        run: |
+          cargo build --all-features
+          cargo test --all-features
+          cargo build --no-default-features
+          cargo test --no-default-features
