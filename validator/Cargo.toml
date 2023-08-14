@@ -12,7 +12,7 @@ readme = "../README.md"
 
 [dependencies]
 url = "2"
-regex = "1"
+regex = { version = "1", default-features = false, features = ["std"] }
 lazy_static = "1"
 idna = "0.4"
 serde = "1"
