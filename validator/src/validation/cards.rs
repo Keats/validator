@@ -2,12 +2,6 @@ use std::borrow::Cow;
 
 use card_validate::Validate as CardValidate;
 
-#[must_use]
-pub fn validate_credit_card<T: ValidateCreditCard>(card: T) -> bool
-{
-    card.validate_credit_card()
-}
-
 pub trait ValidateCreditCard {
     #[must_use]
     fn validate_credit_card(&self) -> bool {
@@ -28,8 +22,6 @@ impl<T: AsRef<str>> ValidateCreditCard for T {
 mod tests {
     use std::borrow::Cow;
 
-    use super::validate_credit_card;
-
     #[test]
     fn test_credit_card() {
         let tests = vec![
@@ -40,7 +32,7 @@ mod tests {
         ];
 
         for (input, expected) in tests {
-            assert_eq!(validate_credit_card(input), expected);
+            assert_eq!(input.validate_credit_card(), expected);
         }
     }
 

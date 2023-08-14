@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
 
-use crate::{validation::ip::validate_ip, HasLen};
+use crate::{HasLen, ValidateIp};
 
 lazy_static! {
     // Regex from the specs
@@ -17,14 +17,6 @@ lazy_static! {
     static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"(?i)\[([A-f0-9:\.]+)\]\z").unwrap();
 }
 
-/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
-/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
-/// that are unfamiliar to most users.
-#[must_use]
-pub fn validate_email<T: ValidateEmail>(val: T) -> bool {
-    val.validate_email()
-}
-
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
 #[must_use]
 fn validate_domain_part(domain_part: &str) -> bool {
@@ -35,13 +27,16 @@ fn validate_domain_part(domain_part: &str) -> bool {
     // maybe we have an ip as a domain?
     match EMAIL_LITERAL_RE.captures(domain_part) {
         Some(caps) => match caps.get(1) {
-            Some(c) => validate_ip(c.as_str()),
+            Some(c) => c.as_str().validate_ip(),
             None => false,
         },
         None => false,
     }
 }
 
+/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
+/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
+/// that are unfamiliar to most users.
 pub trait ValidateEmail {
     fn validate_email(&self) -> bool {
         let val = if let Some(v) = self.to_email_string() { v } else { return true };
@@ -204,7 +199,7 @@ impl ValidateEmail for Option<Option<Cow<'_, str>>> {
 mod tests {
     use std::borrow::Cow;
 
-    use super::validate_email;
+    use crate::ValidateEmail;
 
     #[test]
     fn test_validate_email() {
@@ -264,7 +259,7 @@ mod tests {
         for (input, expected) in tests {
             // println!("{} - {}", input, expected);
             assert_eq!(
-                validate_email(input),
+                input.validate_email(),
                 expected,
                 "Email `{}` was not classified correctly",
                 input
@@ -275,22 +270,22 @@ mod tests {
     #[test]
     fn test_validate_email_cow() {
         let test: Cow<'static, str> = "email@here.com".into();
-        assert!(validate_email(test));
+        assert!(test.validate_email());
         let test: Cow<'static, str> = String::from("email@here.com").into();
-        assert!(validate_email(test));
+        assert!(test.validate_email());
         let test: Cow<'static, str> = "a@[127.0.0.1]\n".into();
-        assert!(!validate_email(test));
+        assert!(!test.validate_email());
         let test: Cow<'static, str> = String::from("a@[127.0.0.1]\n").into();
-        assert!(!validate_email(test));
+        assert!(!test.validate_email());
     }
 
     #[test]
     fn test_validate_email_rfc5321() {
         // 65 character local part
         let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
-        assert_eq!(validate_email(test), false);
+        assert_eq!(test.validate_email(), false);
         // 256 character domain part
         let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
-        assert_eq!(validate_email(test), false);
+        assert_eq!(test.validate_email(), false);
     }
 }

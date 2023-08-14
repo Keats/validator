@@ -1,10 +1,5 @@
 use unic_ucd_common::control;
 
-#[must_use]
-pub fn validate_non_control_character<T: ValidateNonControlCharacter>(val: T) -> bool {
-    val.validate_non_control_character()
-}
-
 pub trait ValidateNonControlCharacter {
     #[must_use]
     fn validate_non_control_character(&self) -> bool {

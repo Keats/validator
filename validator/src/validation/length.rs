@@ -11,16 +11,6 @@ use indexmap::{IndexMap, IndexSet};
 ///
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
-#[must_use]
-pub fn validate_length<T: ValidateLength<u64>>(
-    value: T,
-    min: Option<u64>,
-    max: Option<u64>,
-    equal: Option<u64>,
-) -> bool {
-    value.validate_length(min, max, equal)
-}
-
 pub trait ValidateLength<T>
 where
     T: PartialEq + PartialOrd,
@@ -642,45 +632,45 @@ impl<'a, T> ValidateLength<u64> for Option<Option<&'a IndexSet<T>>> {
 mod tests {
     use std::borrow::Cow;
 
-    use crate::{validate_length, validation::length::ValidateLength};
+    use super::ValidateLength;
 
     #[test]
     fn test_validate_length_equal_overrides_min_max() {
-        assert!(validate_length("hello", Some(1), Some(2), Some(5)));
+        assert!("hello".validate_length(Some(1), Some(2), Some(5)));
     }
 
     #[test]
     fn test_validate_length_string_min_max() {
-        assert!(validate_length("hello", Some(1), Some(10), None));
+        assert!("hello".validate_length(Some(1), Some(10), None));
     }
 
     #[test]
     fn test_validate_length_string_min_only() {
-        assert!(!validate_length("hello", Some(10), None, None));
+        assert!(!"hello".validate_length(Some(10), None, None));
     }
 
     #[test]
     fn test_validate_length_string_max_only() {
-        assert!(!validate_length("hello", None, Some(1), None));
+        assert!(!"hello".validate_length(None, Some(1), None));
     }
 
     #[test]
     fn test_validate_length_cow() {
         let test: Cow<'static, str> = "hello".into();
-        assert!(validate_length(test, None, None, Some(5)));
+        assert!(test.validate_length(None, None, Some(5)));
 
         let test: Cow<'static, str> = String::from("hello").into();
-        assert!(validate_length(test, None, None, Some(5)));
+        assert!(test.validate_length(None, None, Some(5)));
     }
 
     #[test]
     fn test_validate_length_vec() {
-        assert!(validate_length(vec![1, 2, 3], None, None, Some(3)));
+        assert!(vec![1, 2, 3].validate_length(None, None, Some(3)));
     }
 
     #[test]
     fn test_validate_length_unicode_chars() {
-        assert!(validate_length("日本", None, None, Some(2)));
+        assert!("日本".validate_length(None, None, Some(2)));
     }
 
     #[test]

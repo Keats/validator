@@ -67,22 +67,20 @@ mod types;
 mod validation;
 
 #[cfg(feature = "card")]
-pub use validation::cards::{validate_credit_card, ValidateCreditCard};
+pub use validation::cards::ValidateCreditCard;
 pub use validation::contains::ValidateContains;
 pub use validation::does_not_contain::ValidateDoesNotContain;
-pub use validation::email::{validate_email, ValidateEmail};
-pub use validation::ip::{validate_ip, validate_ip_v4, validate_ip_v6, ValidateIp};
-pub use validation::length::{validate_length, ValidateLength};
+pub use validation::email::ValidateEmail;
+pub use validation::ip::ValidateIp;
+pub use validation::length::ValidateLength;
 pub use validation::must_match::validate_must_match;
 pub use validation::nested::ValidateNested;
 #[cfg(feature = "unic")]
-pub use validation::non_control_character::{
-    validate_non_control_character, ValidateNonControlCharacter,
-};
+pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
 pub use validation::regex::ValidateRegex;
-pub use validation::required::{validate_required, ValidateRequired};
-pub use validation::urls::{validate_url, ValidateUrl};
+pub use validation::required::ValidateRequired;
+pub use validation::urls::ValidateUrl;
 
 pub use traits::{HasLen, Validate, ValidateArgs};
 pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
