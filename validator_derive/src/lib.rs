@@ -285,14 +285,11 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!()
     };
 
-    let generics_for_closures = match custom_validation_closures.len() {
-        0 => vec![],
-        1 => vec![quote!(T)],
-        2 => vec![quote!(T), quote!(U)],
-        3 => vec![quote!(T), quote!(U), quote!(V)],
-        4 => vec![quote!(T), quote!(U), quote!(V), quote!(Z)],
-        _ => todo!(),
-    };
+    let generics_for_closures: Vec<Ident> = custom_validation_closures
+        .iter()
+        .enumerate()
+        .map(|(i, _)| format_ident!("A{}", i))
+        .collect();
 
     // generate generics for the impl for ValidateArgs
     let generics_for_impl = if custom_validation_closures.len() > 1 {
