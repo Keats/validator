@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 
+#[cfg(feature = "card")]
 use card_validate::Validate as CardValidate;
 
 pub trait ValidateCreditCard {
-    #[must_use]
     fn validate_credit_card(&self) -> bool {
         let card_string = self.to_credit_card_string();
         CardValidate::from(&card_string).is_ok()
@@ -19,7 +19,9 @@ impl<T: AsRef<str>> ValidateCreditCard for T {
 }
 
 #[cfg(test)]
+#[cfg(feature = "card")]
 mod tests {
+    use super::ValidateCreditCard;
     use std::borrow::Cow;
 
     #[test]
@@ -39,12 +41,12 @@ mod tests {
     #[test]
     fn test_credit_card_cow() {
         let test: Cow<'static, str> = "4539571147647251".into();
-        assert!(validate_credit_card(test));
+        assert!(test.validate_credit_card());
         let test: Cow<'static, str> = String::from("4539571147647251").into();
-        assert!(validate_credit_card(test));
+        assert!(test.validate_credit_card());
         let test: Cow<'static, str> = "5236313877109141".into();
-        assert!(!validate_credit_card(test));
+        assert!(!test.validate_credit_card());
         let test: Cow<'static, str> = String::from("5236313877109141").into();
-        assert!(!validate_credit_card(test));
+        assert!(!test.validate_credit_card());
     }
 }

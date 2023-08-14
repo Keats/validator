@@ -7,7 +7,7 @@ description = "Common validation functions (email, url, length, ...) and trait -
 homepage = "https://github.com/Keats/validator"
 repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]
-edition = "2018"
+edition = "2021"
 readme = "../README.md"
 
 [dependencies]
@@ -24,6 +24,6 @@ unic-ucd-common = { version = "0.9", optional = true }
 indexmap = { version = "2.0.0", features = ["serde"], optional = true }
 
 [features]
-card = ["card-validate", "validator_derive/card"]
-unic = ["unic-ucd-common", "validator_derive/unic"]
+card = ["card-validate"]
+unic = ["unic-ucd-common"]
 derive = ["validator_derive"]

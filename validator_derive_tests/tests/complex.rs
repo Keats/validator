@@ -155,7 +155,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         url: Option<&'a str>,
         #[validate(contains(pattern = "@"))]
         text: Option<&'a str>,
-        #[validate(regex(path = "RE2"))]
+        #[validate(regex(path = *RE2))]
         re: Option<&'a str>,
         #[validate(custom)]
         custom: Option<&'a str>,
@@ -205,7 +205,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         url: Option<String>,
         #[validate(contains(pattern = "@"))]
         text: Option<String>,
-        #[validate(regex(path = "RE2"))]
+        #[validate(regex(path = *RE2))]
         re: Option<String>,
         #[validate(custom)]
         custom: Option<String>,
