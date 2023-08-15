@@ -9,7 +9,11 @@ pub fn custom_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let closure = format_ident!("{}_closure", field_name);
+    let fn_call = if let Some(function) = custom.function {
+        function
+    } else {
+        format_ident!("{}_closure", field_name)
+    };
 
     let message = quote_message(custom.message);
 
@@ -22,7 +26,7 @@ pub fn custom_tokens(
     };
 
     quote! {
-        match #closure(&self.#field_name) {
+        match #fn_call(&self.#field_name) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code

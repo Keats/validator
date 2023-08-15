@@ -258,8 +258,16 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     // generate `use` statements for all used validator traits
     let use_statements = quote_use_stmts(&validation_fields);
 
-    let fields_with_custom_validations: Vec<&ValidateField> =
-        validation_fields.iter().filter(|f| f.custom.is_some()).collect();
+    let fields_with_custom_validations: Vec<&ValidateField> = validation_fields
+        .iter()
+        .filter(|f| {
+            // If field has a custom function without the argument `function` specified add it to the list
+            f.custom.as_ref().is_some_and(|c| match c {
+                Override::Inherit => true,
+                Override::Explicit(c) => !c.function.is_some(),
+            })
+        })
+        .collect();
 
     // prepare closure idents based on the fields that require them
     let mut custom_validation_closures: Vec<Ident> = fields_with_custom_validations

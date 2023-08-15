@@ -1,7 +1,7 @@
 use darling::util::Override;
 use darling::{FromField, FromMeta};
 
-use syn::Expr;
+use syn::{Expr, Ident};
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`
@@ -124,6 +124,7 @@ pub struct Regex {
 
 #[derive(Debug, Clone, FromMeta, Default)]
 pub struct Custom {
+    pub function: Option<Ident>,
     pub message: Option<String>,
     pub code: Option<String>,
 }

@@ -73,3 +73,32 @@ fn can_specify_code_for_custom_fn() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().code, "custom_validation");
 }
+
+#[test]
+fn can_nest_custom_validations() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(nested)]
+        a: A,
+    }
+
+    #[derive(Validate)]
+    struct A {
+        #[validate(custom(function = custom_fn))]
+        val: String,
+    }
+
+    fn custom_fn(val: &String) -> Result<(), ValidationError> {
+        if val == "value" {
+            Ok(())
+        } else {
+            Err(ValidationError::new("Invalid string"))
+        }
+    }
+
+    let t = TestStruct { a: A { val: "value".to_string() } };
+    assert!(t.validate().is_ok());
+
+    let t = TestStruct { a: A { val: "invalid value".to_string() } };
+    assert!(t.validate().is_err());
+}
