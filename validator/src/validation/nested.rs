@@ -22,26 +22,6 @@ where
     }
 }
 
-impl<'a, 'v_a, T, U> ValidateNested<U> for &'a T
-where
-    T: ValidateArgs<'v_a, Args = U>,
-{
-    fn validate_nested(
-        &'a self,
-        field_name: &'static str,
-        args: U,
-    ) -> Result<(), ValidationErrors> {
-        let res = self.validate_with_args(args);
-
-        if let Err(e) = res {
-            let new_err = ValidationErrorsKind::Struct(Box::new(e));
-            Err(ValidationErrors(HashMap::from([(field_name, new_err)])))
-        } else {
-            Ok(())
-        }
-    }
-}
-
 impl<T, U> ValidateNested<U> for Option<T>
 where
     T: ValidateNested<U>,
