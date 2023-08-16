@@ -1,4 +1,4 @@
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::Ident;
 
 use crate::types::Custom;
@@ -9,10 +9,15 @@ pub fn custom_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let fn_call = if let Some(function) = custom.function {
-        function
+    let fn_call = custom.function;
+    let args = if let Some(arg) = custom.use_context {
+        if arg {
+            quote!(&self.#field_name, args)
+        } else {
+            quote! (&self.#field_name)
+        }
     } else {
-        format_ident!("{}_closure", field_name)
+        quote!(&self.#field_name)
     };
 
     let message = quote_message(custom.message);
@@ -26,7 +31,7 @@ pub fn custom_tokens(
     };
 
     quote! {
-        match #fn_call(&self.#field_name) {
+        match #fn_call(#args) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code

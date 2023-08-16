@@ -1,12 +1,19 @@
-use convert_case::{Case, Casing};
-use quote::{format_ident, quote};
-use syn::Ident;
+use quote::quote;
 
 use crate::types::Schema;
 use crate::utils::quote_message;
 
-pub fn schema_tokens(schema: Schema, field_name: &Ident) -> proc_macro2::TokenStream {
-    let closure = format_ident!("{}_schema_closure", field_name.to_string().to_case(Case::Snake));
+pub fn schema_tokens(schema: Schema) -> proc_macro2::TokenStream {
+    let fn_call = schema.function;
+    let args = if let Some(args) = schema.use_context {
+        if args {
+            quote!(&self, args)
+        } else {
+            quote!(&self)
+        }
+    } else {
+        quote!(&self)
+    };
 
     let message = quote_message(schema.message);
 
@@ -19,7 +26,7 @@ pub fn schema_tokens(schema: Schema, field_name: &Ident) -> proc_macro2::TokenSt
     };
 
     quote! {
-        match #closure(&self) {
+        match #fn_call(#args) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
                 #code

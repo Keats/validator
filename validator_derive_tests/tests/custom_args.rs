@@ -1,22 +1,21 @@
 use std::ops::AddAssign;
-use std::path::Path;
 
-use validator::{Validate, ValidateArgs, ValidationError};
+use validator::{Validate, ValidateArgs, ValidateContext, ValidationError};
 
-#[derive(Debug, PartialEq)]
-struct TestArg {
+#[derive(Debug, PartialEq, ValidateContext, Clone)]
+struct TestContext {
     val: String,
 }
 
-fn valid_fn(_: &String, _arg: TestArg) -> Result<(), ValidationError> {
+fn valid_fn(_: &String, _arg: &TestContext) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn valid_fn_with_ref(_: &String, _arg: &TestArg) -> Result<(), ValidationError> {
+fn valid_fn_with_ref(_: &String, _arg: &TestContext) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn valid_fn_with_mut_ref(_: &String, arg: &mut TestArg) -> Result<(), ValidationError> {
+fn valid_fn_with_mut_ref(_: &String, arg: &mut TestContext) -> Result<(), ValidationError> {
     arg.val = "new value".to_string();
     Ok(())
 }
@@ -24,24 +23,27 @@ fn valid_fn_with_mut_ref(_: &String, arg: &mut TestArg) -> Result<(), Validation
 #[test]
 fn validate_simple_custom_fn() {
     #[derive(Validate)]
+    #[validate(context = TestContext)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn, use_context))]
         value: String,
     }
 
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(|v| valid_fn(v, TestArg { val: "asd".to_string() })).is_ok());
+    let c = TestContext { val: "asd".to_string() };
+    assert!(test_struct.validate(&c).is_ok());
 }
 
 #[test]
 fn validate_multiple_custom_fn() {
     #[derive(Validate)]
+    #[validate(context = TestContext)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn, use_context))]
         value: String,
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn, use_context))]
         value2: String,
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn, use_context))]
         value3: String,
     }
 
@@ -51,55 +53,50 @@ fn validate_multiple_custom_fn() {
         value3: "fgre".to_string(),
     };
 
-    let test_arg1 = TestArg { val: "test".to_string() };
-    let test_arg2 = TestArg { val: "test".to_string() };
-    let test_arg3 = TestArg { val: "test".to_string() };
+    let test_arg = TestContext { val: "test".to_string() };
 
-    assert!(test_struct
-        .validate((
-            |s| valid_fn(s, test_arg1),
-            |s| valid_fn(s, test_arg2),
-            |s| valid_fn(s, test_arg3)
-        ))
-        .is_ok());
+    assert!(test_struct.validate(&test_arg).is_ok());
 }
 
 #[test]
 fn validate_custom_fn_with_ref() {
     #[derive(Validate)]
+    #[validate(context = TestContext)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn_with_ref, use_context))]
         value: String,
     }
 
-    let val = TestArg { val: "asd".to_string() };
+    let val = TestContext { val: "asd".to_string() };
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(|s| valid_fn_with_ref(s, &val)).is_ok());
+    assert!(test_struct.validate(&val).is_ok());
 
     // test reference
-    assert_eq!(val, TestArg { val: "asd".to_string() });
+    assert_eq!(val, TestContext { val: "asd".to_string() });
 }
 
 #[test]
 fn validate_custom_fn_with_mut_ref() {
     #[derive(Validate)]
+    #[validate(context = TestContext, mutable)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = valid_fn_with_mut_ref, use_context))]
         value: String,
     }
 
-    let mut val = TestArg { val: "old value".to_string() };
+    let mut val = TestContext { val: "old value".to_string() };
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(|s| valid_fn_with_mut_ref(s, &mut val)).is_ok());
+    assert!(test_struct.validate(&mut val).is_ok());
 
-    assert_eq!(val, TestArg { val: "new value".to_string() });
+    assert_eq!(val, TestContext { val: "new value".to_string() });
 }
 
 #[test]
 fn validate_custom_fn_with_complex_args() {
     #[derive(Validate)]
+    #[validate(context = "Arg<i32>", mutable)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = add_assign, use_context))]
         value: String,
     }
 
@@ -107,35 +104,43 @@ fn validate_custom_fn_with_complex_args() {
         counter: T,
     }
 
-    let test_struct = TestStruct { value: "test".to_string() };
-    let closure = |_val: &String, mut arg: Arg<u32>| -> Result<(), ValidationError> {
+    fn add_assign(_value: &str, arg: &mut Arg<i32>) -> Result<(), ValidationError> {
         arg.counter += 1;
         Ok(())
-    };
+    }
 
-    assert!(test_struct.validate(|s| closure(s, Arg { counter: 0 })).is_ok())
+    let mut arg = Arg { counter: 0 };
+    let test_struct = TestStruct { value: "test".to_string() };
+
+    assert!(test_struct.validate(&mut arg).is_ok());
+
+    assert_eq!(arg.counter, 1)
 }
 
 #[test]
 fn validate_custom_fn_with_multiple_args() {
-    #[derive(Validate)]
+    #[derive(Debug, Validate, PartialEq)]
+    #[validate(context = Arg, mutable)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = add_assign, use_context))]
         value: String,
     }
 
+    #[derive(Debug, PartialEq)]
     struct Arg {
         counter: i32,
+        counter2: u8,
     }
 
-    let closure =
-        |_: &String, mut arg: Arg, _foo: &Path, _str: &str| -> Result<(), ValidationError> {
-            arg.counter += 1;
-            Ok(())
-        };
+    fn add_assign(_: &String, arg: &mut Arg) -> Result<(), ValidationError> {
+        arg.counter += 1;
+        arg.counter2 += 2;
+        Ok(())
+    }
 
     let test_struct = TestStruct { value: "something".to_string() };
-    assert!(test_struct
-        .validate(|s| closure(s, Arg { counter: 5 }, Path::new("file.txt"), "str"))
-        .is_ok())
+    let mut arg = Arg { counter: 5, counter2: 16 };
+    assert!(test_struct.validate(&mut arg).is_ok());
+
+    assert_eq!(arg, Arg { counter: 6, counter2: 18 });
 }

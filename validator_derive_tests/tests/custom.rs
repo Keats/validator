@@ -12,25 +12,25 @@ fn invalid_custom_fn(_: &String) -> Result<(), ValidationError> {
 fn can_validate_custom_fn_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = valid_custom_fn))]
         val: String,
     }
 
     let s = TestStruct { val: "hello".to_string() };
 
-    assert!(s.validate(|s| valid_custom_fn(s)).is_ok());
+    assert!(s.validate(()).is_ok());
 }
 
 #[test]
 fn can_fail_custom_fn_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(custom)]
+        #[validate(custom(function = invalid_custom_fn))]
         val: String,
     }
 
     let s = TestStruct { val: String::new() };
-    let res = s.validate(|s| invalid_custom_fn(s));
+    let res = s.validate(());
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -44,11 +44,11 @@ fn can_fail_custom_fn_validation() {
 fn can_specify_message_for_custom_fn() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(custom(message = "oops"))]
+        #[validate(custom(function = invalid_custom_fn, message = "oops"))]
         val: String,
     }
     let s = TestStruct { val: String::new() };
-    let res = s.validate(|s| invalid_custom_fn(s));
+    let res = s.validate(());
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -61,11 +61,11 @@ fn can_specify_message_for_custom_fn() {
 fn can_specify_code_for_custom_fn() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(custom(code = "custom_validation"))]
+        #[validate(custom(function = invalid_custom_fn, code = "custom_validation"))]
         val: String,
     }
     let s = TestStruct { val: String::new() };
-    let res = s.validate(|s| invalid_custom_fn(s));
+    let res = s.validate(());
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -97,8 +97,8 @@ fn can_nest_custom_validations() {
     }
 
     let t = TestStruct { a: A { val: "value".to_string() } };
-    assert!(t.validate().is_ok());
+    assert!(t.validate(()).is_ok());
 
     let t = TestStruct { a: A { val: "invalid value".to_string() } };
-    assert!(t.validate().is_err());
+    assert!(t.validate(()).is_err());
 }

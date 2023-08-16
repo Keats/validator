@@ -21,4 +21,3 @@ proc-macro-error = "1"
 regex = { version = "1", default-features = false, features = ["std"] }
 lazy_static = "1"
 darling = "0.20"
-convert_case = "0.6.0"

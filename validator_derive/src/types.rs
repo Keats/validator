@@ -27,7 +27,7 @@ pub struct ValidateField {
     pub required_nested: Option<Override<Required>>,
     pub url: Option<Override<Url>>,
     pub regex: Option<Regex>,
-    pub custom: Option<Override<Custom>>,
+    pub custom: Option<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
 }
@@ -122,15 +122,18 @@ pub struct Regex {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta, Default)]
+#[derive(Debug, Clone, FromMeta)]
 pub struct Custom {
-    pub function: Option<Ident>,
+    pub function: Ident,
+    pub use_context: Option<bool>,
     pub message: Option<String>,
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, FromMeta, Default)]
+#[derive(Debug, Clone, FromMeta)]
 pub struct Schema {
+    pub function: Ident,
+    pub use_context: Option<bool>,
     pub message: Option<String>,
     pub code: Option<String>,
 }

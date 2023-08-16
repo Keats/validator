@@ -1,12 +1,9 @@
-// #![recursion_limit = "128"]
-
-use convert_case::{Case, Casing};
 use darling::ast::Data;
 use darling::util::Override;
 use darling::FromDeriveInput;
 use proc_macro_error::proc_macro_error;
-use quote::{format_ident, quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Ident, Type};
+use quote::{quote, ToTokens};
+use syn::{parse_macro_input, DeriveInput, Path};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -31,7 +28,6 @@ mod tokens;
 mod types;
 mod utils;
 
-// The field gets converted to tokens in the same format as it was before
 impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
@@ -179,14 +175,7 @@ impl ToTokens for ValidateField {
 
         // Custom validation
         let custom = if let Some(custom) = self.custom.clone() {
-            custom_tokens(
-                match custom {
-                    Override::Inherit => Custom::default(),
-                    Override::Explicit(c) => c,
-                },
-                &field_name,
-                &field_name_str,
-            )
+            custom_tokens(custom, &field_name, &field_name_str)
         } else {
             quote!()
         };
@@ -222,15 +211,16 @@ impl ToTokens for ValidateField {
 }
 
 // The main struct we get from parsing the attributes
-// The "supports(struct_named)" should guarantee to only have this
-// macro work with structs with named fields I think?
+// The "supports(struct_named)" attribute guarantees only named structs to work with this macro
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(validate), supports(struct_named))]
 struct ValidationData {
     ident: syn::Ident,
     generics: syn::Generics,
     data: Data<(), ValidateField>,
-    schema: Option<Override<Schema>>,
+    schema: Option<Schema>,
+    context: Option<Path>,
+    mutable: Option<bool>,
 }
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -242,6 +232,20 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let validation_data = match ValidationData::from_derive_input(&input) {
         Ok(data) => data,
         Err(e) => return e.write_errors().into(),
+    };
+
+    let custom_context = if let Some(context) = validation_data.context {
+        if let Some(mutable) = validation_data.mutable {
+            if mutable {
+                quote!(&'v_a mut #context)
+            } else {
+                quote!(&'v_a #context)
+            }
+        } else {
+            quote!(&'v_a #context)
+        }
+    } else {
+        quote!(())
     };
 
     // get all the fields to quote them below
@@ -258,137 +262,79 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     // generate `use` statements for all used validator traits
     let use_statements = quote_use_stmts(&validation_fields);
 
-    let fields_with_custom_validations: Vec<&ValidateField> = validation_fields
-        .iter()
-        .filter(|f| {
-            // If field has a custom function without the argument `function` specified add it to the list
-            f.custom.as_ref().is_some_and(|c| match c {
-                Override::Inherit => true,
-                Override::Explicit(c) => !c.function.is_some(),
-            })
-        })
-        .collect();
-
-    // prepare closure idents based on the fields that require them
-    let mut custom_validation_closures: Vec<Ident> = fields_with_custom_validations
-        .iter()
-        .map(|f| format_ident!("{}_closure", f.ident.clone().unwrap()))
-        .collect();
-
+    // Schema validation
     let schema = if let Some(schema) = &validation_data.schema {
-        custom_validation_closures.push(format_ident!(
-            "{}_schema_closure",
-            validation_data.ident.to_string().to_case(Case::Snake)
-        ));
-
-        // Schema validation
-        schema_tokens(
-            match schema {
-                Override::Inherit => Schema::default(),
-                Override::Explicit(s) => s.clone(),
-            },
-            &validation_data.ident.clone(),
-        )
+        schema_tokens(schema.clone())
     } else {
         quote!()
     };
 
-    let generics_for_closures: Vec<Ident> = custom_validation_closures
-        .iter()
-        .enumerate()
-        .map(|(i, _)| format_ident!("A{}", i))
-        .collect();
-
-    // generate generics for the impl for ValidateArgs
-    let generics_for_impl = if custom_validation_closures.len() > 1 {
-        quote!(#(#generics_for_closures, )*)
-    } else {
-        quote!(#(#generics_for_closures)*)
-    };
-
-    // put the generics in a tuple if there's more than one
-    let generics_in_parens = if custom_validation_closures.len() > 1 {
-        quote!((#(#generics_for_closures, )*))
-    } else {
-        quote!(#(#generics_for_closures)*)
-    };
-
-    let mut types_for_closures: Vec<Type> =
-        fields_with_custom_validations.iter().map(|f| f.ty.clone()).collect();
-
-    if validation_data.schema.is_some() {
-        types_for_closures
-            .push(syn::parse_str::<Type>(&validation_data.ident.to_string()).unwrap());
-    }
-
-    let where_clause_for_fn = if custom_validation_closures.len() > 1 {
-        quote!(#(#generics_for_closures: FnOnce(&#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>, )*)
-    } else {
-        quote!(#(#generics_for_closures: FnOnce(&#types_for_closures) -> ::std::result::Result<(), ::validator::ValidationError>)*)
-    };
-
-    // prepare a destructure parens if there's more than one custom validation
-    let destructure_for_args = if custom_validation_closures.len() > 1 {
-        quote!((#(#custom_validation_closures, )*))
-    } else {
-        quote!(#(#custom_validation_closures)*)
-    };
-
     let ident = validation_data.ident;
-    let generics = &validation_data.generics.params;
-    let (imp, ty, whr) = validation_data.generics.split_for_impl();
+    let (_, ty, whr) = validation_data.generics.split_for_impl();
 
-    // prepare the impl<...> block with generics
-    let arg_imp = if generics.is_empty() {
-        quote!(<#generics_for_impl>)
+    let struct_generics_quote =
+        &validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
+            q.extend(quote!(#g, ));
+            q
+        });
+
+    let imp = if struct_generics_quote.is_empty() {
+        quote!(<'v_a>)
     } else {
-        quote!(<#generics, #generics_for_impl>)
+        quote!(<'v_a, #struct_generics_quote>)
     };
 
-    if custom_validation_closures.is_empty() {
-        quote! {
-            impl #imp ::validator::Validate for #ident #ty #whr {
-                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                    #use_statements
+    quote!(
+        impl #imp ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
+            type Args = #custom_context;
 
-                    let mut errors = ::validator::ValidationErrors::new();
+            fn validate(&self, args: Self::Args)
+            -> ::std::result::Result<(), ::validator::ValidationErrors>
+             {
+                #use_statements
 
-                    #(#validation_fields)*
+                let mut errors = ::validator::ValidationErrors::new();
 
-                    if errors.is_empty() {
-                        ::std::result::Result::Ok(())
-                    } else {
-                        ::std::result::Result::Err(errors)
-                    }
+                #schema
+
+                #(#validation_fields)*
+
+                if errors.is_empty() {
+                    ::std::result::Result::Ok(())
+                } else {
+                    ::std::result::Result::Err(errors)
                 }
             }
         }
-        .into()
-    } else {
-        quote!(
-            impl #arg_imp ::validator::ValidateArgs<#generics_in_parens> for #ident #ty #whr
-            where #where_clause_for_fn {
-                fn validate(&self, args: #generics_in_parens)
-                -> ::std::result::Result<(), ::validator::ValidationErrors>
-                 {
-                    #use_statements
+    )
+    .into()
+}
 
-                    let mut errors = ::validator::ValidationErrors::new();
+#[derive(Debug, FromDeriveInput)]
+#[darling(supports(struct_named))]
+struct ValidationContextData {
+    ident: syn::Ident,
+    generics: syn::Generics,
+}
 
-                    let #destructure_for_args = args;
+#[proc_macro_derive(ValidateContext)]
+#[proc_macro_error]
+pub fn derive_context(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input: DeriveInput = parse_macro_input!(input);
 
-                    #schema
+    // parse the input to the ValidationData struct defined above
+    let context_data = match ValidationContextData::from_derive_input(&input) {
+        Ok(data) => data,
+        Err(e) => return e.write_errors().into(),
+    };
 
-                    #(#validation_fields)*
+    let ident = context_data.ident;
+    let (imp, ty, whr) = context_data.generics.split_for_impl();
 
-                    if errors.is_empty() {
-                        ::std::result::Result::Ok(())
-                    } else {
-                        ::std::result::Result::Err(errors)
-                    }
-                }
-            }
-        )
-        .into()
+    quote! {
+        impl #imp ::validator::ValidateContext for #ident #ty #whr {}
+        impl #imp ::validator::ValidateContext for &#ident #ty #whr {}
+        impl #imp ::validator::ValidateContext for &mut #ident #ty #whr {}
     }
+    .into()
 }

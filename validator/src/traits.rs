@@ -162,6 +162,11 @@ impl<T: Validate> Validate for &T {
 /// there is no custom validation with defined arguments.
 ///
 /// The `Args` type can use the lifetime `'v_a` to pass references onto the validator.
-pub trait ValidateArgs<T> {
-    fn validate(&self, args: T) -> Result<(), ValidationErrors>;
+pub trait ValidateArgs<'v_a> {
+    type Args;
+    fn validate(&self, args: Self::Args) -> Result<(), ValidationErrors>;
 }
+
+pub trait ValidateContext {}
+
+impl ValidateContext for () {}
