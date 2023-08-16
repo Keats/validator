@@ -234,7 +234,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         Err(e) => return e.write_errors().into(),
     };
 
-    let custom_context = if let Some(context) = validation_data.context {
+    let custom_context = if let Some(context) = &validation_data.context {
         if let Some(mutable) = validation_data.mutable {
             if mutable {
                 quote!(&'v_a mut #context)
@@ -270,7 +270,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     };
 
     let ident = validation_data.ident;
-    let (_, ty, whr) = validation_data.generics.split_for_impl();
+    let (imp, ty, whr) = validation_data.generics.split_for_impl();
 
     let struct_generics_quote =
         &validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
@@ -278,17 +278,32 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
             q
         });
 
-    let imp = if struct_generics_quote.is_empty() {
+    let imp_args = if struct_generics_quote.is_empty() {
         quote!(<'v_a>)
     } else {
         quote!(<'v_a, #struct_generics_quote>)
     };
 
+    let argless_validation = if validation_data.context.is_none() {
+        quote! {
+            impl #imp ::validator::Validate for #ident #ty #whr {
+                fn validate(&self) -> Result<(), ::validator::ValidationErrors> {
+                    use validator::ValidateArgs;
+                    self.validate_with_args(())
+                }
+            }
+        }
+    } else {
+        quote!()
+    };
+
     quote!(
-        impl #imp ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
+        #argless_validation
+
+        impl #imp_args ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;
 
-            fn validate(&self, args: Self::Args)
+            fn validate_with_args(&self, args: Self::Args)
             -> ::std::result::Result<(), ::validator::ValidationErrors>
              {
                 #use_statements

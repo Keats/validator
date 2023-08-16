@@ -31,7 +31,7 @@ fn validate_simple_custom_fn() {
 
     let test_struct = TestStruct { value: "Something".to_string() };
     let c = TestContext { val: "asd".to_string() };
-    assert!(test_struct.validate(&c).is_ok());
+    assert!(test_struct.validate_with_args(&c).is_ok());
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn validate_multiple_custom_fn() {
 
     let test_arg = TestContext { val: "test".to_string() };
 
-    assert!(test_struct.validate(&test_arg).is_ok());
+    assert!(test_struct.validate_with_args(&test_arg).is_ok());
 }
 
 #[test]
@@ -69,7 +69,7 @@ fn validate_custom_fn_with_ref() {
 
     let val = TestContext { val: "asd".to_string() };
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(&val).is_ok());
+    assert!(test_struct.validate_with_args(&val).is_ok());
 
     // test reference
     assert_eq!(val, TestContext { val: "asd".to_string() });
@@ -86,7 +86,7 @@ fn validate_custom_fn_with_mut_ref() {
 
     let mut val = TestContext { val: "old value".to_string() };
     let test_struct = TestStruct { value: "Something".to_string() };
-    assert!(test_struct.validate(&mut val).is_ok());
+    assert!(test_struct.validate_with_args(&mut val).is_ok());
 
     assert_eq!(val, TestContext { val: "new value".to_string() });
 }
@@ -112,7 +112,7 @@ fn validate_custom_fn_with_complex_args() {
     let mut arg = Arg { counter: 0 };
     let test_struct = TestStruct { value: "test".to_string() };
 
-    assert!(test_struct.validate(&mut arg).is_ok());
+    assert!(test_struct.validate_with_args(&mut arg).is_ok());
 
     assert_eq!(arg.counter, 1)
 }
@@ -140,7 +140,7 @@ fn validate_custom_fn_with_multiple_args() {
 
     let test_struct = TestStruct { value: "something".to_string() };
     let mut arg = Arg { counter: 5, counter2: 16 };
-    assert!(test_struct.validate(&mut arg).is_ok());
+    assert!(test_struct.validate_with_args(&mut arg).is_ok());
 
     assert_eq!(arg, Arg { counter: 6, counter2: 18 });
 }
@@ -172,5 +172,5 @@ fn validate_nested_custom_fn() {
     let t = TestStruct { child: Child { value: "test".to_string() } };
     let arg = Arg { _counter: 123 };
 
-    assert!(t.validate(&arg).is_ok());
+    assert!(t.validate_with_args(&arg).is_ok());
 }

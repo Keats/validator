@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 
-use validator::{Validate, ValidateArgs, ValidationError, ValidationErrors, ValidationErrorsKind};
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 fn validate_unique_username(username: &str) -> Result<(), ValidationError> {
     if username == "xXxShad0wxXx" {
@@ -23,13 +23,13 @@ fn validate_signup(data: &SignupData) -> Result<(), ValidationError> {
 }
 
 #[derive(Debug, Validate, Deserialize)]
-#[validate(schema)]
+#[validate(schema(function = validate_signup))]
 struct SignupData {
     #[validate(email)]
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = 1), custom)]
+    #[validate(length(min = 1), custom(function = validate_unique_username))]
     #[serde(rename = "firstName")]
     first_name: String,
     #[validate(range(min = 18, max = 20))]
@@ -67,9 +67,7 @@ fn is_fine_with_many_valid_validations() {
         _preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
 
-    assert!(signup
-        .validate((|username| validate_unique_username(username), validate_signup))
-        .is_ok());
+    assert!(signup.validate().is_ok());
 }
 
 // Skip this test for now
@@ -157,7 +155,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         text: Option<&'a str>,
         #[validate(regex(path = *RE2))]
         re: Option<&'a str>,
-        #[validate(custom)]
+        #[validate(custom(function = check_str))]
         custom: Option<&'a str>,
     }
 
@@ -176,7 +174,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         re: Some("hi"),
         custom: Some("hey"),
     };
-    assert!(s.validate(check_str).is_ok());
+    assert!(s.validate().is_ok());
 }
 
 #[test]
@@ -207,7 +205,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         text: Option<String>,
         #[validate(regex(path = *RE2))]
         re: Option<String>,
-        #[validate(custom)]
+        #[validate(custom(function = check_str))]
         custom: Option<String>,
     }
 
@@ -228,7 +226,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         re: Some("hi".to_string()),
         custom: Some("hey".to_string()),
     };
-    assert!(s.validate(check_str).is_ok());
+    assert!(s.validate().is_ok());
 }
 
 #[test]
@@ -247,7 +245,7 @@ fn test_works_with_question_mark_operator() {
             _preferences: Vec::new(),
         };
 
-        signup.validate((|s| validate_unique_username(s), validate_signup))?;
+        signup.validate()?;
         Ok(())
     }
 

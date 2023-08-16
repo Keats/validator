@@ -1,4 +1,4 @@
-use validator::{Validate, ValidateArgs, ValidationError};
+use validator::{Validate, ValidationError};
 
 #[test]
 fn can_validate_schema_fn_ok() {
@@ -8,27 +8,27 @@ fn can_validate_schema_fn_ok() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema)]
+    #[validate(schema(function = valid_schema_fn))]
     pub struct TestStruct {
         val: String,
     }
 
     let s = TestStruct { val: "hello".into() };
 
-    assert!(s.validate(|t| valid_schema_fn(t)).is_ok());
+    assert!(s.validate().is_ok());
 }
 
 mod some_defining_mod {
     use validator::Validate;
 
     #[derive(Debug, Validate)]
-    #[validate(schema)]
+    #[validate(schema(function = crate::some_validation_mod::valid_schema_fn))]
     pub struct TestStructValid {
         pub val: String,
     }
 
     #[derive(Debug, Validate)]
-    #[validate(schema)]
+    #[validate(schema(function = crate::some_validation_mod::invalid_schema_fn))]
     pub struct TestStructInvalid {
         pub val: String,
     }
@@ -52,14 +52,14 @@ mod some_validation_mod {
 fn can_validate_fully_qualified_fn_ok() {
     let s = some_defining_mod::TestStructValid { val: "hello".into() };
 
-    assert!(s.validate(some_validation_mod::valid_schema_fn).is_ok());
+    assert!(s.validate().is_ok());
 }
 
 #[test]
 fn can_fail_fully_qualified_fn_validation() {
     let s = some_defining_mod::TestStructInvalid { val: "hello".into() };
 
-    let res = s.validate(some_validation_mod::invalid_schema_fn);
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -102,13 +102,13 @@ fn can_fail_schema_fn_validation() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema)]
+    #[validate(schema(function = invalid_schema_fn))]
     struct TestStruct {
         val: String,
     }
 
     let s = TestStruct { val: String::new() };
-    let res = s.validate(invalid_schema_fn);
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -154,12 +154,12 @@ fn can_specify_message_for_schema_fn() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(message = "oops"))]
+    #[validate(schema(function = invalid_schema_fn, message = "oops"))]
     struct TestStruct {
         val: String,
     }
     let s = TestStruct { val: String::new() };
-    let res = s.validate(invalid_schema_fn);
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -175,7 +175,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     }
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema)]
+    #[validate(schema(function = invalid_schema_fn))]
     struct TestStruct {
         val: String,
         #[validate(range(min = 1, max = 10))]
@@ -184,7 +184,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
 
     let s = TestStruct { val: "hello".to_string(), num: 0 };
 
-    let res = s.validate(invalid_schema_fn);
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();

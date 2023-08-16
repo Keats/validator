@@ -1,4 +1,4 @@
-use validator::{Validate, ValidateArgs, ValidationError};
+use validator::{Validate, ValidationError};
 
 fn valid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Ok(())
@@ -18,7 +18,7 @@ fn can_validate_custom_fn_ok() {
 
     let s = TestStruct { val: "hello".to_string() };
 
-    assert!(s.validate(()).is_ok());
+    assert!(s.validate().is_ok());
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn can_fail_custom_fn_validation() {
     }
 
     let s = TestStruct { val: String::new() };
-    let res = s.validate(());
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -48,7 +48,7 @@ fn can_specify_message_for_custom_fn() {
         val: String,
     }
     let s = TestStruct { val: String::new() };
-    let res = s.validate(());
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -65,7 +65,7 @@ fn can_specify_code_for_custom_fn() {
         val: String,
     }
     let s = TestStruct { val: String::new() };
-    let res = s.validate(());
+    let res = s.validate();
     assert!(res.is_err());
     let err = res.unwrap_err();
     let errs = err.field_errors();
@@ -97,8 +97,8 @@ fn can_nest_custom_validations() {
     }
 
     let t = TestStruct { a: A { val: "value".to_string() } };
-    assert!(t.validate(()).is_ok());
+    assert!(t.validate().is_ok());
 
     let t = TestStruct { a: A { val: "invalid value".to_string() } };
-    assert!(t.validate(()).is_err());
+    assert!(t.validate().is_err());
 }

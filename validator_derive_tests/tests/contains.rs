@@ -1,4 +1,4 @@
-use validator::{Validate, ValidateArgs};
+use validator::Validate;
 
 #[test]
 fn can_validate_contains_ok() {
