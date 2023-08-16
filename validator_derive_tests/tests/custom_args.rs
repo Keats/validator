@@ -144,3 +144,33 @@ fn validate_custom_fn_with_multiple_args() {
 
     assert_eq!(arg, Arg { counter: 6, counter2: 18 });
 }
+
+#[test]
+fn validate_nested_custom_fn() {
+    #[derive(Validate)]
+    #[validate(context = Arg)]
+    struct TestStruct {
+        #[validate(nested)]
+        child: Child,
+    }
+
+    #[derive(Validate)]
+    #[validate(context = Arg)]
+    struct Child {
+        #[validate(custom(function = add_assign, use_context))]
+        value: String,
+    }
+
+    struct Arg {
+        _counter: i32,
+    }
+
+    fn add_assign(_: &String, _arg: &Arg) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
+    let t = TestStruct { child: Child { value: "test".to_string() } };
+    let arg = Arg { _counter: 123 };
+
+    assert!(t.validate(&arg).is_ok());
+}
