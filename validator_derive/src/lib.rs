@@ -273,7 +273,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let (imp, ty, whr) = validation_data.generics.split_for_impl();
 
     let struct_generics_quote =
-        &validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
+        validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
             q.extend(quote!(#g, ));
             q
         });
@@ -322,34 +322,5 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
             }
         }
     )
-    .into()
-}
-
-#[derive(Debug, FromDeriveInput)]
-#[darling(supports(struct_named))]
-struct ValidationContextData {
-    ident: syn::Ident,
-    generics: syn::Generics,
-}
-
-#[proc_macro_derive(ValidateContext)]
-#[proc_macro_error]
-pub fn derive_context(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input: DeriveInput = parse_macro_input!(input);
-
-    // parse the input to the ValidationData struct defined above
-    let context_data = match ValidationContextData::from_derive_input(&input) {
-        Ok(data) => data,
-        Err(e) => return e.write_errors().into(),
-    };
-
-    let ident = context_data.ident;
-    let (imp, ty, whr) = context_data.generics.split_for_impl();
-
-    quote! {
-        impl #imp ::validator::ValidateContext for #ident #ty #whr {}
-        impl #imp ::validator::ValidateContext for &#ident #ty #whr {}
-        impl #imp ::validator::ValidateContext for &mut #ident #ty #whr {}
-    }
     .into()
 }

@@ -1,8 +1,8 @@
 use std::ops::AddAssign;
 
-use validator::{Validate, ValidateArgs, ValidateContext, ValidationError};
+use validator::{Validate, ValidateArgs, ValidationError};
 
-#[derive(Debug, PartialEq, ValidateContext, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 struct TestContext {
     val: String,
 }

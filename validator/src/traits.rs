@@ -166,7 +166,3 @@ pub trait ValidateArgs<'v_a> {
     type Args;
     fn validate_with_args(&self, args: Self::Args) -> Result<(), ValidationErrors>;
 }
-
-pub trait ValidateContext {}
-
-impl ValidateContext for () {}

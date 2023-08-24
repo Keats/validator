@@ -1,7 +1,5 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
-
 use crate::{ValidateArgs, ValidationErrors, ValidationErrorsKind};
-
+use std::collections::{BTreeMap, HashMap, HashSet};
 pub trait ValidateNested<T> {
     fn validate_nested(&self, field_name: &'static str, args: T) -> Result<(), ValidationErrors>;
 }
