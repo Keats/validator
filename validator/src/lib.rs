@@ -91,3 +91,5 @@ pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 #[cfg(feature = "derive")]
 pub use validator_derive::Validate;
+#[cfg(feature = "derive")]
+pub use validator_derive::ValidateAll;

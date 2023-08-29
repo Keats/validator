@@ -26,12 +26,19 @@ mod validation;
 #[proc_macro_error]
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse(input).unwrap();
-    impl_validate(&ast).into()
+    impl_validate(&ast, false).into()
 }
 
-fn impl_validate(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
+#[proc_macro_derive(ValidateAll, attributes(validate))]
+#[proc_macro_error]
+pub fn derive_validation_all(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_validate(&ast, true).into()
+}
+
+fn impl_validate(ast: &syn::DeriveInput, nest_all_fields: bool) -> proc_macro2::TokenStream {
     // Collecting the validators
-    let mut fields_validations = collect_field_validations(ast);
+    let mut fields_validations = collect_field_validations(ast, nest_all_fields);
     let mut struct_validations = find_struct_validations(&ast.attrs);
     let (arg_type, has_arg) =
         construct_validator_argument_type(&mut fields_validations, &mut struct_validations);
@@ -120,13 +127,16 @@ fn collect_fields(ast: &syn::DeriveInput) -> Vec<syn::Field> {
     }
 }
 
-fn collect_field_validations(ast: &syn::DeriveInput) -> Vec<FieldInformation> {
+fn collect_field_validations(ast: &syn::DeriveInput, nest_all_fields: bool) -> Vec<FieldInformation> {
     let mut fields = collect_fields(ast);
 
     let field_types = find_fields_type(&fields);
     fields.drain(..).fold(vec![], |mut acc, field| {
         let key = field.ident.clone().unwrap().to_string();
-        let (name, validations) = find_validators_for_field(&field, &field_types);
+        let (name, mut validations) = find_validators_for_field(&field, &field_types);
+        if nest_all_fields && validations.len() == 0 {
+            validations.push(FieldValidation::new(Validator::Nested));
+        }
         acc.push(FieldInformation::new(
             field,
             field_types.get(&key).unwrap().clone(),
