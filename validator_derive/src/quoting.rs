@@ -537,6 +537,7 @@ pub fn quote_validator(
         Validator::DoesNotContain(_) => {
             validations.push(quote_does_not_contain_validation(field_quoter, validation))
         }
+        Validator::AlwaysValid => { }
     }
 }
 

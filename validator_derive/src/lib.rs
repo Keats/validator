@@ -454,6 +454,9 @@ fn find_validators_for_field(
                                         validators.push(FieldValidation::new(Validator::Required));
                                         validators.push(FieldValidation::new(Validator::Nested));
                                     }
+                                    "always_valid" => {
+                                        validators.push(FieldValidation::new(Validator::AlwaysValid));
+                                    }
                                     _ => {
                                         let mut ident = proc_macro2::TokenStream::new();
                                         name.to_tokens(&mut ident);
