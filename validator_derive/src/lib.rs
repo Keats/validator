@@ -222,6 +222,7 @@ struct ValidationData {
     context: Option<Path>,
     mutable: Option<bool>,
     nested: Option<bool>,
+    nest_all_fields: Option<bool>,
 }
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -250,7 +251,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     };
 
     // get all the fields to quote them below
-    let validation_fields: Vec<ValidateField> = validation_data
+    let mut validation_fields: Vec<ValidateField> = validation_data
         .data
         .take_struct()
         .unwrap()
@@ -259,6 +260,18 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .collect();
+
+    if let Some(nest_all_fields) = validation_data.nest_all_fields {
+        if nest_all_fields {
+            validation_fields = validation_fields
+                .iter_mut()
+                .map(|f| {
+                    f.nested = Some(true);
+                    f.to_owned()
+                })
+                .collect();
+        }
+    }
 
     // generate `use` statements for all used validator traits
     let use_statements = quote_use_stmts(&validation_fields);
