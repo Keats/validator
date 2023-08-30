@@ -166,3 +166,18 @@ pub trait ValidateArgs<'v_a> {
     type Args;
     fn validate_with_args(&self, args: Self::Args) -> Result<(), ValidationErrors>;
 }
+
+impl<'v_a, T, U> ValidateArgs<'v_a> for Option<T>
+where
+    T: ValidateArgs<'v_a, Args = U>,
+{
+    type Args = U;
+
+    fn validate_with_args(&self, args: Self::Args) -> Result<(), ValidationErrors> {
+        if let Some(nested) = self {
+            T::validate_with_args(nested, args)
+        } else {
+            Ok(())
+        }
+    }
+}

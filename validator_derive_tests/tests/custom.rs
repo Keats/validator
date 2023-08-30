@@ -83,6 +83,7 @@ fn can_nest_custom_validations() {
     }
 
     #[derive(Validate)]
+    #[validate(nested)]
     struct A {
         #[validate(custom(function = custom_fn))]
         val: String,

@@ -274,6 +274,7 @@ fn test_works_with_none_values() {
     assert!(q.validate().is_ok());
 }
 
+#[allow(dead_code)]
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
     F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),

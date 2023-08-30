@@ -155,7 +155,7 @@ fn validate_nested_custom_fn() {
     }
 
     #[derive(Validate)]
-    #[validate(context = Arg)]
+    #[validate(context = Arg, nested)]
     struct Child {
         #[validate(custom(function = add_assign, use_context))]
         value: String,

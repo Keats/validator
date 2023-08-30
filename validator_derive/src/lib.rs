@@ -221,6 +221,7 @@ struct ValidationData {
     schema: Option<Schema>,
     context: Option<Path>,
     mutable: Option<bool>,
+    nested: Option<bool>,
 }
 
 #[proc_macro_derive(Validate, attributes(validate))]
@@ -284,6 +285,27 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!(<'v_a, #struct_generics_quote>)
     };
 
+    let nested_validation = if validation_data.nested.is_some_and(|n| n) {
+        quote! {
+            impl #imp_args ::validator::ValidateNested<'v_a> for #ident #ty #whr {
+                type Args = #custom_context;
+                fn validate_nested(&self, field_name: &'static str, args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
+                    use validator::ValidateArgs;
+                    let res = self.validate_with_args(args);
+
+                    if let Err(e) = res {
+                        let new_err = validator::ValidationErrorsKind::Struct(::std::boxed::Box::new(e));
+                        std::result::Result::Err(validator::ValidationErrors(::std::collections::HashMap::from([(field_name, new_err)])))
+                    } else {
+                        std::result::Result::Ok(())
+                    }
+                }
+            }
+        }
+    } else {
+        quote!()
+    };
+
     let argless_validation = if validation_data.context.is_none() {
         quote! {
             impl #imp ::validator::Validate for #ident #ty #whr {
@@ -299,6 +321,8 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     quote!(
         #argless_validation
+
+        #nested_validation
 
         impl #imp_args ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;
