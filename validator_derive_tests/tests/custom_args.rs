@@ -79,13 +79,13 @@ fn validate_custom_fn_with_ref() {
 fn validate_custom_fn_with_mut_ref() {
     #[derive(Validate)]
     #[validate(context = TestContext, mutable)]
-    struct TestStruct {
+    struct TestStruct<'a> {
         #[validate(custom(function = valid_fn_with_mut_ref, use_context))]
-        value: String,
+        value: &'a mut String,
     }
 
     let mut val = TestContext { val: "old value".to_string() };
-    let test_struct = TestStruct { value: "Something".to_string() };
+    let test_struct = TestStruct { value: &mut "Something".to_string() };
     assert!(test_struct.validate_with_args(&mut val).is_ok());
 
     assert_eq!(val, TestContext { val: "new value".to_string() });
