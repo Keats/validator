@@ -1,3 +1,5 @@
+use std::num::NonZeroU64;
+
 use validator::{Validate, ValidationErrors};
 
 const MAX_CONST: usize = 10;
@@ -19,6 +21,19 @@ fn can_validate_range_ok() {
     }
 
     let s = TestStruct { val: 6 };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_range_non_zero_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(range(min = 5, max = 10))]
+        val: NonZeroU64,
+    }
+
+    let s = TestStruct { val: NonZeroU64::new(6).unwrap() };
 
     assert!(s.validate().is_ok());
 }
