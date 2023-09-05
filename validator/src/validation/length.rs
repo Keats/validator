@@ -68,6 +68,15 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_length_cow_unicode_chars() {
+        let test: Cow<'static, str> = "日本".into();
+        assert!(validate_length(test, None, None, Some(2)));
+
+        let test: Cow<'static, str> = String::from("日本").into();
+        assert!(validate_length(test, None, None, Some(2)));
+    }
+
+    #[test]
     fn test_validate_length_vec() {
         assert!(validate_length(vec![1, 2, 3], None, None, Some(3)));
     }

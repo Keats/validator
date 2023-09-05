@@ -34,7 +34,7 @@ impl<'a> HasLen for &'a str {
 
 impl<'a> HasLen for Cow<'a, str> {
     fn length(&self) -> u64 {
-        self.len() as u64
+        self.chars().count() as u64
     }
 }
 
