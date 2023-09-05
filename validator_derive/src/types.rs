@@ -1,7 +1,11 @@
+use darling::error::Accumulator;
 use darling::util::Override;
 use darling::{FromField, FromMeta};
 
-use syn::{Expr, Path};
+use syn::spanned::Spanned;
+use syn::{Expr, Field, Path};
+
+use crate::utils::get_attr;
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`
@@ -30,6 +34,54 @@ pub struct ValidateField {
     pub custom: Option<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
+}
+
+impl ValidateField {
+    pub fn validate(&self, field: &Field) -> Accumulator {
+        let mut errors = darling::Error::accumulator();
+        let field_name = self.ident.clone().unwrap().to_string();
+        let field_attrs = &field.attrs;
+
+        if let Some(custom) = &self.custom {
+            // If function is not a path
+            if let Err(e) = &custom.function {
+                errors.push(
+                    darling::Error::custom(format!("Invalid attribute #[validate(custom(...))] on field {}:", field_name)
+                ).with_span(&e.span())
+                .note("Invalid argument for `custom` validator, only paths are allowed")
+                .help("Try formating the argument like `path::to::function` or `\"path::to::function\"`"));
+            }
+        }
+
+        if let Some(length) = &self.length {
+            // If length has both `equal` and `min` or `max` argument
+            if length.equal.is_some() && (length.min.is_some() || length.max.is_some()) {
+                errors.push(
+                    darling::Error::custom(format!(
+                        "Invalid attribute #[validate(length(...))] on field {}:",
+                        field_name
+                    ))
+                    .with_span(&length.equal.clone().unwrap().span())
+                    .note("Both `equal` and `min` or `max` have been set")
+                    .help("Exclusively use either the `equal` or `min` and `max` attributes"),
+                )
+            }
+
+            if length.equal.is_none() && length.min.is_none() && length.max.is_none() {
+                errors.push(
+                    darling::Error::custom(format!(
+                        "Invalid attribute #[validate(length(...))] on field {}:",
+                        field_name
+                    ))
+                    .with_span(get_attr(field_attrs, "length").unwrap())
+                    .note("Validator `length` requires at least 1 argument")
+                    .help("Add the argument `equal`, `min` or `max`"),
+                )
+            }
+        }
+
+        errors
+    }
 }
 
 // Structs to hold the validation information and to provide attributes
@@ -124,7 +176,7 @@ pub struct Regex {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct Custom {
-    pub function: Path,
+    pub function: darling::Result<Path>,
     pub use_context: Option<bool>,
     pub message: Option<String>,
     pub code: Option<String>,

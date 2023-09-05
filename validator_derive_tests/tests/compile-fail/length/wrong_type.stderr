@@ -1,5 +1,7 @@
-error: Validator `length` can only be used on types `String`, `&str`, Cow<'_,str>, `Vec`, slice, or map/set types (BTree/Hash/Index) but found `usize` for field `s`
- --> $DIR/wrong_type.rs:6:8
+error[E0599]: no method named `validate_length` found for type `usize` in the current scope
+ --> tests/compile-fail/length/wrong_type.rs:3:10
   |
-6 |     s: usize,
-  |        ^^^^^
+3 | #[derive(Validate)]
+  |          ^^^^^^^^ method not found in `usize`
+  |
+  = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

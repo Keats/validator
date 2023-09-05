@@ -1,9 +1,8 @@
 use darling::ast::Data;
-use darling::util::Override;
+use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
-use proc_macro_error::proc_macro_error;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Path};
+use syn::{parse_macro_input, DeriveInput, Path, PathArguments};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -214,10 +213,11 @@ impl ToTokens for ValidateField {
 // The "supports(struct_named)" attribute guarantees only named structs to work with this macro
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(validate), supports(struct_named))]
+#[darling(and_then = ValidationData::validate)]
 struct ValidationData {
     ident: syn::Ident,
     generics: syn::Generics,
-    data: Data<(), ValidateField>,
+    data: Data<(), WithOriginal<ValidateField, syn::Field>>,
     schema: Option<Schema>,
     context: Option<Path>,
     mutable: Option<bool>,
@@ -225,8 +225,57 @@ struct ValidationData {
     nest_all_fields: Option<bool>,
 }
 
+impl ValidationData {
+    fn validate(self) -> darling::Result<Self> {
+        let mut errors = darling::Error::accumulator();
+
+        if let Some(context) = &self.context {
+            // Check if context lifetime is not `'v_a`
+            for segment in &context.segments {
+                match &segment.arguments {
+                    PathArguments::AngleBracketed(args) => {
+                        for arg in &args.args {
+                            match arg {
+                                syn::GenericArgument::Lifetime(lt) => {
+                                    if lt.ident.to_string() != "v_a" {
+                                        errors.push(
+                                            darling::Error::custom("Invalid argument reference")
+                                                .with_span(&lt.ident)
+                                                .note(format!(
+                                                    "The lifetime `'{}` is not supported.",
+                                                    lt.ident
+                                                ))
+                                                .help("Please use the validator lifetime `'v_a`"),
+                                        );
+                                    }
+                                }
+                                _ => (),
+                            }
+                        }
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        match &self.data {
+            Data::Enum(_) => todo!(),
+            Data::Struct(fields) => {
+                for f in &fields.fields {
+                    errors.extend(f.parsed.validate(&f.original).into_inner());
+                }
+            }
+        }
+
+        if let Err(e) = errors.finish() {
+            Err(e)
+        } else {
+            Ok(self)
+        }
+    }
+}
+
 #[proc_macro_derive(Validate, attributes(validate))]
-#[proc_macro_error]
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
 
@@ -257,6 +306,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .unwrap()
         .fields
         .into_iter()
+        .map(|f| f.parsed)
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .collect();

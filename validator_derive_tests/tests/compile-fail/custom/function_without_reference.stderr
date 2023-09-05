@@ -1,5 +1,0 @@
-error: Invalid argument type: Custom arguments only allow tuples, number types and references using the lifetime `'v_a`
- --> $DIR/function_without_reference.rs:5:55
-  |
-5 |     #[validate(custom(function = "hello_world", arg = "dyn FnOnce(&str) -> usize"))]
-  |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^

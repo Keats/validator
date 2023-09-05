@@ -9,7 +9,7 @@ pub fn length_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let (min, min_err) = if let Some(v) = length.min {
+    let (min, min_err) = if let Some(v) = length.min.as_ref() {
         (quote!(Some(#v)), quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);))
     } else {
         (quote!(None), quote!())

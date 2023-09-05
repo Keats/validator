@@ -1,5 +1,8 @@
-error: Invalid attribute #[validate] on field `s`: Validator `length` requires at least 1 argument out of `min`, `max` and `equal`
- --> $DIR/no_args.rs:5:5
+error: Invalid attribute #[validate(length(...))] on field s:
+ --> tests/compile-fail/length/no_args.rs:6:5
   |
-5 |     #[validate(length())]
-  |     ^
+6 |     #[validate(length())]
+  |     ^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: Validator `length` requires at least 1 argument
+  = help: Add the argument `equal`, `min` or `max`

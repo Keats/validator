@@ -2,7 +2,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 struct Test {
-    #[validate(length())]
+    #[validate(length(min = 5))]
     s: usize,
 }
 

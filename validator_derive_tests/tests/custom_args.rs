@@ -111,10 +111,10 @@ fn validate_custom_fn_with_complex_args() {
 
     let mut arg = Arg { counter: 0 };
     let test_struct = TestStruct { value: "test".to_string() };
+    let res = test_struct.validate_with_args(&mut arg);
+    assert!(res.is_ok());
 
-    assert!(test_struct.validate_with_args(&mut arg).is_ok());
-
-    assert_eq!(arg.counter, 1)
+    assert_eq!(arg.counter, 1);
 }
 
 #[test]
@@ -173,4 +173,26 @@ fn validate_nested_custom_fn() {
     let arg = Arg { _counter: 123 };
 
     assert!(t.validate_with_args(&arg).is_ok());
+}
+
+#[test]
+fn validate_custom_arg_with_lifetime() {
+    #[derive(Validate)]
+    #[validate(context = "Arg<'v_a>")]
+    struct Test {
+        #[validate(custom(function = custom_with_lifetime, use_context))]
+        val: String,
+    }
+
+    struct Arg<'a> {
+        _arg: &'a str,
+    }
+
+    fn custom_with_lifetime(_: &str, _: &Arg) -> Result<(), ValidationError> {
+        Ok(())
+    }
+
+    let test = Test { val: "Test".to_string() };
+    let arg = Arg { _arg: "Test" };
+    assert!(test.validate_with_args(&arg).is_ok());
 }

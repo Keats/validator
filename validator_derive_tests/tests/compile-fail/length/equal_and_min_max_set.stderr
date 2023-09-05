@@ -1,5 +1,8 @@
-error: Invalid attribute #[validate] on field `s`: both `equal` and `min` or `max` have been set in `length` validator: probably a mistake
- --> $DIR/equal_and_min_max_set.rs:5:32
+error: Invalid attribute #[validate(length(...))] on field s:
+ --> tests/compile-fail/length/equal_and_min_max_set.rs:5:40
   |
 5 |     #[validate(length(min = 1, equal = 2))]
-  |                                ^^^^^
+  |                                        ^
+  |
+  = note: Both `equal` and `min` or `max` have been set
+  = help: Exclusively use either the `equal` or `min` and `max` attributes

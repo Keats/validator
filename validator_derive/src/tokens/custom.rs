@@ -9,7 +9,8 @@ pub fn custom_tokens(
     field_name: &Ident,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
-    let fn_call = custom.function;
+    let fn_call = custom.function.unwrap();
+
     let args = if let Some(arg) = custom.use_context {
         if arg {
             quote!(&self.#field_name, args)
