@@ -1,13 +1,13 @@
-error[E0599]: no method named `validate` found for struct `Nested` in the current scope
+error[E0599]: no method named `validate_nested` found for struct `Nested` in the current scope
  --> tests/compile-fail/no_nested_validations.rs:3:10
   |
 3 | #[derive(Validate)]
   |          ^^^^^^^^ method not found in `Nested`
 ...
 9 | struct Nested {
-  | ------------- method `validate` not found for this struct
+  | ------------- method `validate_nested` not found for this struct
   |
   = help: items from traits can only be used if the trait is implemented and in scope
-  = note: the following trait defines an item `validate`, perhaps you need to implement it:
-          candidate #1: `Validate`
+  = note: the following trait defines an item `validate_nested`, perhaps you need to implement it:
+          candidate #1: `ValidateNested`
   = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

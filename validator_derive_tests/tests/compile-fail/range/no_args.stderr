@@ -1,5 +1,8 @@
-error: Invalid attribute #[validate] on field `s`: Validator `range` requires at least 1 argument out of `min`, `max`, `exclusive_min` and `exclusive_max`
- --> $DIR/no_args.rs:5:5
+error: Invalid attribute #[validate(range(...))] on field `s`:
+ --> tests/compile-fail/range/no_args.rs:5:5
   |
 5 |     #[validate(range())]
-  |     ^
+  |     ^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: Validator `range` requires at least 1 argument
+  = help: Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`

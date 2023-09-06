@@ -1,4 +1,4 @@
-error: Invalid attribute #[validate(length(...))] on field s:
+error: Invalid attribute #[validate(length(...))] on field `s`:
  --> tests/compile-fail/length/equal_and_min_max_set.rs:5:40
   |
 5 |     #[validate(length(min = 1, equal = 2))]

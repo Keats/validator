@@ -1,4 +1,4 @@
-error: Invalid attribute #[validate(custom(...))] on field s:
+error: Invalid attribute #[validate(custom(...))] on field `s`:
  --> tests/compile-fail/custom/custom_not_string.rs:5:34
   |
 5 |     #[validate(custom(function = 2))]

@@ -1,4 +1,4 @@
-error: Invalid attribute #[validate(length(...))] on field s:
+error: Invalid attribute #[validate(length(...))] on field `s`:
  --> tests/compile-fail/length/no_args.rs:6:5
   |
 6 |     #[validate(length())]

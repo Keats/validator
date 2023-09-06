@@ -2,13 +2,13 @@ use validator::{Validate, ValidationError};
 
 #[derive(Validate)]
 struct Test {
-    #[validate(custom = "crate::validate_something")]
+    #[validate(custom(function = crate::validate_something))]
     s: String,
 }
 
 #[derive(Validate)]
 struct TestPath {
-    #[validate(custom = "crate::validate_something")]
+    #[validate(custom(function = "crate::validate_something"))]
     s: String,
 }
 

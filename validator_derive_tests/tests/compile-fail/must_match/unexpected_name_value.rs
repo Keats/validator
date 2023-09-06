@@ -2,7 +2,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 struct Email {
-    #[validate(not_a = "validator")]
+    #[validate(not_a(other = "validator"))]
     email: String,
 }
 

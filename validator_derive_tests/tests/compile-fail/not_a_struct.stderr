@@ -1,5 +1,1 @@
-error: #[derive(Validate)] can only be used with structs
- --> $DIR/not_a_struct.rs:4:1
-  |
-4 | pub enum NotAStruct {
-  | ^^^
+error: Unsupported shape `enum`. Expected struct with named fields.

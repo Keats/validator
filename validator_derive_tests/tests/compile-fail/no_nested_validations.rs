@@ -2,7 +2,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 struct Test {
-    #[validate]
+    #[validate(nested)]
     nested: Nested,
 }
 

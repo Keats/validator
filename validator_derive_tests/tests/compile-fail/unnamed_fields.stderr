@@ -1,8 +1,1 @@
-error: struct has unnamed fields
-
-         = help: #[derive(Validate)] can only be used on structs with named fields
-
- --> $DIR/unnamed_fields.rs:4:19
-  |
-4 | struct TupleStruct(String);
-  |                   ^^^^^^^^
+error: Unsupported shape `one unnamed field`. Expected named fields.

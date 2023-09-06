@@ -2,7 +2,7 @@ use darling::ast::Data;
 use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Path, PathArguments};
+use syn::{parse_macro_input, DeriveInput, Field, Path, PathArguments};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -259,12 +259,16 @@ impl ValidationData {
         }
 
         match &self.data {
-            Data::Enum(_) => todo!(),
             Data::Struct(fields) => {
+                let original_fields: Vec<&Field> =
+                    fields.fields.iter().map(|f| &f.original).collect();
                 for f in &fields.fields {
-                    errors.extend(f.parsed.validate(&f.original).into_inner());
+                    errors.extend(
+                        f.parsed.validate(&self.ident, &original_fields, &f.original).into_inner(),
+                    );
                 }
             }
+            _ => (),
         }
 
         if let Err(e) = errors.finish() {
