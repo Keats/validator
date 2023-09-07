@@ -5,6 +5,7 @@ authors = ["Vincent Prouillet <hello@vincentprouillet.com>"]
 edition = "2021"
 
 [features]
+default = ["test_ui"]
 test_ui = []
 
 [dev-dependencies]
