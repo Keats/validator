@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com>"]
 edition = "2021"
 
+[features]
+test_ui = []
+
 [dev-dependencies]
 validator = { version = "0.16", path = "../validator", features = [
     "card",
