@@ -15,6 +15,8 @@ pub fn schema_tokens(schema: Schema) -> proc_macro2::TokenStream {
         quote!(&self)
     };
 
+    let skip_on_errors = schema.skip_on_field_errors.unwrap_or(true);
+
     let message = quote_message(schema.message);
 
     let code = if let Some(c) = schema.code {
@@ -25,7 +27,7 @@ pub fn schema_tokens(schema: Schema) -> proc_macro2::TokenStream {
         quote!()
     };
 
-    quote! {
+    let fn_call = quote! {
         match #fn_call(#args) {
             ::std::result::Result::Ok(()) => {}
             ::std::result::Result::Err(mut err) => {
@@ -33,6 +35,18 @@ pub fn schema_tokens(schema: Schema) -> proc_macro2::TokenStream {
                 #message
                 errors.add("__all__", err);
             }
+        }
+    };
+
+    if skip_on_errors {
+        quote! {
+            if errors.is_empty() {
+                #fn_call
+            }
+        }
+    } else {
+        quote! {
+            #fn_call
         }
     }
 }

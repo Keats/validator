@@ -175,7 +175,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     }
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = invalid_schema_fn))]
+    #[validate(schema(function = invalid_schema_fn, skip_on_field_errors = false))]
     struct TestStruct {
         val: String,
         #[validate(range(min = 1, max = 10))]
@@ -194,4 +194,26 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     assert!(errs.contains_key("num"));
     assert_eq!(errs["num"].len(), 1);
     assert_eq!(errs["num"][0].clone().code, "range");
+}
+
+#[test]
+fn schema_does_not_run_if_other_fields_have_errors() {
+    fn invalid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
+        Err(ValidationError::new("meh"))
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = invalid_schema_fn))]
+    struct TestStruct {
+        #[validate(range(min = 1, max = 10))]
+        num: usize,
+    }
+
+    let s = TestStruct { num: 0 };
+    let res = s.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
+    assert!(!errs.contains_key("__all__"));
 }

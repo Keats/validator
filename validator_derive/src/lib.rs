@@ -401,9 +401,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
                 let mut errors = ::validator::ValidationErrors::new();
 
-                #schema
-
                 #(#validation_fields)*
+
+                #schema
 
                 if errors.is_empty() {
                     ::std::result::Result::Ok(())

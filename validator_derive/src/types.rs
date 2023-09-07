@@ -234,6 +234,7 @@ pub struct Custom {
 pub struct Schema {
     pub function: Path,
     pub use_context: Option<bool>,
+    pub skip_on_field_errors: Option<bool>,
     pub message: Option<String>,
     pub code: Option<String>,
 }
