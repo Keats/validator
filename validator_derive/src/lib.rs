@@ -1,6 +1,7 @@
 use darling::ast::Data;
 use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
+use proc_macro_error::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Field, Path, PathArguments};
 
@@ -227,8 +228,6 @@ struct ValidationData {
 
 impl ValidationData {
     fn validate(self) -> darling::Result<Self> {
-        let mut errors = darling::Error::accumulator();
-
         if let Some(context) = &self.context {
             // Check if context lifetime is not `'v_a`
             for segment in &context.segments {
@@ -238,15 +237,11 @@ impl ValidationData {
                             match arg {
                                 syn::GenericArgument::Lifetime(lt) => {
                                     if lt.ident.to_string() != "v_a" {
-                                        errors.push(
-                                            darling::Error::custom("Invalid argument reference")
-                                                .with_span(&lt.ident)
-                                                .note(format!(
-                                                    "The lifetime `'{}` is not supported.",
-                                                    lt.ident
-                                                ))
-                                                .help("Please use the validator lifetime `'v_a`"),
-                                        );
+                                        abort! {
+                                            lt.ident, "Invalid argument reference";
+                                            note = "The lifetime `'{}` is not supported.", lt.ident;
+                                            help = "Please use the validator lifetime `'v_a`";
+                                        }
                                     }
                                 }
                                 _ => (),
@@ -263,22 +258,17 @@ impl ValidationData {
                 let original_fields: Vec<&Field> =
                     fields.fields.iter().map(|f| &f.original).collect();
                 for f in &fields.fields {
-                    errors.extend(
-                        f.parsed.validate(&self.ident, &original_fields, &f.original).into_inner(),
-                    );
+                    f.parsed.validate(&self.ident, &original_fields, &f.original);
                 }
             }
             _ => (),
         }
 
-        if let Err(e) = errors.finish() {
-            Err(e)
-        } else {
-            Ok(self)
-        }
+        Ok(self)
     }
 }
 
+#[proc_macro_error]
 #[proc_macro_derive(Validate, attributes(validate))]
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = parse_macro_input!(input);

@@ -1,8 +1,9 @@
 error: Invalid attribute for #[validate(must_match(...))] on field `password`:
+
+         = note: The `other` field doesn't exist in the struct `Test`
+         = help: Add the field `password2` to the struct
+
  --> tests/compile-fail/must_match/field_doesnt_exist.rs:5:35
   |
 5 |     #[validate(must_match(other = password2))]
   |                                   ^^^^^^^^^
-  |
-  = note: The `other` field doesn't exist in the struct `Test`
-  = help: Add the field `password2` to the struct

@@ -1,8 +1,9 @@
 error: Invalid attribute #[validate(custom(...))] on field `s`:
+
+         = note: Invalid argument for `custom` validator, only paths are allowed
+         = help: Try formating the argument like `path::to::function` or `"path::to::function"`
+
  --> tests/compile-fail/custom/custom_not_string.rs:5:34
   |
 5 |     #[validate(custom(function = 2))]
   |                                  ^
-  |
-  = note: Invalid argument for `custom` validator, only paths are allowed
-  = help: Try formating the argument like `path::to::function` or `"path::to::function"`

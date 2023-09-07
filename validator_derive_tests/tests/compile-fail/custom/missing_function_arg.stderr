@@ -2,4 +2,4 @@ error: Missing field `function`
  --> tests/compile-fail/custom/missing_function_arg.rs:5:16
   |
 5 |     #[validate(custom(use_context))]
-  |                ^^^^^^^^^^^^^^^^^^^
+  |                ^^^^^^

@@ -1,8 +1,9 @@
 error: Invalid attribute #[validate(length(...))] on field `s`:
+
+         = note: Validator `length` requires at least 1 argument
+         = help: Add the argument `equal`, `min` or `max`
+
  --> tests/compile-fail/length/no_args.rs:6:5
   |
 6 |     #[validate(length())]
   |     ^^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: Validator `length` requires at least 1 argument
-  = help: Add the argument `equal`, `min` or `max`

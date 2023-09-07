@@ -1,7 +1,5 @@
-error: Unknown field: `eq`
+error: Unknown field: `eq`. Did you mean `equal`?
  --> tests/compile-fail/length/unknown_arg.rs:5:23
   |
 5 |     #[validate(length(eq = 2))]
-  |                       ^^^^^^
-  |
-  = help: did you mean `equal`?
+  |                       ^^

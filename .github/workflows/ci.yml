@@ -10,6 +10,7 @@ jobs:
         include:
           - rust: 1.70.0 # MSRV
           - rust: stable
+          - rust: beta
           - rust: nightly
     steps:
       - uses: actions/checkout@v3

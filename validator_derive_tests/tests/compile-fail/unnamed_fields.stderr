@@ -1,1 +1,7 @@
 error: Unsupported shape `one unnamed field`. Expected named fields.
+ --> tests/compile-fail/unnamed_fields.rs:3:10
+  |
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

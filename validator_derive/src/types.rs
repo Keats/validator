@@ -1,7 +1,7 @@
-use darling::error::Accumulator;
 use darling::util::Override;
 use darling::{FromField, FromMeta};
 
+use proc_macro_error::abort;
 use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
 
@@ -37,51 +37,37 @@ pub struct ValidateField {
 }
 
 impl ValidateField {
-    pub fn validate(
-        &self,
-        struct_ident: &Ident,
-        all_fields: &Vec<&Field>,
-        current_field: &Field,
-    ) -> Accumulator {
-        let mut errors = darling::Error::accumulator();
+    pub fn validate(&self, struct_ident: &Ident, all_fields: &Vec<&Field>, current_field: &Field) {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
 
         if let Some(custom) = &self.custom {
             // If function is not a path
             if let Err(e) = &custom.function {
-                errors.push(
-                    darling::Error::custom(format!("Invalid attribute #[validate(custom(...))] on field `{}`:", field_name)
-                ).with_span(&e.span())
-                .note("Invalid argument for `custom` validator, only paths are allowed")
-                .help("Try formating the argument like `path::to::function` or `\"path::to::function\"`"));
+                abort!(
+                    e.span(), "Invalid attribute #[validate(custom(...))] on field `{}`:", field_name;
+                    note = "Invalid argument for `custom` validator, only paths are allowed";
+                    help = "Try formating the argument like `path::to::function` or `\"path::to::function\"`"
+                );
             }
         }
 
         if let Some(length) = &self.length {
             // If length has both `equal` and `min` or `max` argument
             if length.equal.is_some() && (length.min.is_some() || length.max.is_some()) {
-                errors.push(
-                    darling::Error::custom(format!(
-                        "Invalid attribute #[validate(length(...))] on field `{}`:",
-                        field_name
-                    ))
-                    .with_span(&length.equal.clone().unwrap().span())
-                    .note("Both `equal` and `min` or `max` have been set")
-                    .help("Exclusively use either the `equal` or `min` and `max` attributes"),
-                )
+                abort! {
+                    length.equal.clone().unwrap().span(), "Invalid attribute #[validate(length(...))] on field `{}`:", field_name;
+                    note = "Both `equal` and `min` or `max` have been set";
+                    help = "Exclusively use either the `equal` or `min` and `max` attributes"
+                }
             }
 
             // Check if validator has no arguments
             if length.equal.is_none() && length.min.is_none() && length.max.is_none() {
-                errors.push(
-                    darling::Error::custom(format!(
-                        "Invalid attribute #[validate(length(...))] on field `{}`:",
-                        field_name
-                    ))
-                    .with_span(get_attr(field_attrs, "length").unwrap())
-                    .note("Validator `length` requires at least 1 argument")
-                    .help("Add the argument `equal`, `min` or `max`"),
+                abort!(
+                    get_attr(field_attrs, "length").unwrap(), "Invalid attribute #[validate(length(...))] on field `{}`:", field_name;
+                    note = "Validator `length` requires at least 1 argument";
+                    help = "Add the argument `equal`, `min` or `max`"
                 )
             }
         }
@@ -95,17 +81,10 @@ impl ValidateField {
 
             // Check if the other field exists
             if !all_fields.iter().any(|f| f.ident.clone().unwrap().to_string() == other_field) {
-                errors.push(
-                    darling::Error::custom(format!(
-                        "Invalid attribute for #[validate(must_match(...))] on field `{}`:",
-                        field_name
-                    ))
-                    .with_span(&must_match.other.span())
-                    .note(format!(
-                        "The `other` field doesn't exist in the struct `{}`",
-                        struct_ident
-                    ))
-                    .help(format!("Add the field `{}` to the struct", other_field)),
+                abort!(
+                    must_match.other.span(), "Invalid attribute for #[validate(must_match(...))] on field `{}`:", field_name;
+                    note =  "The `other` field doesn't exist in the struct `{}`", struct_ident;
+                    help = "Add the field `{}` to the struct", other_field
                 )
             }
         }
@@ -117,18 +96,13 @@ impl ValidateField {
                 && range.exclusive_min.is_none()
                 && range.exclusive_max.is_none()
             {
-                errors.push(
-                    darling::Error::custom(format!(
-                        "Invalid attribute #[validate(range(...))] on field `{}`:",
-                        field_name
-                    ))
-                    .with_span(get_attr(field_attrs, "range").unwrap())
-                    .note("Validator `range` requires at least 1 argument")
-                    .help("Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`"),
+                abort!(
+                    get_attr(field_attrs, "range").unwrap(),  "Invalid attribute #[validate(range(...))] on field `{}`:", field_name;
+                    note = "Validator `range` requires at least 1 argument";
+                    help = "Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`"
                 )
             }
         }
-        errors
     }
 }
 

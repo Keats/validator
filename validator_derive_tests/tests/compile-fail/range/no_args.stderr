@@ -1,8 +1,9 @@
 error: Invalid attribute #[validate(range(...))] on field `s`:
+
+         = note: Validator `range` requires at least 1 argument
+         = help: Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`
+
  --> tests/compile-fail/range/no_args.rs:5:5
   |
 5 |     #[validate(range())]
   |     ^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: Validator `range` requires at least 1 argument
-  = help: Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`

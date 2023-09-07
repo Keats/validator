@@ -1,7 +1,5 @@
-error: Unknown field: `mi`
+error: Unknown field: `mi`. Did you mean `min`?
  --> tests/compile-fail/range/unknown_arg.rs:5:22
   |
 5 |     #[validate(range(mi = 2, max = 3))]
-  |                      ^^^^^^
-  |
-  = help: did you mean `min`?
+  |                      ^^
