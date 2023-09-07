@@ -26,5 +26,5 @@ jobs:
         run: |
           cargo build --no-default-features
           cargo test --no-default-features
-          cargo build ${{ matrix.rust == 'stable' && '--all-features' || '--features card unic derive' }}
-          cargo test ${{ matrix.rust == 'stable' && '--all-features' || '--features card unic derive' }}
+          cargo build ${{ matrix.rust == 'stable' && '--all-features' || '--features card,unic,derive' }}
+          cargo test ${{ matrix.rust == 'stable' && '--all-features' || '--features card,unic,derive' }}
