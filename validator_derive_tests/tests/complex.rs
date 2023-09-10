@@ -22,6 +22,7 @@ fn validate_signup(data: &SignupData) -> Result<(), ValidationError> {
     Ok(())
 }
 
+#[allow(unused)]
 #[derive(Debug, Validate, Deserialize)]
 #[validate(schema(function = validate_signup))]
 struct SignupData {
@@ -35,9 +36,9 @@ struct SignupData {
     #[validate(range(min = 18, max = 20))]
     age: u32,
     #[validate]
-    _card: Option<Card>,
+    card: Option<Card>,
     #[validate]
-    _preferences: Vec<Preference>,
+    preferences: Vec<Preference>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -63,8 +64,8 @@ fn is_fine_with_many_valid_validations() {
         site: "http://hello.com".to_string(),
         first_name: "Bob".to_string(),
         age: 18,
-        _card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
-        _preferences: vec![Preference { name: "marketing".to_string(), value: false }],
+        card: Some(Card { number: "5236313877109142".to_string(), cvv: 123 }),
+        preferences: vec![Preference { name: "marketing".to_string(), value: false }],
     };
 
     assert!(signup.validate().is_ok());
@@ -241,8 +242,8 @@ fn test_works_with_question_mark_operator() {
             site: "http://hello.com".to_string(),
             first_name: "Bob".to_string(),
             age: 18,
-            _card: None,
-            _preferences: Vec::new(),
+            card: None,
+            preferences: Vec::new(),
         };
 
         signup.validate()?;
