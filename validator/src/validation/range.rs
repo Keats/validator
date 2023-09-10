@@ -67,19 +67,11 @@ where
     T: PartialEq + PartialOrd + ValidateRangeType,
 {
     fn greater_than(&self, max: T) -> Option<bool> {
-        if let Some(r) = self {
-            Some(r > &max)
-        } else {
-            None
-        }
+        self.as_ref().map(|r| r > &max)
     }
 
     fn less_than(&self, min: T) -> Option<bool> {
-        if let Some(r) = self {
-            Some(r < &min)
-        } else {
-            None
-        }
+        self.as_ref().map(|r| r < &min)
     }
 }
 
@@ -89,11 +81,7 @@ where
 {
     fn greater_than(&self, max: T) -> Option<bool> {
         if let Some(r) = self {
-            if let Some(r) = r {
-                Some(r > &max)
-            } else {
-                None
-            }
+            r.as_ref().map(|r| r > &max)
         } else {
             None
         }
@@ -101,11 +89,7 @@ where
 
     fn less_than(&self, min: T) -> Option<bool> {
         if let Some(r) = self {
-            if let Some(r) = r {
-                Some(r < &min)
-            } else {
-                None
-            }
+            r.as_ref().map(|r| r < &min)
         } else {
             None
         }
@@ -126,45 +110,21 @@ macro_rules! impl_val_range {
 
         impl ValidateRange<$t> for Option<$t> {
             fn greater_than(&self, max: $t) -> Option<bool> {
-                if let Some(r) = self {
-                    Some(r > &max)
-                } else {
-                    None
-                }
+                self.map(|r| r > max)
             }
 
             fn less_than(&self, min: $t) -> Option<bool> {
-                if let Some(r) = self {
-                    Some(r < &min)
-                } else {
-                    None
-                }
+                self.map(|r| r < min)
             }
         }
 
         impl ValidateRange<$t> for Option<Option<$t>> {
             fn greater_than(&self, max: $t) -> Option<bool> {
-                if let Some(r) = self {
-                    if let Some(r) = r {
-                        Some(r > &max)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+                self.flatten().map(|r| r > max)
             }
 
             fn less_than(&self, min: $t) -> Option<bool> {
-                if let Some(r) = self {
-                    if let Some(r) = r {
-                        Some(r < &min)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+                self.flatten().map(|r| r < min)
             }
         }
     };

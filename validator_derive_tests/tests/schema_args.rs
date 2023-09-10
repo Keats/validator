@@ -57,9 +57,9 @@ fn validate_schema_fn_err() {
 
 #[test]
 fn invalidate_schema_fn_complex_arg_err() {
-    fn invalid_validation_complex_args<'a>(
+    fn invalid_validation_complex_args(
         _: &TestStruct,
-        args: &mut TestArgs<'a, i32>,
+        args: &mut TestArgs<'_, i32>,
     ) -> Result<(), ValidationError> {
         args.arg1 += 1;
         *args.arg3 += args.arg2;

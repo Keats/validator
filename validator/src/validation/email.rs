@@ -83,22 +83,14 @@ impl ValidateEmail for String {
 
 impl ValidateEmail for Option<String> {
     fn as_email_string(&self) -> Option<Cow<str>> {
-        if let Some(u) = self {
-            Some(Cow::from(u))
-        } else {
-            None
-        }
+        self.as_ref().map(Cow::from)
     }
 }
 
 impl ValidateEmail for Option<Option<String>> {
     fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
-            if let Some(u) = u {
-                Some(Cow::from(u))
-            } else {
-                None
-            }
+            u.as_ref().map(Cow::from)
         } else {
             None
         }
@@ -113,22 +105,14 @@ impl ValidateEmail for &String {
 
 impl ValidateEmail for Option<&String> {
     fn as_email_string(&self) -> Option<Cow<str>> {
-        if let Some(u) = self {
-            Some(Cow::from(*u))
-        } else {
-            None
-        }
+        self.as_ref().map(|u| Cow::from(*u))
     }
 }
 
 impl ValidateEmail for Option<Option<&String>> {
     fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
-            if let Some(u) = u {
-                Some(Cow::from(*u))
-            } else {
-                None
-            }
+            u.as_ref().map(|u| Cow::from(*u))
         } else {
             None
         }
@@ -143,22 +127,14 @@ impl<'a> ValidateEmail for &'a str {
 
 impl<'a> ValidateEmail for Option<&'a str> {
     fn as_email_string(&self) -> Option<Cow<str>> {
-        if let Some(u) = self {
-            Some(Cow::from(*u))
-        } else {
-            None
-        }
+        self.as_ref().map(|u| Cow::from(*u))
     }
 }
 
 impl<'a> ValidateEmail for Option<Option<&'a str>> {
     fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
-            if let Some(u) = u {
-                Some(Cow::from(*u))
-            } else {
-                None
-            }
+            u.as_ref().map(|u| Cow::from(*u))
         } else {
             None
         }
@@ -173,22 +149,14 @@ impl ValidateEmail for Cow<'_, str> {
 
 impl ValidateEmail for Option<Cow<'_, str>> {
     fn as_email_string(&self) -> Option<Cow<str>> {
-        if let Some(u) = self {
-            Some(u.clone())
-        } else {
-            None
-        }
+        self.as_ref().map(|u| u.clone())
     }
 }
 
 impl ValidateEmail for Option<Option<Cow<'_, str>>> {
     fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
-            if let Some(u) = u {
-                Some(u.clone())
-            } else {
-                None
-            }
+            u.as_ref().map(|u| u.clone())
         } else {
             None
         }

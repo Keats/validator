@@ -80,7 +80,7 @@ impl ValidateField {
                 .to_string();
 
             // Check if the other field exists
-            if !all_fields.iter().any(|f| f.ident.clone().unwrap().to_string() == other_field) {
+            if !all_fields.iter().any(|f| f.ident.clone().unwrap() == other_field) {
                 abort!(
                     must_match.other.span(), "Invalid attribute for #[validate(must_match(...))] on field `{}`:", field_name;
                     note =  "The `other` field doesn't exist in the struct `{}`", struct_ident;

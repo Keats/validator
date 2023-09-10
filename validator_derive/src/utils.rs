@@ -130,7 +130,7 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
 }
 
 pub fn get_attr<'a>(attrs: &'a Vec<Attribute>, name: &str) -> Option<&'a Attribute> {
-    attrs.into_iter().find(|a| match &a.meta {
+    attrs.iter().find(|a| match &a.meta {
         syn::Meta::List(list) => list.tokens.clone().into_iter().any(|t| match t {
             proc_macro2::TokenTree::Ident(i) => &i.to_string() == name,
             _ => false,

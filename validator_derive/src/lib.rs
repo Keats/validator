@@ -236,7 +236,7 @@ impl ValidationData {
                         for arg in &args.args {
                             match arg {
                                 syn::GenericArgument::Lifetime(lt) => {
-                                    if lt.ident.to_string() != "v_a" {
+                                    if lt.ident != "v_a" {
                                         abort! {
                                             lt.ident, "Invalid argument reference";
                                             note = "The lifetime `'{}` is not supported.", lt.ident;
