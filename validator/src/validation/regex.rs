@@ -4,66 +4,66 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use regex::Regex;
 
-pub trait IntoRegex {
-    fn into_regex(&self) -> Cow<Regex>;
+pub trait AsRegex {
+    fn as_regex(&self) -> Cow<Regex>;
 }
 
-impl IntoRegex for Regex {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for Regex {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Borrowed(self)
     }
 }
 
-impl IntoRegex for &Regex {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &Regex {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Borrowed(self)
     }
 }
 
-impl IntoRegex for &OnceLock<Regex> {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &OnceLock<Regex> {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Borrowed(self.get().unwrap())
     }
 }
 
-impl IntoRegex for &Mutex<OnceCell<Regex>> {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &Mutex<OnceCell<Regex>> {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
-impl IntoRegex for &Mutex<OnceLock<Regex>> {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &Mutex<OnceLock<Regex>> {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
-impl IntoRegex for &Arc<Mutex<OnceCell<Regex>>> {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &Arc<Mutex<OnceCell<Regex>>> {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
-impl IntoRegex for &Arc<Mutex<OnceLock<Regex>>> {
-    fn into_regex(&self) -> Cow<Regex> {
+impl AsRegex for &Arc<Mutex<OnceLock<Regex>>> {
+    fn as_regex(&self) -> Cow<Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
 pub trait ValidateRegex {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool;
+    fn validate_regex(&self, regex: impl AsRegex) -> bool;
 }
 
 impl ValidateRegex for String {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
-        regex.into_regex().is_match(self)
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
     }
 }
 
 impl ValidateRegex for Option<String> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
-            regex.into_regex().is_match(h)
+            regex.as_regex().is_match(h)
         } else {
             true
         }
@@ -71,10 +71,10 @@ impl ValidateRegex for Option<String> {
 }
 
 impl ValidateRegex for Option<Option<String>> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
             if let Some(h) = h {
-                regex.into_regex().is_match(h)
+                regex.as_regex().is_match(h)
             } else {
                 true
             }
@@ -85,15 +85,15 @@ impl ValidateRegex for Option<Option<String>> {
 }
 
 impl ValidateRegex for &String {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
-        regex.into_regex().is_match(self)
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
     }
 }
 
 impl ValidateRegex for Option<&String> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
-            regex.into_regex().is_match(h)
+            regex.as_regex().is_match(h)
         } else {
             true
         }
@@ -101,10 +101,10 @@ impl ValidateRegex for Option<&String> {
 }
 
 impl ValidateRegex for Option<Option<&String>> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
             if let Some(h) = h {
-                regex.into_regex().is_match(h)
+                regex.as_regex().is_match(h)
             } else {
                 true
             }
@@ -115,15 +115,15 @@ impl ValidateRegex for Option<Option<&String>> {
 }
 
 impl ValidateRegex for &str {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
-        regex.into_regex().is_match(self)
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
     }
 }
 
 impl ValidateRegex for Option<&str> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
-            regex.into_regex().is_match(h)
+            regex.as_regex().is_match(h)
         } else {
             true
         }
@@ -131,10 +131,10 @@ impl ValidateRegex for Option<&str> {
 }
 
 impl ValidateRegex for Option<Option<&str>> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
             if let Some(h) = h {
-                regex.into_regex().is_match(h)
+                regex.as_regex().is_match(h)
             } else {
                 true
             }
@@ -145,15 +145,15 @@ impl ValidateRegex for Option<Option<&str>> {
 }
 
 impl ValidateRegex for Cow<'_, str> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
-        regex.into_regex().is_match(self)
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
     }
 }
 
 impl ValidateRegex for Option<Cow<'_, str>> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
-            regex.into_regex().is_match(h)
+            regex.as_regex().is_match(h)
         } else {
             true
         }
@@ -161,10 +161,10 @@ impl ValidateRegex for Option<Cow<'_, str>> {
 }
 
 impl ValidateRegex for Option<Option<Cow<'_, str>>> {
-    fn validate_regex(&self, regex: impl IntoRegex) -> bool {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
             if let Some(h) = h {
-                regex.into_regex().is_match(h)
+                regex.as_regex().is_match(h)
             } else {
                 true
             }

@@ -85,7 +85,7 @@ fn can_validate_custom_impl_for_credit_card() {
     }
 
     impl validator::ValidateCreditCard for CustomCreditCard {
-        fn to_credit_card_string(&self) -> Cow<str> {
+        fn as_credit_card_string(&self) -> Cow<str> {
             Cow::from(format!("{}{}{}", &self.bin, &self.ian, &self.check,))
         }
     }

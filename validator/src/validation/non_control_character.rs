@@ -3,14 +3,14 @@ use unic_ucd_common::control;
 
 pub trait ValidateNonControlCharacter {
     fn validate_non_control_character(&self) -> bool {
-        self.to_non_control_character_iterator().all(|code| !control::is_control(code))
+        self.as_non_control_character_iterator().all(|code| !control::is_control(code))
     }
 
-    fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_>;
+    fn as_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_>;
 }
 
 impl<T: AsRef<str>> ValidateNonControlCharacter for T {
-    fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
+    fn as_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
         Box::new(self.as_ref().chars())
     }
 }

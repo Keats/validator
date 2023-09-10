@@ -4,24 +4,24 @@ use url::Url;
 /// Validates whether the string given is a url
 pub trait ValidateUrl {
     fn validate_url(&self) -> bool {
-        if let Some(u) = self.to_url_string() {
+        if let Some(u) = self.as_url_string() {
             Url::parse(&u).is_ok()
         } else {
             true
         }
     }
 
-    fn to_url_string(&self) -> Option<Cow<str>>;
+    fn as_url_string(&self) -> Option<Cow<str>>;
 }
 
 impl ValidateUrl for String {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         Some(Cow::from(self))
     }
 }
 
 impl ValidateUrl for Option<String> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(u))
         } else {
@@ -31,7 +31,7 @@ impl ValidateUrl for Option<String> {
 }
 
 impl ValidateUrl for Option<Option<String>> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(u))
@@ -45,13 +45,13 @@ impl ValidateUrl for Option<Option<String>> {
 }
 
 impl ValidateUrl for &String {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         Some(Cow::from(self.as_str()))
     }
 }
 
 impl ValidateUrl for Option<&String> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(*u))
         } else {
@@ -61,7 +61,7 @@ impl ValidateUrl for Option<&String> {
 }
 
 impl ValidateUrl for Option<Option<&String>> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(*u))
@@ -75,13 +75,13 @@ impl ValidateUrl for Option<Option<&String>> {
 }
 
 impl<'a> ValidateUrl for &'a str {
-    fn to_url_string(&self) -> Option<Cow<'_, str>> {
+    fn as_url_string(&self) -> Option<Cow<'_, str>> {
         Some(Cow::from(*self))
     }
 }
 
 impl<'a> ValidateUrl for Option<&'a str> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(*u))
         } else {
@@ -91,7 +91,7 @@ impl<'a> ValidateUrl for Option<&'a str> {
 }
 
 impl<'a> ValidateUrl for Option<Option<&'a str>> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(*u))
@@ -105,13 +105,13 @@ impl<'a> ValidateUrl for Option<Option<&'a str>> {
 }
 
 impl ValidateUrl for Cow<'_, str> {
-    fn to_url_string(&self) -> Option<Cow<'_, str>> {
+    fn as_url_string(&self) -> Option<Cow<'_, str>> {
         Some(self.clone())
     }
 }
 
 impl ValidateUrl for Option<Cow<'_, str>> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(u.clone())
         } else {
@@ -121,7 +121,7 @@ impl ValidateUrl for Option<Cow<'_, str>> {
 }
 
 impl ValidateUrl for Option<Option<Cow<'_, str>>> {
-    fn to_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(u.clone())

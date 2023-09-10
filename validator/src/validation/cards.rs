@@ -5,15 +5,15 @@ use card_validate::Validate as CardValidate;
 
 pub trait ValidateCreditCard {
     fn validate_credit_card(&self) -> bool {
-        let card_string = self.to_credit_card_string();
+        let card_string = self.as_credit_card_string();
         CardValidate::from(&card_string).is_ok()
     }
 
-    fn to_credit_card_string(&self) -> Cow<str>;
+    fn as_credit_card_string(&self) -> Cow<str>;
 }
 
 impl<T: AsRef<str>> ValidateCreditCard for T {
-    fn to_credit_card_string(&self) -> Cow<str> {
+    fn as_credit_card_string(&self) -> Cow<str> {
         Cow::from(self.as_ref())
     }
 }

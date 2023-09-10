@@ -39,7 +39,7 @@ fn validate_domain_part(domain_part: &str) -> bool {
 /// that are unfamiliar to most users.
 pub trait ValidateEmail {
     fn validate_email(&self) -> bool {
-        let val = if let Some(v) = self.to_email_string() { v } else { return true };
+        let val = if let Some(v) = self.as_email_string() { v } else { return true };
 
         if val.is_empty() || !val.contains('@') {
             return false;
@@ -72,17 +72,17 @@ pub trait ValidateEmail {
         true
     }
 
-    fn to_email_string(&self) -> Option<Cow<str>>;
+    fn as_email_string(&self) -> Option<Cow<str>>;
 }
 
 impl ValidateEmail for String {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         Some(Cow::from(self))
     }
 }
 
 impl ValidateEmail for Option<String> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(u))
         } else {
@@ -92,7 +92,7 @@ impl ValidateEmail for Option<String> {
 }
 
 impl ValidateEmail for Option<Option<String>> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(u))
@@ -106,13 +106,13 @@ impl ValidateEmail for Option<Option<String>> {
 }
 
 impl ValidateEmail for &String {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         Some(Cow::from(self.as_str()))
     }
 }
 
 impl ValidateEmail for Option<&String> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(*u))
         } else {
@@ -122,7 +122,7 @@ impl ValidateEmail for Option<&String> {
 }
 
 impl ValidateEmail for Option<Option<&String>> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(*u))
@@ -136,13 +136,13 @@ impl ValidateEmail for Option<Option<&String>> {
 }
 
 impl<'a> ValidateEmail for &'a str {
-    fn to_email_string(&self) -> Option<Cow<'_, str>> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
         Some(Cow::from(*self))
     }
 }
 
 impl<'a> ValidateEmail for Option<&'a str> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(Cow::from(*u))
         } else {
@@ -152,7 +152,7 @@ impl<'a> ValidateEmail for Option<&'a str> {
 }
 
 impl<'a> ValidateEmail for Option<Option<&'a str>> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(Cow::from(*u))
@@ -166,13 +166,13 @@ impl<'a> ValidateEmail for Option<Option<&'a str>> {
 }
 
 impl ValidateEmail for Cow<'_, str> {
-    fn to_email_string(&self) -> Option<Cow<'_, str>> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
         Some(self.clone())
     }
 }
 
 impl ValidateEmail for Option<Cow<'_, str>> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             Some(u.clone())
         } else {
@@ -182,7 +182,7 @@ impl ValidateEmail for Option<Cow<'_, str>> {
 }
 
 impl ValidateEmail for Option<Option<Cow<'_, str>>> {
-    fn to_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
         if let Some(u) = self {
             if let Some(u) = u {
                 Some(u.clone())
