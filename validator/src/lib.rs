@@ -65,9 +65,12 @@
 //! ```
 
 mod display_impl;
+pub mod span;
 mod traits;
 mod types;
 mod validation;
+
+pub use span::email::{validate_email_span, EmailError, EmailValidationError};
 
 #[cfg(feature = "card")]
 pub use validation::cards::validate_credit_card;
