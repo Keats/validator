@@ -219,7 +219,8 @@ struct ValidationData {
     ident: syn::Ident,
     generics: syn::Generics,
     data: Data<(), WithOriginal<ValidateField, syn::Field>>,
-    schema: Option<Schema>,
+    #[darling(multiple)]
+    schema: Vec<Schema>,
     context: Option<Path>,
     mutable: Option<bool>,
     nested: Option<bool>,
@@ -321,11 +322,14 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let use_statements = quote_use_stmts(&validation_fields);
 
     // Schema validation
-    let schema = if let Some(schema) = &validation_data.schema {
-        schema_tokens(schema.clone())
-    } else {
-        quote!()
-    };
+    let schema = validation_data.schema.iter().fold(quote!(), |acc, s| {
+        let st = schema_tokens(s.clone());
+        let acc = quote! {
+            #acc
+            #st
+        };
+        acc
+    });
 
     let ident = validation_data.ident;
     let (imp, ty, whr) = validation_data.generics.split_for_impl();

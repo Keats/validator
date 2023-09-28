@@ -40,7 +40,7 @@ pub fn schema_tokens(schema: Schema) -> proc_macro2::TokenStream {
 
     if skip_on_errors {
         quote! {
-            if errors.is_empty() {
+            if errors.is_empty() || ((errors.field_errors().len() == 1) && errors.field_errors().contains_key("__all__")) {
                 #fn_call
             }
         }
