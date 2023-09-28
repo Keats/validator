@@ -71,67 +71,6 @@ fn is_fine_with_many_valid_validations() {
     assert!(signup.validate().is_ok());
 }
 
-// Skip this test for now
-// #[test]
-// fn failed_validation_points_to_original_field_name() {
-//     let signup = SignupData {
-//         mail: "bob@bob.com".to_string(),
-//         site: "http://hello.com".to_string(),
-//         first_name: "".to_string(),
-//         age: 18,
-//         _card: Some(Card { number: "1234567890123456".to_string(), cvv: 1 }),
-//         _preferences: vec![Preference { name: "abc".to_string(), value: true }],
-//     };
-//     let res = signup.validate(|username| validate_unique_username(username), validate_signup);
-//     // println!("{}", serde_json::to_string(&res).unwrap());
-//     assert!(res.is_err());
-//     let err = res.unwrap_err();
-//     let errs = err.errors();
-//     assert!(errs.contains_key("firstName"));
-//     if let ValidationErrorsKind::Field(ref err) = errs["firstName"] {
-//         assert_eq!(err.len(), 1);
-//         assert_eq!(err[0].code, "length");
-//     } else {
-//         panic!("Expected field validation errors");
-//     }
-//     assert!(errs.contains_key("card"));
-//     if let ValidationErrorsKind::Struct(ref errs) = errs["card"] {
-//         unwrap_map(errs, |errs| {
-//             assert_eq!(errs.len(), 2);
-//             assert!(errs.contains_key("number"));
-//             if let ValidationErrorsKind::Field(ref err) = errs["number"] {
-//                 assert_eq!(err.len(), 1);
-//                 assert_eq!(err[0].code, "credit_card");
-//             } else {
-//                 panic!("Expected field validation errors");
-//             }
-//             assert!(errs.contains_key("cvv"));
-//             if let ValidationErrorsKind::Field(ref err) = errs["cvv"] {
-//                 assert_eq!(err.len(), 1);
-//                 assert_eq!(err[0].code, "range");
-//             } else {
-//                 panic!("Expected field validation errors");
-//             }
-//         });
-//     } else {
-//         panic!("Expected struct validation errors");
-//     }
-//     assert!(errs.contains_key("preferences"));
-//     if let ValidationErrorsKind::List(ref errs) = errs["preferences"] {
-//         assert!(errs.contains_key(&0));
-//         unwrap_map(&errs[&0], |errs| {
-//             assert_eq!(errs.len(), 1);
-//             assert!(errs.contains_key("name"));
-//             if let ValidationErrorsKind::Field(ref err) = errs["name"] {
-//                 assert_eq!(err.len(), 1);
-//                 assert_eq!(err[0].code, "length");
-//             }
-//         });
-//     } else {
-//         panic!("Expected list validation errors");
-//     }
-// }
-
 #[test]
 fn test_can_validate_option_fields_with_lifetime() {
     lazy_static! {
