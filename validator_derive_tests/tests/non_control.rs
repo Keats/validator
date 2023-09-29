@@ -80,8 +80,8 @@ fn can_validate_custom_impl_for_non_control_character() {
         val: CustomNonControlCharacter,
     }
 
-    impl validator::ValidateNonControlCharacter for &CustomNonControlCharacter {
-        fn to_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
+    impl validator::ValidateNonControlCharacter for CustomNonControlCharacter {
+        fn as_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_> {
             Box::new(std::iter::once(self.char))
         }
     }

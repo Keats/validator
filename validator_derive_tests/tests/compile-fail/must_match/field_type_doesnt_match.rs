@@ -2,7 +2,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 struct Test {
-    #[validate(must_match = "password2")]
+    #[validate(must_match(other = "password2"))]
     password: String,
     password2: i32,
 }

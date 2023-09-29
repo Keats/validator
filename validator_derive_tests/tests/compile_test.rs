@@ -1,3 +1,4 @@
+#[cfg(feature = "test_ui")]
 #[test]
 fn ui() {
     let t = trybuild::TestCases::new();

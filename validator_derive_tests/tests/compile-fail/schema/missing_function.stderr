@@ -1,5 +1,5 @@
-error: Invalid schema level validation: `function` is required
- --> $DIR/missing_function.rs:4:12
+error: Missing field `function`
+ --> tests/compile-fail/schema/missing_function.rs:4:12
   |
 4 | #[validate(schema())]
   |            ^^^^^^

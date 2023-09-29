@@ -8,13 +8,13 @@ lazy_static! {
 
 #[derive(Validate)]
 struct Test {
-    #[validate(regex = "crate::RE2")]
+    #[validate(regex(path = "*crate::RE2"))]
     s: String,
 }
 
 #[derive(Validate)]
 struct TestPath {
-    #[validate(regex = "crate::RE2")]
+    #[validate(regex(path = *crate::RE2))]
     s: String,
 }
 

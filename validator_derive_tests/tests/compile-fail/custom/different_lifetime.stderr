@@ -1,5 +1,9 @@
-error: Invalid argument reference: The lifetime `'a` is not supported. Please use the validator lifetime `'v_a`
- --> $DIR/different_lifetime.rs:9:55
+error: Invalid argument reference
+
+         = note: The lifetime `'a` is not supported.
+         = help: Please use the validator lifetime `'v_a`
+
+ --> tests/compile-fail/custom/different_lifetime.rs:8:22
   |
-9 |     #[validate(custom(function = "hello_world", arg = "&'a mut String"))]
-  |                                                       ^^^^^^^^^^^^^^^^
+8 | #[validate(context = "Arg<'a>")]
+  |                      ^^^^^^^^^

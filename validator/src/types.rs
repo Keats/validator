@@ -40,7 +40,7 @@ pub enum ValidationErrorsKind {
 }
 
 #[derive(Default, Debug, Serialize, Clone, PartialEq)]
-pub struct ValidationErrors(HashMap<&'static str, ValidationErrorsKind>);
+pub struct ValidationErrors(pub HashMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
     pub fn new() -> ValidationErrors {
@@ -55,6 +55,22 @@ impl ValidationErrors {
         match result {
             Ok(()) => false,
             Err(ref errs) => errs.contains_key(field),
+        }
+    }
+
+    pub fn merge_self(
+        &mut self,
+        field: &'static str,
+        child: Result<(), ValidationErrors>,
+    ) -> &mut ValidationErrors {
+        match child {
+            Ok(()) => self,
+            Err(errors) => {
+                for (_, e) in errors.0 {
+                    self.add_nested(field, e);
+                }
+                self
+            }
         }
     }
 

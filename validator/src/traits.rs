@@ -144,49 +144,6 @@ impl<T> HasLen for IndexSet<T> {
     }
 }
 
-/// Trait to implement if one wants to make the `contains` validator
-/// work for more types
-pub trait Contains {
-    #[must_use]
-    fn has_element(&self, needle: &str) -> bool;
-}
-
-impl Contains for String {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> Contains for &'a String {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> Contains for &'a str {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> Contains for Cow<'a, str> {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<S, H: ::std::hash::BuildHasher> Contains for HashMap<String, S, H> {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains_key(needle)
-    }
-}
-
-impl<'a, S, H: ::std::hash::BuildHasher> Contains for &'a HashMap<String, S, H> {
-    fn has_element(&self, needle: &str) -> bool {
-        self.contains_key(needle)
-    }
-}
-
 /// This is the original trait that was implemented by deriving `Validate`. It will still be
 /// implemented for struct validations that don't take custom arguments. The call is being
 /// forwarded to the `ValidateArgs<'v_a>` trait.
@@ -207,6 +164,20 @@ impl<T: Validate> Validate for &T {
 /// The `Args` type can use the lifetime `'v_a` to pass references onto the validator.
 pub trait ValidateArgs<'v_a> {
     type Args;
+    fn validate_with_args(&self, args: Self::Args) -> Result<(), ValidationErrors>;
+}
 
-    fn validate_args(&self, args: Self::Args) -> Result<(), ValidationErrors>;
+impl<'v_a, T, U> ValidateArgs<'v_a> for Option<T>
+where
+    T: ValidateArgs<'v_a, Args = U>,
+{
+    type Args = U;
+
+    fn validate_with_args(&self, args: Self::Args) -> Result<(), ValidationErrors> {
+        if let Some(nested) = self {
+            T::validate_with_args(nested, args)
+        } else {
+            Ok(())
+        }
+    }
 }

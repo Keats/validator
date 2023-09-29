@@ -1,11 +1,16 @@
-use crate::traits::Contains;
+use crate::ValidateContains;
 
-/// Validates whether the value does not contain the needle
-/// The value needs to implement the Contains trait, which is implement on String, str and Hashmap<String>
-/// by default.
-#[must_use]
-pub fn validate_does_not_contain<T: Contains>(val: T, needle: &str) -> bool {
-    !val.has_element(needle)
+pub trait ValidateDoesNotContain {
+    fn validate_does_not_contain(&self, needle: &str) -> bool;
+}
+
+impl<T> ValidateDoesNotContain for T
+where
+    T: ValidateContains,
+{
+    fn validate_does_not_contain(&self, needle: &str) -> bool {
+        !self.validate_contains(needle)
+    }
 }
 
 #[cfg(test)]
@@ -17,41 +22,41 @@ mod tests {
 
     #[test]
     fn test_validate_does_not_contain_string() {
-        assert_eq!(validate_does_not_contain("hey", "e"), false);
+        assert!("hey".validate_does_not_contain("g"));
     }
 
     #[test]
     fn test_validate_does_not_contain_string_can_fail() {
-        assert!(validate_does_not_contain("hey", "o"));
+        assert!(!"hey".validate_does_not_contain("e"));
     }
 
     #[test]
     fn test_validate_does_not_contain_hashmap_key() {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
-        assert_eq!(validate_does_not_contain(map, "hey"), false);
+        assert!(map.validate_does_not_contain("bob"));
     }
 
     #[test]
     fn test_validate_does_not_contain_hashmap_key_can_fail() {
         let mut map = HashMap::new();
         map.insert("hey".to_string(), 1);
-        assert!(validate_does_not_contain(map, "bob"));
+        assert!(!map.validate_does_not_contain("hey"));
     }
 
     #[test]
     fn test_validate_does_not_contain_cow() {
         let test: Cow<'static, str> = "hey".into();
-        assert_eq!(validate_does_not_contain(test, "e"), false);
+        assert!(test.validate_does_not_contain("b"));
         let test: Cow<'static, str> = String::from("hey").into();
-        assert_eq!(validate_does_not_contain(test, "e"), false);
+        assert!(test.validate_does_not_contain("b"));
     }
 
     #[test]
     fn test_validate_does_not_contain_cow_can_fail() {
         let test: Cow<'static, str> = "hey".into();
-        assert!(validate_does_not_contain(test, "o"));
+        assert!(!test.validate_does_not_contain("e"));
         let test: Cow<'static, str> = String::from("hey").into();
-        assert!(validate_does_not_contain(test, "o"));
+        assert!(!test.validate_does_not_contain("e"));
     }
 }
