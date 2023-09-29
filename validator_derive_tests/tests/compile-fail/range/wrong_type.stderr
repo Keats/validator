@@ -1,5 +1,0 @@
-error: Validator `range` can only be used on number types but found `String` for field `s`
- --> $DIR/wrong_type.rs:6:8
-  |
-6 |     s: String,
-  |        ^^^^^^

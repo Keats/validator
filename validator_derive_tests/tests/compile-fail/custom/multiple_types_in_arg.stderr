@@ -1,6 +1,0 @@
-error: Invalid attribute #[validate] on field `s`: invalid argument type for `arg` of `custom` validator: The string has to be a single type.
-       (Tip: You can combine multiple types into one tuple.)
- --> $DIR/multiple_types_in_arg.rs:5:55
-  |
-5 |     #[validate(custom(function = "hello_world", arg = "i64, i64"))]
-  |                                                       ^^^^^^^^^^

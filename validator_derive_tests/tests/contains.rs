@@ -4,7 +4,7 @@ use validator::Validate;
 fn can_validate_contains_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(contains = "he")]
+        #[validate(contains(pattern = "he"))]
         val: String,
     }
 
@@ -17,7 +17,7 @@ fn can_validate_contains_ok() {
 fn value_not_containing_needle_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(contains = "he")]
+        #[validate(contains(pattern = "he"))]
         val: String,
     }
 

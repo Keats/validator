@@ -1,5 +1,7 @@
-error: #[derive(Validate)] can only be used with structs
- --> $DIR/not_a_struct.rs:4:1
+error: Unsupported shape `enum`. Expected struct with named fields.
+ --> tests/compile-fail/not_a_struct.rs:3:10
   |
-4 | pub enum NotAStruct {
-  | ^^^
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

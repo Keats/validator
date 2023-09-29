@@ -1,0 +1,5 @@
+error: Unknown field: `arg`
+ --> tests/compile-fail/custom/defined_args_in_custom.rs:5:49
+  |
+5 |     #[validate(custom(function = "hello_world", arg = "(i64, i64)"))]
+  |                                                 ^^^

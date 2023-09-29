@@ -6,8 +6,10 @@ pub mod email;
 pub mod ip;
 pub mod length;
 pub mod must_match;
+pub mod nested;
 #[cfg(feature = "unic")]
 pub mod non_control_character;
 pub mod range;
+pub mod regex;
 pub mod required;
 pub mod urls;

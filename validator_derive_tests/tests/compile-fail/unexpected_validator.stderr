@@ -1,5 +1,5 @@
-error: Unexpected validator: my_custom_validator
- --> $DIR/unexpected_validator.rs:5:16
+error: Unknown field: `my_custom_validator`
+ --> tests/compile-fail/unexpected_validator.rs:5:16
   |
 5 |     #[validate(my_custom_validator)]
   |                ^^^^^^^^^^^^^^^^^^^

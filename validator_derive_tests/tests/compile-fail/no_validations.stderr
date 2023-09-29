@@ -1,5 +1,0 @@
-error: Invalid attribute #[validate] on field `s`: it needs at least one validator
- --> $DIR/no_validations.rs:5:5
-  |
-5 |     #[validate()]
-  |     ^

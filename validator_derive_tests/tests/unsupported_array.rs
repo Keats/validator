@@ -28,7 +28,7 @@ fn can_validate_custom_with_unsupported_array() {
     struct TestStruct {
         #[validate(email)]
         val: String,
-        #[validate(custom = "valid_custom_fn")]
+        #[validate(custom(function = valid_custom_fn))]
         array: [u8; 2],
     }
 
@@ -43,7 +43,7 @@ fn can_fail_custom_with_unsupported_array() {
     struct TestStruct {
         #[validate(email)]
         val: String,
-        #[validate(custom = "valid_custom_fn")]
+        #[validate(custom(function = valid_custom_fn))]
         array: [u8; 2],
     }
 

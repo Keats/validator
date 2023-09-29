@@ -2,10 +2,19 @@
 name = "validator_derive_tests"
 version = "0.1.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com>"]
-edition = "2018"
+edition = "2021"
+
+[features]
+default = ["test_ui"]
+test_ui = []
 
 [dev-dependencies]
-validator = { version = "0.16", path = "../validator", features = ["card", "unic", "derive", "indexmap"] }
+validator = { version = "0.16", path = "../validator", features = [
+    "card",
+    "unic",
+    "derive",
+    "indexmap",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 trybuild = "1.0"
@@ -13,4 +22,4 @@ regex = "1"
 lazy_static = "1"
 
 [dependencies]
-indexmap = {version = "1", features = ["serde-1"], optional = true }
+indexmap = { version = "2", features = ["serde"], optional = true }

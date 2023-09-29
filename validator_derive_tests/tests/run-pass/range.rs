@@ -2,7 +2,7 @@ use validator::Validate;
 
 #[derive(Validate)]
 struct Test {
-    #[validate(range(min = 1, max = 2.2))]
+    #[validate(range(min = 1, max = 2))]
     s: isize,
     #[validate(range(min = 1, max = 2))]
     s2: usize,
@@ -14,21 +14,21 @@ struct Test {
     s5: u32,
     #[validate(range(min = 18, max = 22))]
     s6: u64,
-    #[validate(range(min = 18.1, max = 22))]
+    #[validate(range(min = 18, max = 22))]
     s7: i8,
-    #[validate(range(min = 18.0, max = 22))]
+    #[validate(range(min = 18, max = 22))]
     s8: u8,
-    #[validate(range(min = 18.0, max = 22))]
+    #[validate(range(min = 18, max = 22))]
     s9: Option<u8>,
-    #[validate(range(min = 18.0))]
+    #[validate(range(min = 18))]
     s10: Option<u8>,
-    #[validate(range(max = 18.0))]
+    #[validate(range(max = 18))]
     s11: Option<u8>,
 }
 
 #[derive(Validate)]
 struct Test2 {
-    #[validate(range(exclusive_min = 1.1, max = 2.2))]
+    #[validate(range(exclusive_min = 1, max = 2))]
     s: isize,
     #[validate(range(min = 1, exclusive_max = 2))]
     s2: usize,
@@ -40,15 +40,15 @@ struct Test2 {
     s5: u32,
     #[validate(range(min = 18, exclusive_max = 22))]
     s6: u64,
-    #[validate(range(exclusive_min = 18.1, max = 22))]
+    #[validate(range(exclusive_min = 18, max = 22))]
     s7: i8,
-    #[validate(range(exclusive_min = 18.0, max = 22))]
+    #[validate(range(exclusive_min = 18, max = 22))]
     s8: u8,
-    #[validate(range(exclusive_min = 18.0, exclusive_max = 22))]
+    #[validate(range(exclusive_min = 18, exclusive_max = 22))]
     s9: Option<u8>,
-    #[validate(range(exclusive_min = 18.0))]
+    #[validate(range(exclusive_min = 18))]
     s10: Option<u8>,
-    #[validate(range(exclusive_max = 18.0))]
+    #[validate(range(exclusive_max = 18))]
     s11: Option<u8>,
 }
 fn main() {}

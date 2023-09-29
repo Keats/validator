@@ -5,7 +5,7 @@ use validator::Validate;
 fn can_validate_does_not_contain_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(does_not_contain = "asdf")]
+        #[validate(does_not_contain(pattern = "asdf"))]
         val: String,
     }
 
@@ -18,7 +18,7 @@ fn can_validate_does_not_contain_ok() {
 fn container_containing_needle_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(does_not_contain = "asdf")]
+        #[validate(does_not_contain(pattern = "asdf"))]
         val: HashMap<String, usize>,
     }
 
@@ -42,7 +42,7 @@ fn container_containing_needle_fails_validation() {
 fn string_containing_needle_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
-        #[validate(does_not_contain = "he")]
+        #[validate(does_not_contain(pattern = "he"))]
         val: String,
     }
 

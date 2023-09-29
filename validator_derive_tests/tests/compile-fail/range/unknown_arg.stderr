@@ -1,5 +1,5 @@
-error: Invalid attribute #[validate] on field `s`: unknown argument `mi` for validator `range` (it only has `min`, `max`)
- --> $DIR/unknown_arg.rs:5:22
+error: Unknown field: `mi`. Did you mean `min`?
+ --> tests/compile-fail/range/unknown_arg.rs:5:22
   |
 5 |     #[validate(range(mi = 2, max = 3))]
   |                      ^^

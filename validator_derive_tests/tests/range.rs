@@ -234,3 +234,31 @@ fn can_pass_reference_as_validate() {
     validate(&val).unwrap_err();
     assert_eq!(val.num_field, 10);
 }
+
+#[test]
+fn can_validate_option() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(range(min = 100))]
+        num_field: Option<u32>,
+        #[validate(range(min = 5, exclusive_max = 10))]
+        exl_field: Option<Option<u8>>,
+    }
+
+    let t = TestStruct { num_field: Some(101), exl_field: Some(Some(9)) };
+    assert!(t.validate().is_ok());
+}
+
+#[test]
+fn can_validate_none_values() {
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(range(min = 100))]
+        num_field: Option<u32>,
+        #[validate(range(min = 5, exclusive_max = 10))]
+        exl_field: Option<Option<u8>>,
+    }
+
+    let t = TestStruct { num_field: None, exl_field: None };
+    assert!(t.validate().is_ok());
+}
