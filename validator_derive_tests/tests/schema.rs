@@ -8,8 +8,8 @@ fn can_validate_schema_fn_ok() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "valid_schema_fn"))]
-    struct TestStruct {
+    #[validate(schema(function = valid_schema_fn))]
+    pub struct TestStruct {
         val: String,
     }
 
@@ -22,13 +22,13 @@ mod some_defining_mod {
     use validator::Validate;
 
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "crate::some_validation_mod::valid_schema_fn"))]
+    #[validate(schema(function = crate::some_validation_mod::valid_schema_fn))]
     pub struct TestStructValid {
         pub val: String,
     }
 
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "crate::some_validation_mod::invalid_schema_fn"))]
+    #[validate(schema(function = crate::some_validation_mod::invalid_schema_fn))]
     pub struct TestStructInvalid {
         pub val: String,
     }
@@ -80,8 +80,8 @@ fn can_validate_multiple_schema_fn_ok() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "valid_schema_fn"))]
-    #[validate(schema(function = "valid_schema_fn2"))]
+    #[validate(schema(function = valid_schema_fn))]
+    #[validate(schema(function = valid_schema_fn2))]
     struct TestStruct {
         val: String,
     }
@@ -99,7 +99,7 @@ fn can_fail_schema_fn_validation() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "invalid_schema_fn"))]
+    #[validate(schema(function = invalid_schema_fn))]
     struct TestStruct {
         val: String,
     }
@@ -126,8 +126,8 @@ fn can_fail_multiple_schema_fn_validation() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "invalid_schema_fn"))]
-    #[validate(schema(function = "invalid_schema_fn2"))]
+    #[validate(schema(function = invalid_schema_fn))]
+    #[validate(schema(function = invalid_schema_fn2))]
     struct TestStruct {
         val: String,
     }
@@ -151,7 +151,7 @@ fn can_specify_message_for_schema_fn() {
 
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "invalid_schema_fn", message = "oops"))]
+    #[validate(schema(function = invalid_schema_fn, message = "oops"))]
     struct TestStruct {
         val: String,
     }
@@ -172,7 +172,7 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     }
     #[allow(dead_code)]
     #[derive(Debug, Validate)]
-    #[validate(schema(function = "invalid_schema_fn", skip_on_field_errors = false))]
+    #[validate(schema(function = invalid_schema_fn, skip_on_field_errors = false))]
     struct TestStruct {
         val: String,
         #[validate(range(min = 1, max = 10))]
@@ -191,4 +191,26 @@ fn can_choose_to_run_schema_validation_even_after_field_errors() {
     assert!(errs.contains_key("num"));
     assert_eq!(errs["num"].len(), 1);
     assert_eq!(errs["num"][0].clone().code, "range");
+}
+
+#[test]
+fn schema_does_not_run_if_other_fields_have_errors() {
+    fn invalid_schema_fn(_: &TestStruct) -> Result<(), ValidationError> {
+        Err(ValidationError::new("meh"))
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Validate)]
+    #[validate(schema(function = invalid_schema_fn))]
+    struct TestStruct {
+        #[validate(range(min = 1, max = 10))]
+        num: usize,
+    }
+
+    let s = TestStruct { num: 0 };
+    let res = s.validate();
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
+    assert!(!errs.contains_key("__all__"));
 }

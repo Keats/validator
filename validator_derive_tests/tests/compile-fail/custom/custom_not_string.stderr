@@ -1,5 +1,9 @@
-error: Invalid attribute #[validate] on field `s`: invalid argument for `custom` validator: only strings are allowed
- --> $DIR/custom_not_string.rs:5:25
+error: Invalid attribute #[validate(custom(...))] on field `s`:
+
+         = note: Invalid argument for `custom` validator, only paths are allowed
+         = help: Try formating the argument like `path::to::function` or `"path::to::function"`
+
+ --> tests/compile-fail/custom/custom_not_string.rs:5:34
   |
-5 |     #[validate(custom = 2)]
-  |                         ^
+5 |     #[validate(custom(function = 2))]
+  |                                  ^

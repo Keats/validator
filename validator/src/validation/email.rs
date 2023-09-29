@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
 
-use crate::{validation::ip::validate_ip, HasLen};
+use crate::{HasLen, ValidateIp};
 
 lazy_static! {
     // Regex from the specs
@@ -17,14 +17,6 @@ lazy_static! {
     static ref EMAIL_LITERAL_RE: Regex = Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap();
 }
 
-/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
-/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
-/// that are unfamiliar to most users.
-#[must_use]
-pub fn validate_email<T: ValidateEmail>(val: T) -> bool {
-    val.validate_email()
-}
-
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
 #[must_use]
 fn validate_domain_part(domain_part: &str) -> bool {
@@ -35,16 +27,19 @@ fn validate_domain_part(domain_part: &str) -> bool {
     // maybe we have an ip as a domain?
     match EMAIL_LITERAL_RE.captures(domain_part) {
         Some(caps) => match caps.get(1) {
-            Some(c) => validate_ip(c.as_str()),
+            Some(c) => c.as_str().validate_ip(),
             None => false,
         },
         None => false,
     }
 }
 
+/// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
+/// [RFC 5322](https://tools.ietf.org/html/rfc5322) is not practical in most circumstances and allows email addresses
+/// that are unfamiliar to most users.
 pub trait ValidateEmail {
     fn validate_email(&self) -> bool {
-        let val = self.to_email_string();
+        let val = if let Some(v) = self.as_email_string() { v } else { return true };
 
         if val.is_empty() || !val.contains('@') {
             return false;
@@ -77,12 +72,94 @@ pub trait ValidateEmail {
         true
     }
 
-    fn to_email_string(&self) -> Cow<str>;
+    fn as_email_string(&self) -> Option<Cow<str>>;
 }
 
-impl<T: AsRef<str>> ValidateEmail for T {
-    fn to_email_string(&self) -> Cow<'_, str> {
-        Cow::from(self.as_ref())
+impl ValidateEmail for String {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        Some(Cow::from(self))
+    }
+}
+
+impl ValidateEmail for Option<String> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        self.as_ref().map(Cow::from)
+    }
+}
+
+impl ValidateEmail for Option<Option<String>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            u.as_ref().map(Cow::from)
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateEmail for &String {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        Some(Cow::from(self.as_str()))
+    }
+}
+
+impl ValidateEmail for Option<&String> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        self.as_ref().map(|u| Cow::from(*u))
+    }
+}
+
+impl ValidateEmail for Option<Option<&String>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            u.as_ref().map(|u| Cow::from(*u))
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> ValidateEmail for &'a str {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
+        Some(Cow::from(*self))
+    }
+}
+
+impl<'a> ValidateEmail for Option<&'a str> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        self.as_ref().map(|u| Cow::from(*u))
+    }
+}
+
+impl<'a> ValidateEmail for Option<Option<&'a str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            u.as_ref().map(|u| Cow::from(*u))
+        } else {
+            None
+        }
+    }
+}
+
+impl ValidateEmail for Cow<'_, str> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
+        Some(self.clone())
+    }
+}
+
+impl ValidateEmail for Option<Cow<'_, str>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        self.as_ref().map(|u| u.clone())
+    }
+}
+
+impl ValidateEmail for Option<Option<Cow<'_, str>>> {
+    fn as_email_string(&self) -> Option<Cow<str>> {
+        if let Some(u) = self {
+            u.as_ref().map(|u| u.clone())
+        } else {
+            None
+        }
     }
 }
 
@@ -90,7 +167,7 @@ impl<T: AsRef<str>> ValidateEmail for T {
 mod tests {
     use std::borrow::Cow;
 
-    use super::validate_email;
+    use crate::ValidateEmail;
 
     #[test]
     fn test_validate_email() {
@@ -150,7 +227,7 @@ mod tests {
         for (input, expected) in tests {
             // println!("{} - {}", input, expected);
             assert_eq!(
-                validate_email(input),
+                input.validate_email(),
                 expected,
                 "Email `{}` was not classified correctly",
                 input
@@ -161,22 +238,22 @@ mod tests {
     #[test]
     fn test_validate_email_cow() {
         let test: Cow<'static, str> = "email@here.com".into();
-        assert!(validate_email(test));
+        assert!(test.validate_email());
         let test: Cow<'static, str> = String::from("email@here.com").into();
-        assert!(validate_email(test));
+        assert!(test.validate_email());
         let test: Cow<'static, str> = "a@[127.0.0.1]\n".into();
-        assert!(!validate_email(test));
+        assert!(!test.validate_email());
         let test: Cow<'static, str> = String::from("a@[127.0.0.1]\n").into();
-        assert!(!validate_email(test));
+        assert!(!test.validate_email());
     }
 
     #[test]
     fn test_validate_email_rfc5321() {
         // 65 character local part
         let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
-        assert_eq!(validate_email(test), false);
+        assert_eq!(test.validate_email(), false);
         // 256 character domain part
         let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
-        assert_eq!(validate_email(test), false);
+        assert_eq!(test.validate_email(), false);
     }
 }
