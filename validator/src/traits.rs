@@ -1,5 +1,11 @@
-use std::borrow::Cow;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    rc::Rc,
+    sync::Arc,
+};
+use std::cell::{Ref, RefMut};
+use std::collections::VecDeque;
 
 #[cfg(feature = "indexmap")]
 use indexmap::{IndexMap, IndexSet};
@@ -14,133 +20,71 @@ pub trait HasLen {
     fn length(&self) -> u64;
 }
 
-impl HasLen for String {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
+macro_rules! impl_type_that_derefs {
+    ($type_:ty) => {
+        impl<T> HasLen for $type_
+        where T: HasLen {
+            fn length(&self) -> u64 {
+                T::length(self)
+            }
+        }
+    };
 }
 
-impl<'a> HasLen for &'a String {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
+impl_type_that_derefs!(&T);
+impl_type_that_derefs!(Arc<T>);
+impl_type_that_derefs!(Box<T>);
+impl_type_that_derefs!(Rc<T>);
+impl_type_that_derefs!(Ref<'_, T>);
+impl_type_that_derefs!(RefMut<'_, T>);
+
+macro_rules! impl_type_with_chars {
+    ($type_:ty) => {
+        impl HasLen for $type_ {
+            fn length(&self) -> u64 {
+                self.chars().count() as u64
+            }
+        }
+    };
 }
 
-impl<'a> HasLen for &'a str {
-    fn length(&self) -> u64 {
-        self.chars().count() as u64
-    }
+impl_type_with_chars!(str);
+impl_type_with_chars!(&str);
+impl_type_with_chars!(String);
+
+macro_rules! impl_type_with_len {
+    ($type_:ty, $($generic:ident),*$(,)*) => {
+        impl<$($generic),*> HasLen for $type_ {
+            fn length(&self) -> u64 {
+                self.len() as u64
+            }
+        }
+    };
 }
 
-impl<'a> HasLen for Cow<'a, str> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
+impl_type_with_len!([T], T);
+impl_type_with_len!(BTreeSet<T>, T);
+impl_type_with_len!(BTreeMap<K, V>, K, V);
+impl_type_with_len!(HashSet<T, S>, T, S);
+impl_type_with_len!(HashMap<K, V, S>, K, V, S);
+impl_type_with_len!(Vec<T>, T);
+impl_type_with_len!(VecDeque<T>, T);
+#[cfg(feature = "indexmap")]
+impl_type_with_len!(IndexSet<T>, T);
+#[cfg(feature = "indexmap")]
+impl_type_with_len!(IndexMap<K, V>, K, V);
 
-impl<T> HasLen for Vec<T> {
+impl<'cow, T> HasLen for Cow<'cow, T>
+    where T: ToOwned + ?Sized,
+          for<'a> &'a T: HasLen {
     fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<'a, T> HasLen for &'a Vec<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<T> HasLen for &[T] {
-    fn length(&self) -> u64 {
-        self.len() as u64
+        self.as_ref().length()
     }
 }
 
 impl<T, const N: usize> HasLen for [T; N] {
     fn length(&self) -> u64 {
         N as u64
-    }
-}
-
-impl<T, const N: usize> HasLen for &[T; N] {
-    fn length(&self) -> u64 {
-        N as u64
-    }
-}
-
-impl<'a, K, V, S> HasLen for &'a HashMap<K, V, S> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<K, V, S> HasLen for HashMap<K, V, S> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<'a, T, S> HasLen for &'a HashSet<T, S> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<T, S> HasLen for HashSet<T, S> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<'a, K, V> HasLen for &'a BTreeMap<K, V> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<K, V> HasLen for BTreeMap<K, V> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<'a, T> HasLen for &'a BTreeSet<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-impl<T> HasLen for BTreeSet<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, K, V> HasLen for &'a IndexMap<K, V> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<K, V> HasLen for IndexMap<K, V> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, T> HasLen for &'a IndexSet<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<T> HasLen for IndexSet<T> {
-    fn length(&self) -> u64 {
-        self.len() as u64
     }
 }
 
@@ -168,8 +112,8 @@ pub trait ValidateArgs<'v_a> {
 }
 
 impl<'v_a, T, U> ValidateArgs<'v_a> for Option<T>
-where
-    T: ValidateArgs<'v_a, Args = U>,
+    where
+        T: ValidateArgs<'v_a, Args=U>,
 {
     type Args = U;
 
