@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Cow;
 
-use crate::{HasLen, ValidateIp};
+use crate::{ValidateIp};
 
 lazy_static! {
     // Regex from the specs
@@ -53,7 +53,7 @@ pub trait ValidateEmail {
         // according to RFC5321 the max length of the local part is 64 characters
         // and the max length of the domain part is 255 characters
         // https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1
-        if user_part.length() > 64 || domain_part.length() > 255 {
+        if user_part.chars().count() > 64 || domain_part.chars().count() > 255 {
             return false;
         }
 
