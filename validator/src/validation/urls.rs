@@ -1,4 +1,9 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    rc::Rc,
+    sync::Arc,
+    cell::{Ref, RefMut},
+};
 use url::Url;
 
 /// Validates whether the string given is a url
@@ -14,79 +19,52 @@ pub trait ValidateUrl {
     fn as_url_string(&self) -> Option<Cow<str>>;
 }
 
-impl ValidateUrl for String {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        Some(Cow::from(self))
-    }
-}
-
-impl ValidateUrl for Option<String> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.as_ref().map(Cow::from)
-    }
-}
-
-impl ValidateUrl for Option<Option<String>> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        if let Some(u) = self {
-            u.as_ref().map(Cow::from)
-        } else {
-            None
+macro_rules! validate_type_that_derefs {
+    ($type_:ty) => {
+        impl<T> ValidateUrl for $type_
+        where T: ValidateUrl {
+            fn as_url_string(&self) -> Option<Cow<str>> {
+                T::as_url_string(self)
+            }
         }
-    }
+    };
 }
 
-impl ValidateUrl for &String {
+validate_type_that_derefs!(&T);
+validate_type_that_derefs!(Arc<T>);
+validate_type_that_derefs!(Box<T>);
+validate_type_that_derefs!(Rc<T>);
+validate_type_that_derefs!(Ref<'_, T>);
+validate_type_that_derefs!(RefMut<'_, T>);
+
+macro_rules! validate_type_of_str {
+    ($type_:ty) => {
+        impl ValidateUrl for $type_ {
+            fn as_url_string(&self) -> Option<Cow<str>> {
+                Some(Cow::Borrowed(self))
+            }
+        }
+    };
+}
+
+validate_type_of_str!(str);
+validate_type_of_str!(&str);
+validate_type_of_str!(String);
+
+impl<T> ValidateUrl for Option<T>
+    where T: ValidateUrl {
     fn as_url_string(&self) -> Option<Cow<str>> {
-        Some(Cow::from(self.as_str()))
-    }
-}
+        let Some(u) = self else {
+            return None;
+        };
 
-impl ValidateUrl for Option<&String> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.as_ref().map(|u| Cow::from(*u))
-    }
-}
-
-impl ValidateUrl for Option<Option<&String>> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.flatten().map(Cow::from)
-    }
-}
-
-impl<'a> ValidateUrl for &'a str {
-    fn as_url_string(&self) -> Option<Cow<'_, str>> {
-        Some(Cow::from(*self))
-    }
-}
-
-impl<'a> ValidateUrl for Option<&'a str> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.as_ref().map(|u| Cow::from(*u))
-    }
-}
-
-impl<'a> ValidateUrl for Option<Option<&'a str>> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.flatten().map(Cow::from)
+        T::as_url_string(u)
     }
 }
 
 impl ValidateUrl for Cow<'_, str> {
     fn as_url_string(&self) -> Option<Cow<'_, str>> {
-        Some(self.clone())
-    }
-}
-
-impl ValidateUrl for Option<Cow<'_, str>> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.as_ref().cloned()
-    }
-}
-
-impl ValidateUrl for Option<Option<Cow<'_, str>>> {
-    fn as_url_string(&self) -> Option<Cow<str>> {
-        self.as_ref().cloned().flatten()
+        <str as ValidateUrl>::as_url_string(self)
     }
 }
 

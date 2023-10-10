@@ -14,9 +14,10 @@ impl AsRegex for Regex {
     }
 }
 
-impl AsRegex for &Regex {
+impl<T> AsRegex for &T
+    where T: AsRegex {
     fn as_regex(&self) -> Cow<Regex> {
-        Cow::Borrowed(self)
+        T::as_regex(self)
     }
 }
 
@@ -54,122 +55,41 @@ pub trait ValidateRegex {
     fn validate_regex(&self, regex: impl AsRegex) -> bool;
 }
 
+impl<T> ValidateRegex for &T
+    where T: ValidateRegex {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        T::validate_regex(self, regex)
+    }
+}
+
+impl<T> ValidateRegex for Option<T>
+    where T: ValidateRegex {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        if let Some(h) = self {
+            T::validate_regex(h, regex)
+        } else {
+            true
+        }
+    }
+}
+
+impl<'cow, T> ValidateRegex for Cow<'cow, T>
+    where T: ToOwned + ?Sized,
+          for<'a> &'a T: ValidateRegex
+{
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        self.as_ref().validate_regex(regex)
+    }
+}
+
 impl ValidateRegex for String {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         regex.as_regex().is_match(self)
     }
 }
 
-impl ValidateRegex for Option<String> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            regex.as_regex().is_match(h)
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for Option<Option<String>> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            if let Some(h) = h {
-                regex.as_regex().is_match(h)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for &String {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        regex.as_regex().is_match(self)
-    }
-}
-
-impl ValidateRegex for Option<&String> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            regex.as_regex().is_match(h)
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for Option<Option<&String>> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            if let Some(h) = h {
-                regex.as_regex().is_match(h)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
 impl ValidateRegex for &str {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         regex.as_regex().is_match(self)
-    }
-}
-
-impl ValidateRegex for Option<&str> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            regex.as_regex().is_match(h)
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for Option<Option<&str>> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            if let Some(h) = h {
-                regex.as_regex().is_match(h)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for Cow<'_, str> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        regex.as_regex().is_match(self)
-    }
-}
-
-impl ValidateRegex for Option<Cow<'_, str>> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            regex.as_regex().is_match(h)
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateRegex for Option<Option<Cow<'_, str>>> {
-    fn validate_regex(&self, regex: impl AsRegex) -> bool {
-        if let Some(h) = self {
-            if let Some(h) = h {
-                regex.as_regex().is_match(h)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
     }
 }

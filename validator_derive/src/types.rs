@@ -37,7 +37,7 @@ pub struct ValidateField {
 }
 
 impl ValidateField {
-    pub fn validate(&self, struct_ident: &Ident, all_fields: &Vec<&Field>, current_field: &Field) {
+    pub fn validate(&self, struct_ident: &Ident, all_fields: &[&Field], current_field: &Field) {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
 
