@@ -12,57 +12,30 @@ impl ValidateContains for String {
     }
 }
 
-impl ValidateContains for Option<String> {
+impl<T> ValidateContains for Option<T>
+    where T: ValidateContains {
     fn validate_contains(&self, needle: &str) -> bool {
         if let Some(v) = self {
-            v.contains(needle)
+            v.validate_contains(needle)
         } else {
             true
         }
     }
 }
 
-impl ValidateContains for Option<Option<String>> {
+impl<T> ValidateContains for &T
+    where T: ValidateContains {
     fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
+        T::validate_contains(self, needle)
     }
 }
 
-impl ValidateContains for &String {
+impl<'cow, T> ValidateContains for Cow<'cow, T>
+    where T: ToOwned + ?Sized,
+          for<'a> &'a T: ValidateContains
+{
     fn validate_contains(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl ValidateContains for Option<&String> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            v.contains(needle)
-        } else {
-            true
-        }
-    }
-}
-
-impl ValidateContains for Option<Option<&String>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
+        self.as_ref().validate_contains(needle)
     }
 }
 
@@ -72,117 +45,9 @@ impl<'a> ValidateContains for &'a str {
     }
 }
 
-impl<'a> ValidateContains for Option<&'a str> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            v.contains(needle)
-        } else {
-            true
-        }
-    }
-}
-
-impl<'a> ValidateContains for Option<Option<&'a str>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
-impl<'a> ValidateContains for Cow<'a, str> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        self.contains(needle)
-    }
-}
-
-impl<'a> ValidateContains for Option<Cow<'a, str>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            v.contains(needle)
-        } else {
-            true
-        }
-    }
-}
-
-impl<'a> ValidateContains for Option<Option<Cow<'a, str>>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
 impl<S, H: BuildHasher> ValidateContains for HashMap<String, S, H> {
     fn validate_contains(&self, needle: &str) -> bool {
         self.contains_key(needle)
-    }
-}
-
-impl<S, H: BuildHasher> ValidateContains for Option<HashMap<String, S, H>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            v.contains_key(needle)
-        } else {
-            true
-        }
-    }
-}
-
-impl<S, H: BuildHasher> ValidateContains for Option<Option<HashMap<String, S, H>>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains_key(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
-    }
-}
-
-impl<'a, S, H: BuildHasher> ValidateContains for &'a HashMap<String, S, H> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        self.contains_key(needle)
-    }
-}
-
-impl<'a, S, H: BuildHasher> ValidateContains for Option<&'a HashMap<String, S, H>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            v.contains_key(needle)
-        } else {
-            true
-        }
-    }
-}
-
-impl<'a, S, H: BuildHasher> ValidateContains for Option<Option<&'a HashMap<String, S, H>>> {
-    fn validate_contains(&self, needle: &str) -> bool {
-        if let Some(v) = self {
-            if let Some(v) = v {
-                v.contains_key(needle)
-            } else {
-                true
-            }
-        } else {
-            true
-        }
     }
 }
 

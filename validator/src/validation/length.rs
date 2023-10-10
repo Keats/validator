@@ -1,6 +1,9 @@
 use std::{
     borrow::Cow,
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque},
+    rc::Rc,
+    sync::Arc,
+    cell::{Ref, RefMut},
 };
 
 #[cfg(feature = "indexmap")]
@@ -12,8 +15,8 @@ use indexmap::{IndexMap, IndexSet};
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
 pub trait ValidateLength<T>
-where
-    T: PartialEq + PartialOrd,
+    where
+        T: PartialEq + PartialOrd,
 {
     fn validate_length(&self, min: Option<T>, max: Option<T>, equal: Option<T>) -> bool {
         if let Some(length) = self.length() {
@@ -40,439 +43,88 @@ where
     fn length(&self) -> Option<T>;
 }
 
-impl ValidateLength<u64> for String {
-    fn length(&self) -> Option<u64> {
-        Some(self.chars().count() as u64)
-    }
-}
-
-impl ValidateLength<u64> for Option<String> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl ValidateLength<u64> for Option<Option<String>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(s) = self {
-            s.as_ref().map(|s| s.chars().count() as u64)
-        } else {
-            None
+macro_rules! validate_type_that_derefs {
+    ($type_:ty) => {
+        impl<T> ValidateLength<u64> for $type_
+        where T: ValidateLength<u64> {
+            fn length(&self) -> Option<u64> {
+                T::length(self)
+            }
         }
-    }
+    };
 }
 
-impl<'a> ValidateLength<u64> for &'a String {
-    fn length(&self) -> Option<u64> {
-        Some(self.chars().count() as u64)
-    }
-}
+validate_type_that_derefs!(&T);
+validate_type_that_derefs!(Arc<T>);
+validate_type_that_derefs!(Box<T>);
+validate_type_that_derefs!(Rc<T>);
+validate_type_that_derefs!(Ref<'_, T>);
+validate_type_that_derefs!(RefMut<'_, T>);
 
-impl<'a> ValidateLength<u64> for Option<&'a String> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Option<Option<&'a String>> {
-    fn length(&self) -> Option<u64> {
-        self.flatten().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for &'a str {
-    fn length(&self) -> Option<u64> {
-        Some(self.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Option<&'a str> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Option<Option<&'a str>> {
-    fn length(&self) -> Option<u64> {
-        self.flatten().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Cow<'a, str> {
-    fn length(&self) -> Option<u64> {
-        Some(self.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Option<Cow<'a, str>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|s| s.chars().count() as u64)
-    }
-}
-
-impl<'a> ValidateLength<u64> for Option<Option<Cow<'a, str>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(s) = self {
-            s.as_ref().map(|s| s.chars().count() as u64)
-        } else {
-            None
+macro_rules! validate_type_with_chars {
+    ($type_:ty) => {
+        impl ValidateLength<u64> for $type_ {
+            fn length(&self) -> Option<u64> {
+                Some(self.chars().count() as u64)
+            }
         }
-    }
+    };
 }
 
-impl<T> ValidateLength<u64> for Vec<T> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
+validate_type_with_chars!(str);
+validate_type_with_chars!(&str);
+validate_type_with_chars!(String);
 
-impl<T> ValidateLength<u64> for Option<Vec<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<T> ValidateLength<u64> for Option<Option<Vec<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
+macro_rules! validate_type_with_len {
+    ($type_:ty) => {
+        validate_type_with_len!($type_,);
+    };
+    ($type_:ty, $($generic:ident),*$(,)*) => {
+        impl<$($generic),*> ValidateLength<u64> for $type_ {
+            fn length(&self) -> Option<u64> {
+                Some(self.len() as u64)
+            }
         }
+    };
+}
+
+validate_type_with_len!([T], T);
+validate_type_with_len!(BTreeSet<T>, T);
+validate_type_with_len!(BTreeMap<K, V>, K, V);
+validate_type_with_len!(HashSet<T, S>, T, S);
+validate_type_with_len!(HashMap<K, V, S>, K, V, S);
+validate_type_with_len!(Vec<T>, T);
+validate_type_with_len!(VecDeque<T>, T);
+#[cfg(feature = "indexmap")]
+validate_type_with_len!(IndexSet<T>, T);
+#[cfg(feature = "indexmap")]
+validate_type_with_len!(IndexMap<K, V>, K, V);
+
+impl<T> ValidateLength<u64> for Cow<'_, T>
+    where
+        T: ToOwned + ?Sized,
+        for<'a> &'a T: ValidateLength<u64>,
+{
+    fn length(&self) -> Option<u64> {
+        self.as_ref().length()
     }
 }
 
-impl<'a, T> ValidateLength<u64> for &'a Vec<T> {
+impl<T> ValidateLength<u64> for Option<T>
+    where T: ValidateLength<u64>,
+{
     fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
+        let Some(s) = self else {
+            return None;
+        };
 
-impl<'a, T> ValidateLength<u64> for Option<&'a Vec<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<'a, T> ValidateLength<u64> for Option<Option<&'a Vec<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<T> ValidateLength<u64> for &[T] {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<T> ValidateLength<u64> for Option<&[T]> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<T> ValidateLength<u64> for Option<Option<&[T]>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
+        T::length(s)
     }
 }
 
 impl<T, const N: usize> ValidateLength<u64> for [T; N] {
     fn length(&self) -> Option<u64> {
         Some(N as u64)
-    }
-}
-
-impl<T, const N: usize> ValidateLength<u64> for Option<[T; N]> {
-    fn length(&self) -> Option<u64> {
-        Some(N as u64)
-    }
-}
-
-impl<T, const N: usize> ValidateLength<u64> for Option<Option<[T; N]>> {
-    fn length(&self) -> Option<u64> {
-        Some(N as u64)
-    }
-}
-
-impl<T, const N: usize> ValidateLength<u64> for &[T; N] {
-    fn length(&self) -> Option<u64> {
-        Some(N as u64)
-    }
-}
-
-impl<T, const N: usize> ValidateLength<u64> for Option<&[T; N]> {
-    fn length(&self) -> Option<u64> {
-        Some(N as u64)
-    }
-}
-
-impl<T, const N: usize> ValidateLength<u64> for Option<Option<&[T; N]>> {
-    fn length(&self) -> Option<u64> {
-        Some(N as u64)
-    }
-}
-
-impl<K, V, S> ValidateLength<u64> for HashMap<K, V, S> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<K, V, S> ValidateLength<u64> for Option<HashMap<K, V, S>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<K, V, S> ValidateLength<u64> for Option<Option<HashMap<K, V, S>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<'a, K, V, S> ValidateLength<u64> for &'a HashMap<K, V, S> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<'a, K, V, S> ValidateLength<u64> for Option<&'a HashMap<K, V, S>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<'a, K, V, S> ValidateLength<u64> for Option<Option<&'a HashMap<K, V, S>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<T, S> ValidateLength<u64> for HashSet<T, S> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<T, S> ValidateLength<u64> for Option<HashSet<T, S>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<T, S> ValidateLength<u64> for Option<Option<HashSet<T, S>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<'a, T, S> ValidateLength<u64> for &'a HashSet<T, S> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<'a, T, S> ValidateLength<u64> for Option<&'a HashSet<T, S>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<'a, T, S> ValidateLength<u64> for Option<Option<&'a HashSet<T, S>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<'a, K, V> ValidateLength<u64> for &'a BTreeMap<K, V> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<'a, K, V> ValidateLength<u64> for Option<&'a BTreeMap<K, V>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<'a, K, V> ValidateLength<u64> for Option<Option<&'a BTreeMap<K, V>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<T> ValidateLength<u64> for BTreeSet<T> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<T> ValidateLength<u64> for Option<BTreeSet<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<T> ValidateLength<u64> for Option<Option<BTreeSet<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-impl<'a, T> ValidateLength<u64> for &'a BTreeSet<T> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-impl<'a, T> ValidateLength<u64> for Option<&'a BTreeSet<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-impl<'a, T> ValidateLength<u64> for Option<Option<&'a BTreeSet<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<K, V> ValidateLength<u64> for IndexMap<K, V> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<K, V> ValidateLength<u64> for Option<IndexMap<K, V>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<K, V> ValidateLength<u64> for Option<Option<IndexMap<K, V>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, K, V> ValidateLength<u64> for &'a IndexMap<K, V> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, K, V> ValidateLength<u64> for Option<&'a IndexMap<K, V>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, K, V> ValidateLength<u64> for Option<Option<&'a IndexMap<K, V>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<T> ValidateLength<u64> for IndexSet<T> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<T> ValidateLength<u64> for Option<IndexSet<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<T> ValidateLength<u64> for Option<Option<IndexSet<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, T> ValidateLength<u64> for &'a IndexSet<T> {
-    fn length(&self) -> Option<u64> {
-        Some(self.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, T> ValidateLength<u64> for Option<&'a IndexSet<T>> {
-    fn length(&self) -> Option<u64> {
-        self.as_ref().map(|v| v.len() as u64)
-    }
-}
-
-#[cfg(feature = "indexmap")]
-impl<'a, T> ValidateLength<u64> for Option<Option<&'a IndexSet<T>>> {
-    fn length(&self) -> Option<u64> {
-        if let Some(v) = self {
-            v.as_ref().map(|v| v.len() as u64)
-        } else {
-            None
-        }
     }
 }
 
@@ -519,6 +171,15 @@ mod tests {
     #[test]
     fn test_validate_length_unicode_chars() {
         assert!("日本".validate_length(None, None, Some(2)));
+    }
+
+    #[test]
+    fn test_validate_length_cow_unicode_chars() {
+        let test: Cow<'static, str> = "日本".into();
+        assert!(test.validate_length(None, None, Some(2)));
+
+        let test: Cow<'static, str> = String::from("日本").into();
+        assert!(test.validate_length(None, None, Some(2)));
     }
 
     #[test]
