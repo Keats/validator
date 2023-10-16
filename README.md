@@ -255,9 +255,11 @@ Tests whether the string matches the regex given. `regex` takes
 Examples:
 
 ```rust
-lazy_static! {
-    static ref RE_TWO_CHARS: Regex = Regex::new(r"[a-z]{2}$").unwrap();
-}
+use once_cell::sync::Lazy;
+
+static ref RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"[a-z]{2}$").unwrap()
+});
 
 #[validate(regex = "RE_TWO_CHARS")]
 #[validate(regex(path = "RE_TWO_CHARS"))]
