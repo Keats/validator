@@ -1,13 +1,13 @@
 use std::cell::OnceCell;
 use std::sync::{Mutex, OnceLock};
+use once_cell::sync::Lazy;
 
-use lazy_static::lazy_static;
 use regex::Regex;
 use validator::Validate;
 
-lazy_static! {
-    static ref RE2: Regex = Regex::new(r"^[a-z]{2}$").unwrap();
-}
+static RE2: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-z]{2}$").unwrap()
+});
 
 static REGEX_ONCE_LOCK: OnceLock<Regex> = OnceLock::new();
 static REGEX_MUTEX_ONCE_CELL: Mutex<OnceCell<Regex>> = Mutex::new(OnceCell::new());
