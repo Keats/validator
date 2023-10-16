@@ -1,10 +1,12 @@
-use lazy_static::lazy_static;
+
+use once_cell::sync::Lazy;
 use regex::Regex;
 use validator::Validate;
 
-lazy_static! {
-    static ref RE2: Regex = Regex::new(r"^[a-z]{2}$").unwrap();
-}
+static RE2: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-z]{2}$").unwrap()
+});
+
 
 #[derive(Validate)]
 struct Test {
