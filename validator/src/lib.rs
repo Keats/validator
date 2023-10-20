@@ -61,7 +61,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! validator = { version = "0.12", features = ["derive"] }
+//! validator = { version = "0.16", features = ["derive"] }
 //! ```
 
 mod display_impl;
