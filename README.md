@@ -30,7 +30,7 @@ Installation:
 
 ```toml
 [dependencies]
-validator = { version = "0.15", features = ["derive"] }
+validator = { version = "0.16", features = ["derive"] }
 ```
 
 A short example:
