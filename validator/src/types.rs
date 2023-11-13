@@ -20,6 +20,13 @@ impl ValidationError {
     pub fn add_param<T: Serialize>(&mut self, name: Cow<'static, str>, val: &T) {
         self.params.insert(name, to_value(val).unwrap());
     }
+
+    /// Adds a custom message to a `ValidationError` that will be used when displaying the
+    /// `ValidationError`, instead of an auto-generated description.
+    pub fn with_message(mut self, message: Cow<'static, str>) -> ValidationError {
+        self.message = Some(message);
+        self
+    }
 }
 
 impl std::error::Error for ValidationError {
