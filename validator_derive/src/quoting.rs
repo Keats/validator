@@ -31,11 +31,19 @@ impl FieldQuoter {
         let ident = &self.ident;
 
         if self._type.starts_with("Option<") {
-            quote!(#ident)
+            if !self._type.contains("NonZero") {
+                quote!(#ident)
+            } else {
+                quote!(#ident.get())
+            }
         } else if COW_TYPE.is_match(self._type.as_ref()) {
             quote!(self.#ident.as_ref())
         } else if self._type.starts_with('&') || NUMBER_TYPES.contains(&self._type.as_ref()) {
-            quote!(self.#ident)
+            if !self._type.contains("NonZero") {
+                quote!(self.#ident)
+            } else {
+                quote!(self.#ident.get())
+            }
         } else {
             quote!(&self.#ident)
         }
