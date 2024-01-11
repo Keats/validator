@@ -1,11 +1,14 @@
 use std::borrow::Cow;
 use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
 
+#[cfg(feature = "schemars")]
+use schemars::JsonSchema;
 use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct ValidationError {
     pub code: Cow<'static, str>,
     pub message: Option<Cow<'static, str>>,
@@ -32,6 +35,7 @@ impl std::error::Error for ValidationError {
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ValidationErrorsKind {
     Struct(Box<ValidationErrors>),
@@ -40,6 +44,7 @@ pub enum ValidationErrorsKind {
 }
 
 #[derive(Default, Debug, Serialize, Clone, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct ValidationErrors(HashMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
