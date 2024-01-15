@@ -41,6 +41,7 @@ pub enum Validator {
     Required,
     RequiredNested,
     DoesNotContain(String),
+    AlwaysValid
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -91,6 +92,7 @@ impl Validator {
             Validator::Required => "required",
             Validator::RequiredNested => "required_nested",
             Validator::DoesNotContain(_) => "does_not_contain",
+            Validator::AlwaysValid => "always_valid"
         }
     }
 
