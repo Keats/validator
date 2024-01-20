@@ -124,6 +124,81 @@ pub fn extract_length_validation(
     }
 }
 
+pub fn extract_length_utf16_validation(
+    field: String,
+    attr: &syn::Attribute,
+    meta_items: &[syn::NestedMeta],
+) -> FieldValidation {
+    let mut min = None;
+    let mut max = None;
+    let mut equal = None;
+
+    let (message, code) = extract_message_and_code("length_utf16", &field, meta_items);
+
+    let error = |span: Span, msg: &str| -> ! {
+        abort!(span, "Invalid attribute #[validate] on field `{}`: {}", field, msg);
+    };
+
+    for meta_item in meta_items {
+        if let syn::NestedMeta::Meta(ref item) = *meta_item {
+            if let syn::Meta::NameValue(syn::MetaNameValue { ref path, ref lit, .. }) = *item {
+                let ident = path.get_ident().unwrap();
+                match ident.to_string().as_ref() {
+                    "message" | "code" => continue,
+                    "min" => {
+                        min = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `min` of `length_utf16` validator: only number literals or value paths are allowed"),
+                        };
+                    }
+                    "max" => {
+                        max = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `max` of `length_utf16` validator: only number literals or value paths are allowed"),
+                        };
+                    }
+                    "equal" => {
+                        equal = match lit_to_u64_or_path(lit) {
+                            Some(s) => Some(s),
+                            None => error(lit.span(), "invalid argument type for `equal` of `length_utf16` validator: only number literals or value paths are allowed"),
+                        };
+                    }
+                    v => error(path.span(), &format!(
+                        "unknown argument `{}` for validator `length_utf16` (it only has `min`, `max`, `equal`)",
+                        v
+                    ))
+                }
+            } else {
+                error(
+                    item.span(),
+                    &format!(
+                        "unexpected item {:?} while parsing `length_utf16` validator of field {}",
+                        item, field
+                    ),
+                )
+            }
+        }
+
+        if equal.is_some() && (min.is_some() || max.is_some()) {
+            error(meta_item.span(), "both `equal` and `min` or `max` have been set in `length_utf16` validator: probably a mistake");
+        }
+    }
+
+    if min.is_none() && max.is_none() && equal.is_none() {
+        error(
+            attr.span(),
+            "Validator `length_utf16` requires at least 1 argument out of `min`, `max` and `equal`",
+        );
+    }
+
+    let validator = Validator::LengthUTF16 { min, max, equal };
+    FieldValidation {
+        message,
+        code: code.unwrap_or_else(|| validator.code().to_string()),
+        validator,
+    }
+}
+
 pub fn extract_range_validation(
     field: String,
     attr: &syn::Attribute,

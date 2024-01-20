@@ -110,6 +110,30 @@ pub fn assert_has_len(field_name: String, type_name: &str, field_type: &syn::Typ
     }
 }
 
+pub fn assert_has_len_utf16(field_name: String, type_name: &str, field_type: &syn::Type) {
+    if let syn::Type::Reference(ref tref) = field_type {
+        let elem = &tref.elem;
+        let type_name = format!("{}", quote::quote! { #elem }).replace(' ', "");
+
+        if type_name == "str" {
+            return;
+        }
+        assert_has_len_utf16(field_name, &type_name, elem);
+        return;
+    }
+
+    if !type_name.contains("String")
+        && !type_name.contains("str")
+        // a bit ugly
+        && !COW_TYPE.is_match(type_name)
+    {
+        abort!(field_type.span(),
+                "Validator `length` can only be used on types `String`, `&str`, Cow<'_,str> types but found `{}` for field `{}`",
+                type_name, field_name
+            );
+    }
+}
+
 pub fn assert_has_range(field_name: String, type_name: &str, field_type: &syn::Type) {
     if !NUMBER_TYPES.contains(&type_name) {
         abort!(

@@ -5,6 +5,7 @@ pub mod does_not_contain;
 pub mod email;
 pub mod ip;
 pub mod length;
+pub mod length_utf16;
 pub mod must_match;
 #[cfg(feature = "unic")]
 pub mod non_control_character;

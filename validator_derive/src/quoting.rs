@@ -223,6 +223,66 @@ pub fn quote_length_validation(
     unreachable!()
 }
 
+pub fn quote_length_utf16_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
+    let field_name = &field_quoter.name;
+    let validator_param = field_quoter.quote_validator_param();
+
+    if let Validator::LengthUTF16 { min, max, equal } = &validation.validator {
+        let min_err_param_quoted = if let Some(v) = min {
+            let v = value_or_path_to_tokens(v);
+            quote!(err.add_param(::std::borrow::Cow::from("min"), &#v);)
+        } else {
+            quote!()
+        };
+        let max_err_param_quoted = if let Some(v) = max {
+            let v = value_or_path_to_tokens(v);
+            quote!(err.add_param(::std::borrow::Cow::from("max"), &#v);)
+        } else {
+            quote!()
+        };
+        let equal_err_param_quoted = if let Some(v) = equal {
+            let v = value_or_path_to_tokens(v);
+            quote!(err.add_param(::std::borrow::Cow::from("equal"), &#v);)
+        } else {
+            quote!()
+        };
+
+        let min_tokens = option_to_tokens(
+            &min.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
+        );
+        let max_tokens = option_to_tokens(
+            &max.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
+        );
+        let equal_tokens = option_to_tokens(
+            &equal.clone().as_ref().map(value_or_path_to_tokens).map(|x| quote!(#x as u64)),
+        );
+
+        let quoted_error = quote_error(validation);
+        let quoted = quote!(
+            if !::validator::validate_length_utf16(
+                #validator_param,
+                #min_tokens,
+                #max_tokens,
+                #equal_tokens
+            ) {
+                #quoted_error
+                #min_err_param_quoted
+                #max_err_param_quoted
+                #equal_err_param_quoted
+                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                errors.add(#field_name, err);
+            }
+        );
+
+        return field_quoter.wrap_if_option(quoted);
+    }
+
+    unreachable!()
+}
+
 pub fn quote_range_validation(
     field_quoter: &FieldQuoter,
     validation: &FieldValidation,
@@ -504,6 +564,9 @@ pub fn quote_validator(
     match validation.validator {
         Validator::Length { .. } => {
             validations.push(quote_length_validation(field_quoter, validation))
+        }
+        Validator::LengthUTF16 { .. } => {
+            validations.push(quote_length_utf16_validation(field_quoter, validation))
         }
         Validator::Range { .. } => {
             validations.push(quote_range_validation(field_quoter, validation))
