@@ -21,6 +21,8 @@ pub enum Validator {
     Contains(String),
     // No implementation in this crate, it's all in validator_derive
     Regex(String),
+    // value is a &str
+    StartsWith(String),
     Range {
         min: Option<ValueOrPath<f64>>,
         max: Option<ValueOrPath<f64>>,
@@ -79,6 +81,7 @@ impl Validator {
             Validator::Custom { .. } => "custom",
             Validator::Contains(_) => "contains",
             Validator::Regex(_) => "regex",
+            Validator::StartsWith(_) => "starts_with",
             Validator::Range { .. } => "range",
             Validator::Length { .. } => "length",
             #[cfg(feature = "card")]

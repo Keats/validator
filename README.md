@@ -247,6 +247,16 @@ Examples:
 #[validate(does_not_contain(pattern = "gmail"))]
 ```
 
+### starts_with
+Tests whether the string starts with the given pattern. `starts_with` takes 1 string argument.
+
+Examples:
+
+```rust
+#[validate(starts_with = "gmail")]
+#[validate(starts_with(pattern = "gmail"))]
+```
+
 ### regex
 Tests whether the string matches the regex given. `regex` takes
 1 string argument: the path to a static Regex instance.
@@ -391,6 +401,7 @@ For example, the following attributes all work:
 #[validate(custom(function = "custom_fn", code = "code_str"))]
 #[validate(contains(pattern = "pattern_str", code = "code_str"))]
 #[validate(does_not_contain(pattern = "pattern_str", code = "code_str"))]
+#[validate(starts_with(pattern = "pattern_str", code = "code_str"))]
 #[validate(must_match(other = "match_value", code = "code_str"))]
 
 // message attribute
@@ -401,6 +412,7 @@ For example, the following attributes all work:
 #[validate(custom(function = "custom_fn", message = "message_str"))]
 #[validate(contains(pattern = "pattern_str", message = "message_str"))]
 #[validate(does_not_contain(pattern = "pattern_str", message = "message_str"))]
+#[validate(starts_with(pattern = "pattern_str", message = "message_str"))]
 #[validate(must_match(other = "match_value", message = "message_str"))]
 
 // both attributes

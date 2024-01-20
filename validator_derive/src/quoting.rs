@@ -488,6 +488,30 @@ pub fn quote_regex_validation(
     unreachable!();
 }
 
+pub fn quote_starts_with_validation(
+    field_quoter: &FieldQuoter,
+    validation: &FieldValidation,
+) -> proc_macro2::TokenStream {
+    let field_name = &field_quoter.name;
+    let validator_param = field_quoter.quote_validator_param();
+
+    if let Validator::StartsWith(ref needle) = validation.validator {
+        let quoted_error = quote_error(validation);
+        let quoted = quote!(
+            if !::validator::validate_starts_with(#validator_param, &#needle) {
+                #quoted_error
+                err.add_param(::std::borrow::Cow::from("value"), &#validator_param);
+                err.add_param(::std::borrow::Cow::from("needle"), &#needle);
+                errors.add(#field_name, err);
+            }
+        );
+
+        return field_quoter.wrap_if_option(quoted);
+    }
+
+    unreachable!();
+}
+
 pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
@@ -520,6 +544,9 @@ pub fn quote_validator(
             validations.push(quote_contains_validation(field_quoter, validation))
         }
         Validator::Regex(_) => validations.push(quote_regex_validation(field_quoter, validation)),
+        Validator::StartsWith(_) => {
+            validations.push(quote_starts_with_validation(field_quoter, validation))
+        }
         #[cfg(feature = "card")]
         Validator::CreditCard => {
             validations.push(quote_credit_card_validation(field_quoter, validation))

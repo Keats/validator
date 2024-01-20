@@ -451,7 +451,7 @@ fn find_validators_for_field(
                                     }
                                 }
                             }
-                            // custom, contains, must_match, regex
+                            // custom, contains, must_match, regex, starts_with
                             syn::Meta::NameValue(syn::MetaNameValue {
                                 ref path, ref lit, ..
                             }) => {
@@ -491,6 +491,12 @@ fn find_validators_for_field(
                                                 validators.push(FieldValidation::new(Validator::MustMatch(s)));
                                             }
                                             None => error(lit.span(), "invalid argument for `must_match` validator: only strings are allowed"),
+                                        };
+                                    }
+                                    "starts_with" => {
+                                        match lit_to_string(lit) {
+                                            Some(s) => validators.push(FieldValidation::new(Validator::StartsWith(s))),
+                                            None => error(lit.span(), "invalid argument for `starts_with` validator: only strings are allowed"),
                                         };
                                     }
                                     v => abort!(
@@ -540,7 +546,7 @@ fn find_validators_for_field(
                                             &meta_items,
                                         ));
                                     }
-                                    "contains" | "does_not_contain" => {
+                                    "contains" | "does_not_contain" | "starts_with" => {
                                         validators.push(extract_one_arg_validation(
                                             "pattern",
                                             ident.to_string(),

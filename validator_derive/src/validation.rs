@@ -373,6 +373,7 @@ pub fn extract_one_arg_validation(
         "contains" => Validator::Contains(value.unwrap()),
         "does_not_contain" => Validator::DoesNotContain(value.unwrap()),
         "must_match" => Validator::MustMatch(value.unwrap()),
+        "starts_with" => Validator::StartsWith(value.unwrap()),
         "regex" => Validator::Regex(value.unwrap()),
         _ => unreachable!(),
     };
