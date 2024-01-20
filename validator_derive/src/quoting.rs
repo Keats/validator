@@ -491,7 +491,11 @@ pub fn quote_regex_validation(
 pub fn quote_nested_validation(field_quoter: &FieldQuoter) -> proc_macro2::TokenStream {
     let field_name = &field_quoter.name;
     let validator_field = field_quoter.quote_validator_field();
-    let quoted = quote!(result = ::validator::ValidationErrors::merge(result, #field_name, #validator_field.validate()););
+    let quoted = quote!(
+        result = ::validator::ValidationErrors::merge(
+            result, #field_name, ::validator::Validate::validate(&#validator_field)
+        );
+    );
     field_quoter.wrap_if_option(field_quoter.wrap_if_collection(quoted))
 }
 
