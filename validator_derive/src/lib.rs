@@ -587,7 +587,7 @@ fn find_validators_for_field(
                 let error_string = format!("{:?}", e);
                 if error_string == "Error(\"expected literal\")" {
                     abort!(attr.span(),
-                        "This attributes for the field `{}` seem to be misformed, please validate the syntax with the documentation",
+                        "This attributes for the field `{}` seem to be malformed, please validate the syntax with the documentation",
                         field_ident
                     );
                 } else {
