@@ -370,7 +370,7 @@ Any error on the struct level validation will appear in the key `__all__` of the
 Each validator can take 2 optional arguments in addition to their own arguments:
 
 - `message`: a message to go with the error, for example if you want to do i18n
-- `code`: each validator has a default error code (for example the `regex` validator code is `regex`) but it can be overriden
+- `code`: each validator has a default error code (for example the `regex` validator code is `regex`) but it can be overridden
 if necessary, mainly needed for the `custom` validator
 
 Note that these arguments can't be applied to nested validation calls with `#[validate]`.
