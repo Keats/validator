@@ -9,7 +9,7 @@ default = ["test_ui"]
 test_ui = []
 
 [dev-dependencies]
-validator = { version = "0.16", path = "../validator", features = [
+validator = { version = "0.17", path = "../validator", features = [
     "card",
     "unic",
     "derive",
