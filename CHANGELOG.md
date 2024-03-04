@@ -1,5 +1,11 @@
 ## Changelog
 
+## 0.17.0 (2024/03/04)
+
+- Derive macro has been entirely rewritten
+- Validation is now done through traits that you can implement
+
+
 ## 0.16.0 (2022/06/27)
 
 - Allow passing code/message to `required`
