@@ -1,6 +1,6 @@
 [package]
 name = "validator"
-version = "0.16.1"
+version = "0.17.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com"]
 license = "MIT"
 description = "Common validation functions (email, url, length, ...) and trait - to be used with `validator_derive`"
@@ -18,7 +18,7 @@ idna = "0.4"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
-validator_derive = { version = "0.16", path = "../validator_derive", optional = true }
+validator_derive = { version = "0.17", path = "../validator_derive", optional = true }
 card-validate = { version = "2.3", optional = true }
 unic-ucd-common = { version = "0.9", optional = true }
 indexmap = { version = "2.0.0", features = ["serde"], optional = true }
