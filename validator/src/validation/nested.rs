@@ -62,12 +62,11 @@ where
             }
         }
 
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
-
-        if errors.is_empty() {
+        if vec_err.is_empty() {
             Ok(())
         } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
             Err(errors)
         }
     }
@@ -93,12 +92,11 @@ where
             }
         }
 
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
-
-        if errors.is_empty() {
+        if vec_err.is_empty() {
             Ok(())
         } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
             Err(errors)
         }
     }
@@ -123,12 +121,11 @@ where
             }
         }
 
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
-
-        if errors.is_empty() {
+        if vec_err.is_empty() {
             Ok(())
         } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
             Err(errors)
         }
     }
@@ -153,12 +150,11 @@ where
             }
         }
 
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
-
-        if errors.is_empty() {
+        if vec_err.is_empty() {
             Ok(())
         } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
             Err(errors)
         }
     }
@@ -183,12 +179,11 @@ where
             }
         }
 
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
-
-        if errors.is_empty() {
+        if vec_err.is_empty() {
             Ok(())
         } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors = ValidationErrors(HashMap::from([(field_name, err_kind)]));
             Err(errors)
         }
     }
