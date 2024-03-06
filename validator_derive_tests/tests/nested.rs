@@ -293,6 +293,12 @@ fn test_can_validate_vector_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithVectorOfChildren {
+        child: vec![Child { value: "valid".to_string() }, Child { value: "valid".to_string() }],
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -352,6 +358,11 @@ fn test_can_validate_slice_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let child = vec![Child { value: "valid".to_string() }, Child { value: "valid".to_string() }];
+    let instance = ParentWithSliceOfChildren { child: &child };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -411,6 +422,17 @@ fn test_can_validate_array_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithArrayOfChildren {
+        child: [
+            Child { value: "valid".to_string() },
+            Child { value: "valid".to_string() },
+            Child { value: "valid".to_string() },
+            Child { value: "valid".to_string() },
+        ],
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -470,6 +492,15 @@ fn test_can_validate_option_vector_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithOptionVectorOfChildren {
+        child: Some(vec![
+            Child { value: "valid".to_string() },
+            Child { value: "valid".to_string() },
+        ]),
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -513,6 +544,12 @@ fn test_can_validate_map_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithMapOfChildren {
+        child: [(0, Child { value: "value".to_string() })].iter().cloned().collect(),
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -555,6 +592,11 @@ fn test_can_validate_ref_map_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let child = [(0, Child { value: "value".to_string() })].iter().cloned().collect();
+    let instance = ParentWithRefMapOfChildren { child: &child };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -598,6 +640,12 @@ fn test_can_validate_option_map_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithOptionMapOfChildren {
+        child: Some([(0, Child { value: "value".to_string() })].iter().cloned().collect()),
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -641,6 +689,12 @@ fn test_can_validate_set_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithSetOfChildren {
+        child: [Child { value: "value".to_string() }].iter().cloned().collect(),
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -683,6 +737,11 @@ fn test_can_validate_ref_set_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let child = [Child { value: "value".to_string() }].iter().cloned().collect();
+    let instance = ParentWithRefSetOfChildren { child: &child };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
@@ -726,6 +785,12 @@ fn test_can_validate_option_set_fields() {
     } else {
         panic!("Expected list validation errors");
     }
+
+    // A valid struct should not fail
+    let instance = ParentWithOptionSetOfChildren {
+        child: Some([Child { value: "value".to_string() }].iter().cloned().collect()),
+    };
+    assert!(instance.validate().is_ok());
 }
 
 #[test]
