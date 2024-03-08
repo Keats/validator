@@ -80,8 +80,11 @@ pub use validation::regex::ValidateRegex;
 pub use validation::required::ValidateRequired;
 pub use validation::urls::ValidateUrl;
 
-pub use traits::{Validate, ValidateArgs};
-pub use types::{ValidationError, ValidationErrors, ValidationErrorsKind};
+pub use traits::{Constraints, Validate, ValidateArgs};
+pub use types::{
+    LengthConstraint, ValidationConstraint, ValidationConstraints, ValidationConstraintsKind,
+    ValidationError, ValidationErrors, ValidationErrorsKind,
+};
 
 #[cfg(feature = "derive")]
 pub use validator_derive::Validate;
