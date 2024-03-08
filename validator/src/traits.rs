@@ -1,6 +1,12 @@
-use crate::types::{ValidationErrors, ValidationErrorsKind};
-use std::collections::btree_map::BTreeMap;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+
+#[cfg(feature = "indexmap")]
+use indexmap::{IndexMap, IndexSet};
+
+use crate::{
+    types::{ValidationErrors, ValidationErrorsKind},
+    ValidationConstraints,
+};
 
 /// This is the original trait that was implemented by deriving `Validate`. It will still be
 /// implemented for struct validations that don't take custom arguments. The call is being
@@ -51,26 +57,24 @@ impl_validate_list!(std::vec::Vec<T>);
 impl_validate_list!([T]);
 
 impl<T: Validate, const N: usize> Validate for [T; N] {
-fn validate(&self) -> Result<(), ValidationErrors> {
-    let mut vec_err: BTreeMap<usize, Box<ValidationErrors>> = BTreeMap::new();
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        let mut vec_err: BTreeMap<usize, Box<ValidationErrors>> = BTreeMap::new();
 
-    for (index, item) in self.iter().enumerate() {
-        if let Err(e) = item.validate() {
-            vec_err.insert(index, Box::new(e));
+        for (index, item) in self.iter().enumerate() {
+            if let Err(e) = item.validate() {
+                vec_err.insert(index, Box::new(e));
+            }
+        }
+
+        if vec_err.is_empty() {
+            Ok(())
+        } else {
+            let err_kind = ValidationErrorsKind::List(vec_err);
+            let errors =
+                ValidationErrors(std::collections::HashMap::from([("_tmp_validator", err_kind)]));
+            Err(errors)
         }
     }
-
-    if vec_err.is_empty() {
-        Ok(())
-    } else {
-        let err_kind = ValidationErrorsKind::List(vec_err);
-        let errors = ValidationErrors(std::collections::HashMap::from([(
-            "_tmp_validator",
-            err_kind,
-        )]));
-        Err(errors)
-    }
-}
 }
 
 impl<K, V: Validate, S> Validate for &HashMap<K, V, S> {
@@ -135,5 +139,113 @@ where
         } else {
             Ok(())
         }
+    }
+}
+
+pub trait Constraints {
+    fn constraints() -> ValidationConstraints;
+
+    fn is_collection() -> bool {
+        false
+    }
+}
+
+impl<T: Constraints> Constraints for &T {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        T::is_collection()
+    }
+}
+
+impl<T: Constraints> Constraints for Option<T> {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        T::is_collection()
+    }
+}
+
+macro_rules! impl_constraints {
+    ($ty:ty) => {
+        impl<T: Constraints> Constraints for $ty {
+            fn constraints() -> ValidationConstraints {
+                T::constraints()
+            }
+
+            fn is_collection() -> bool {
+                true
+            }
+        }
+    };
+}
+
+impl_constraints!(&[T]);
+impl_constraints!(Vec<T>);
+impl_constraints!(BTreeSet<T>);
+
+impl<T: Constraints, const N: usize> Constraints for [T; N] {
+    fn constraints() -> ValidationConstraints {
+        T::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
+    }
+}
+
+impl<K, V: Constraints, S> Constraints for HashMap<K, V, S> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
+    }
+}
+
+impl<V: Constraints, S> Constraints for HashSet<V, S> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
+    }
+}
+
+impl<K, V: Constraints> Constraints for BTreeMap<K, V> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<K, V: Constraints> Constraints for IndexMap<K, V> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<V: Constraints> Constraints for IndexSet<V> {
+    fn constraints() -> ValidationConstraints {
+        V::constraints()
+    }
+
+    fn is_collection() -> bool {
+        true
     }
 }
