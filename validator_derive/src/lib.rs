@@ -1,222 +1,16 @@
-use darling::ast::Data;
-use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
+use darling::{ast::Data, util::WithOriginal};
 use proc_macro_error::{abort, proc_macro_error};
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
 
-use tokens::cards::credit_card_tokens;
-use tokens::contains::contains_tokens;
-use tokens::custom::custom_tokens;
-use tokens::does_not_contain::does_not_contain_tokens;
-use tokens::email::email_tokens;
-use tokens::ip::ip_tokens;
-use tokens::length::length_tokens;
-use tokens::must_match::must_match_tokens;
-use tokens::nested::nested_tokens;
-use tokens::non_control_character::non_control_char_tokens;
-use tokens::range::range_tokens;
-use tokens::regex::regex_tokens;
-use tokens::required::required_tokens;
 use tokens::schema::schema_tokens;
-use tokens::url::url_tokens;
 use types::*;
 use utils::quote_use_stmts;
 
 mod tokens;
 mod types;
 mod utils;
-
-impl ToTokens for ValidateField {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let field_name = self.ident.clone().unwrap();
-        let field_name_str = self.ident.clone().unwrap().to_string();
-
-        let type_name = self.ty.to_token_stream().to_string();
-        let is_number = NUMBER_TYPES.contains(&type_name);
-
-        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name, is_number);
-
-        // Length validation
-        let length = if let Some(length) = self.length.clone() {
-            wrapper_closure(length_tokens(length, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
-
-        // Email validation
-        let email = if let Some(email) = self.email.clone() {
-            wrapper_closure(email_tokens(
-                match email {
-                    Override::Inherit => Email::default(),
-                    Override::Explicit(e) => e,
-                },
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Credit card validation
-        let card = if let Some(credit_card) = self.credit_card.clone() {
-            wrapper_closure(credit_card_tokens(
-                match credit_card {
-                    Override::Inherit => Card::default(),
-                    Override::Explicit(c) => c,
-                },
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Url validation
-        let url = if let Some(url) = self.url.clone() {
-            wrapper_closure(url_tokens(
-                match url {
-                    Override::Inherit => Url::default(),
-                    Override::Explicit(u) => u,
-                },
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Ip address validation
-        let ip = if let Some(ip) = self.ip.clone() {
-            wrapper_closure(ip_tokens(
-                match ip {
-                    Override::Inherit => Ip::default(),
-                    Override::Explicit(i) => i,
-                },
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Non control character validation
-        let ncc = if let Some(ncc) = self.non_control_character.clone() {
-            wrapper_closure(non_control_char_tokens(
-                match ncc {
-                    Override::Inherit => NonControlCharacter::default(),
-                    Override::Explicit(n) => n,
-                },
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Range validation
-        let range = if let Some(range) = self.range.clone() {
-            wrapper_closure(range_tokens(range, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
-
-        // Required validation
-        let required = if let Some(required) = self.required.clone() {
-            required_tokens(
-                match required {
-                    Override::Inherit => Required::default(),
-                    Override::Explicit(r) => r,
-                },
-                &field_name,
-                &field_name_str,
-            )
-        } else {
-            quote!()
-        };
-
-        // Contains validation
-        let contains = if let Some(contains) = self.contains.clone() {
-            wrapper_closure(contains_tokens(contains, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
-
-        // Does not contain validation
-        let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
-            wrapper_closure(does_not_contain_tokens(
-                does_not_contain,
-                &actual_field,
-                &field_name_str,
-            ))
-        } else {
-            quote!()
-        };
-
-        // Must match validation
-        let must_match = if let Some(must_match) = self.must_match.clone() {
-            // TODO: handle option for other
-            wrapper_closure(must_match_tokens(must_match, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
-
-        // Regex validation
-        let regex = if let Some(regex) = self.regex.clone() {
-            wrapper_closure(regex_tokens(regex, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
-
-        // Custom validation
-        let mut custom = quote!();
-        // We try to be smart when passing arguments
-        let is_cow = type_name.contains("Cow <");
-        let custom_actual_field = if is_cow {
-            quote!(#actual_field.as_ref())
-        } else if is_number || type_name.starts_with("&") {
-            quote!(#actual_field)
-        } else {
-            quote!(&#actual_field)
-        };
-        for c in &self.custom {
-            let tokens = custom_tokens(c.clone(), &custom_actual_field, &field_name_str);
-            custom = quote!(
-              #tokens
-            );
-        }
-        if !self.custom.is_empty() {
-            custom = wrapper_closure(custom);
-        }
-
-        let nested = if let Some(n) = self.nested {
-            if n {
-                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
-            } else {
-                quote!()
-            }
-        } else {
-            quote!()
-        };
-
-        tokens.extend(quote! {
-            #length
-            #email
-            #card
-            #url
-            #ip
-            #ncc
-            #range
-            #required
-            #contains
-            #does_not_contain
-            #must_match
-            #regex
-            #custom
-            #nested
-        });
-    }
-}
 
 // The main struct we get from parsing the attributes
 // The "supports(struct_named)" attribute guarantees only named structs to work with this macro
@@ -378,6 +172,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!()
     };
 
+    let (validation_fields, constraints): (Vec<_>, Vec<_>) =
+        validation_fields.into_iter().map(ValidateField::into_tokens).unzip();
+
     quote!(
         #argless_validation
 
@@ -402,6 +199,17 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                 }
             }
         }
+
+        impl #imp ::validator::Constraints for #ident #ty #whr {
+            fn constraints() -> ::validator::ValidationConstraints {
+                let mut constraints = ::validator::ValidationConstraints::default();
+
+                #(#constraints)*
+
+                constraints
+            }
+        }
+
     )
     .into()
 }
