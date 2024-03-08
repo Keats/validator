@@ -19,3 +19,20 @@ note: the trait `Validate` must be implemented
   = note: the following trait defines an item `validate`, perhaps you need to implement it:
           candidate #1: `Validate`
   = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Nested: Constraints` is not satisfied
+ --> tests/compile-fail/no_nested_validations.rs:6:13
+  |
+6 |     nested: Nested,
+  |             ^^^^^^ the trait `Constraints` is not implemented for `Nested`
+  |
+  = help: the following other types implement trait `Constraints`:
+            Test
+            HashMap<K, V, S>
+            indexmap::map::IndexMap<K, V>
+            BTreeMap<K, V>
+            HashSet<V, S>
+            indexmap::set::IndexSet<V>
+            BTreeSet<T>
+            Vec<T>
+          and $N others
