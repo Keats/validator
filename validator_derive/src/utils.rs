@@ -13,18 +13,6 @@ pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     }
 }
 
-pub fn quote_code(code: Option<String>, default: &str) -> proc_macro2::TokenStream {
-    if let Some(c) = code {
-        quote!(
-            let mut err = ::validator::ValidationError::new(#c);
-        )
-    } else {
-        quote!(
-            let mut err = ::validator::ValidationError::new(#default);
-        )
-    }
-}
-
 pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream {
     let mut length = quote!();
     let mut email = quote!();
