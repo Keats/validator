@@ -1,9 +1,9 @@
 use std::{
     borrow::Cow,
+    cell::{Ref, RefMut},
     collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque},
     rc::Rc,
     sync::Arc,
-    cell::{Ref, RefMut},
 };
 
 #[cfg(feature = "indexmap")]
@@ -15,8 +15,8 @@ use indexmap::{IndexMap, IndexSet};
 /// If you apply it on String, don't forget that the length can be different
 /// from the number of visual characters for Unicode
 pub trait ValidateLength<T>
-    where
-        T: PartialEq + PartialOrd,
+where
+    T: PartialEq + PartialOrd,
 {
     fn validate_length(&self, min: Option<T>, max: Option<T>, equal: Option<T>) -> bool {
         if let Some(length) = self.length() {
@@ -46,7 +46,9 @@ pub trait ValidateLength<T>
 macro_rules! validate_type_that_derefs {
     ($type_:ty) => {
         impl<T> ValidateLength<u64> for $type_
-        where T: ValidateLength<u64> {
+        where
+            T: ValidateLength<u64>,
+        {
             fn length(&self) -> Option<u64> {
                 T::length(self)
             }
@@ -101,9 +103,9 @@ validate_type_with_len!(IndexSet<T>, T);
 validate_type_with_len!(IndexMap<K, V>, K, V);
 
 impl<T> ValidateLength<u64> for Cow<'_, T>
-    where
-        T: ToOwned + ?Sized,
-        for<'a> &'a T: ValidateLength<u64>,
+where
+    T: ToOwned + ?Sized,
+    for<'a> &'a T: ValidateLength<u64>,
 {
     fn length(&self) -> Option<u64> {
         self.as_ref().length()
@@ -111,7 +113,8 @@ impl<T> ValidateLength<u64> for Cow<'_, T>
 }
 
 impl<T> ValidateLength<u64> for Option<T>
-    where T: ValidateLength<u64>,
+where
+    T: ValidateLength<u64>,
 {
     fn length(&self) -> Option<u64> {
         let Some(s) = self else {

@@ -24,8 +24,8 @@ pub trait ValidateArgs<'v_a> {
 }
 
 impl<'v_a, T, U> ValidateArgs<'v_a> for Option<T>
-    where
-        T: ValidateArgs<'v_a, Args=U>,
+where
+    T: ValidateArgs<'v_a, Args = U>,
 {
     type Args = U;
 
