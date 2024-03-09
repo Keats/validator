@@ -1,3 +1,3 @@
 [workspace]
 resolver = "2"
-members = ["validator", "validator_derive", "validator_derive_tests", "testing-bugs"]
+members = ["validator", "validator_derive", "validator_derive_tests"]
