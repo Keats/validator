@@ -370,7 +370,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let argless_validation = if validation_data.context.is_none() {
         quote! {
             impl #imp ::validator::Validate for #ident #ty #whr {
-                fn validate(&self) -> Result<(), ::validator::ValidationErrors> {
+                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
                     use validator::ValidateArgs;
                     self.validate_with_args(())
                 }
