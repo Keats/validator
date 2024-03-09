@@ -1,12 +1,11 @@
 use quote::quote;
-use syn::Ident;
 
 use crate::types::DoesNotContain;
 use crate::utils::{quote_code, quote_message};
 
 pub fn does_not_contain_tokens(
     does_not_contain: DoesNotContain,
-    field_name: &Ident,
+    field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let p = does_not_contain.pattern;
@@ -18,11 +17,11 @@ pub fn does_not_contain_tokens(
     let code = quote_code(does_not_contain.code, "does_not_contain");
 
     quote! {
-        if !self.#field_name.validate_does_not_contain(#needle) {
+        if !#field_name.validate_does_not_contain(#needle) {
             #code
             #message
             #needle_err
-            err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
+            err.add_param(::std::borrow::Cow::from("value"), &#field_name);
             errors.add(#field_name_str, err);
         }
     }

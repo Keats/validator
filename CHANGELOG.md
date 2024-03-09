@@ -1,5 +1,10 @@
 ## Changelog
 
+## 0.17.1 (unreleased)
+
+- Fix regressions from the derive rewrite
+
+
 ## 0.17.0 (2024/03/04)
 
 - Derive macro has been entirely rewritten

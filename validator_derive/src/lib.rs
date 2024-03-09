@@ -32,157 +32,163 @@ impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
+        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name);
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {
-            length_tokens(length, &field_name, &field_name_str)
+            wrapper_closure(length_tokens(length, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Email validation
         let email = if let Some(email) = self.email.clone() {
-            email_tokens(
+            wrapper_closure(email_tokens(
                 match email {
                     Override::Inherit => Email::default(),
                     Override::Explicit(e) => e,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Credit card validation
         let card = if let Some(credit_card) = self.credit_card.clone() {
-            credit_card_tokens(
+            wrapper_closure(credit_card_tokens(
                 match credit_card {
                     Override::Inherit => Card::default(),
                     Override::Explicit(c) => c,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Url validation
         let url = if let Some(url) = self.url.clone() {
-            url_tokens(
+            wrapper_closure(url_tokens(
                 match url {
                     Override::Inherit => Url::default(),
                     Override::Explicit(u) => u,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Ip address validation
         let ip = if let Some(ip) = self.ip.clone() {
-            ip_tokens(
+            wrapper_closure(ip_tokens(
                 match ip {
                     Override::Inherit => Ip::default(),
                     Override::Explicit(i) => i,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Non control character validation
         let ncc = if let Some(ncc) = self.non_control_character.clone() {
-            non_control_char_tokens(
+            wrapper_closure(non_control_char_tokens(
                 match ncc {
                     Override::Inherit => NonControlCharacter::default(),
                     Override::Explicit(n) => n,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Range validation
         let range = if let Some(range) = self.range.clone() {
-            range_tokens(range, &field_name, &field_name_str)
+            wrapper_closure(range_tokens(range, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Required validation
         let required = if let Some(required) = self.required.clone() {
-            required_tokens(
+            wrapper_closure(required_tokens(
                 match required {
                     Override::Inherit => Required::default(),
                     Override::Explicit(r) => r,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Required nested validation
         let required_nested = if let Some(required_nested) = self.required_nested.clone() {
-            required_nested_tokens(
+            wrapper_closure(required_nested_tokens(
                 match required_nested {
                     Override::Inherit => Required::default(),
                     Override::Explicit(r) => r,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Contains validation
         let contains = if let Some(contains) = self.contains.clone() {
-            contains_tokens(contains, &field_name, &field_name_str)
+            wrapper_closure(contains_tokens(contains, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Does not contain validation
         let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
-            does_not_contain_tokens(does_not_contain, &field_name, &field_name_str)
+            wrapper_closure(does_not_contain_tokens(
+                does_not_contain,
+                &actual_field,
+                &field_name_str,
+            ))
         } else {
             quote!()
         };
 
         // Must match validation
         let must_match = if let Some(must_match) = self.must_match.clone() {
-            must_match_tokens(must_match, &field_name, &field_name_str)
+            // TODO: handle option for other
+            wrapper_closure(must_match_tokens(must_match, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Regex validation
         let regex = if let Some(regex) = self.regex.clone() {
-            regex_tokens(regex, &field_name, &field_name_str)
+            wrapper_closure(regex_tokens(regex, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Custom validation
         let custom = if let Some(custom) = self.custom.clone() {
-            custom_tokens(custom, &field_name, &field_name_str)
+            wrapper_closure(custom_tokens(custom, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         let nested = if let Some(n) = self.nested {
             if n {
-                nested_tokens(&field_name, &field_name_str)
+                wrapper_closure(nested_tokens(&field_name, &field_name_str))
             } else {
                 quote!()
             }

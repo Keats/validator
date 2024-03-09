@@ -1,12 +1,11 @@
 use quote::quote;
-use syn::Ident;
 
 use crate::types::Length;
 use crate::utils::{quote_code, quote_message};
 
 pub fn length_tokens(
     length: Length,
-    field_name: &Ident,
+    field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let (min, min_err) = if let Some(v) = length.min.as_ref() {
@@ -29,13 +28,13 @@ pub fn length_tokens(
     let code = quote_code(length.code, "length");
 
     quote! {
-        if !self.#field_name.validate_length(#min, #max, #equal) {
+        if !#field_name.validate_length(#min, #max, #equal) {
             #code
             #message
             #min_err
             #max_err
             #equal_err
-            err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
+            err.add_param(::std::borrow::Cow::from("value"), &#field_name);
             errors.add(#field_name_str, err);
         }
     }
