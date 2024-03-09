@@ -1,7 +1,7 @@
 use validator::Validate;
 
 #[derive(Validate)]
-struct Test<T = ()> {
+struct DefaultParameters<T = ()> {
     a: T,
 }
 

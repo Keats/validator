@@ -13,7 +13,9 @@ impl ValidateContains for String {
 }
 
 impl<T> ValidateContains for Option<T>
-    where T: ValidateContains {
+where
+    T: ValidateContains,
+{
     fn validate_contains(&self, needle: &str) -> bool {
         if let Some(v) = self {
             v.validate_contains(needle)
@@ -24,15 +26,18 @@ impl<T> ValidateContains for Option<T>
 }
 
 impl<T> ValidateContains for &T
-    where T: ValidateContains {
+where
+    T: ValidateContains,
+{
     fn validate_contains(&self, needle: &str) -> bool {
         T::validate_contains(self, needle)
     }
 }
 
 impl<'cow, T> ValidateContains for Cow<'cow, T>
-    where T: ToOwned + ?Sized,
-          for<'a> &'a T: ValidateContains
+where
+    T: ToOwned + ?Sized,
+    for<'a> &'a T: ValidateContains,
 {
     fn validate_contains(&self, needle: &str) -> bool {
         self.as_ref().validate_contains(needle)

@@ -3,7 +3,7 @@ use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Field, Path, PathArguments};
+use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -336,7 +336,19 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     let struct_generics_quote =
         validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
-            q.extend(quote!(#g, ));
+            if let GenericParam::Type(t) = g {
+                // Default types are not allowed in trait impl
+                if t.default.is_some() {
+                    let mut t2 = t.clone();
+                    t2.default = None;
+                    let g2 = GenericParam::Type(t2);
+                    q.extend(quote!(#g2, ));
+                } else {
+                    q.extend(quote!(#g, ));
+                }
+            } else {
+                q.extend(quote!(#g, ));
+            }
             q
         });
 

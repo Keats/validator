@@ -73,9 +73,7 @@ fn is_fine_with_many_valid_validations() {
 
 #[test]
 fn test_can_validate_option_fields_with_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^[a-z]{2}$").unwrap()
-    });
+    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct<'a> {
@@ -119,9 +117,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^[a-z]{2}$").unwrap()
-    });
+    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct {

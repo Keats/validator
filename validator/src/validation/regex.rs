@@ -15,7 +15,9 @@ impl AsRegex for Regex {
 }
 
 impl<T> AsRegex for &T
-    where T: AsRegex {
+where
+    T: AsRegex,
+{
     fn as_regex(&self) -> Cow<Regex> {
         T::as_regex(self)
     }
@@ -56,14 +58,18 @@ pub trait ValidateRegex {
 }
 
 impl<T> ValidateRegex for &T
-    where T: ValidateRegex {
+where
+    T: ValidateRegex,
+{
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         T::validate_regex(self, regex)
     }
 }
 
 impl<T> ValidateRegex for Option<T>
-    where T: ValidateRegex {
+where
+    T: ValidateRegex,
+{
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         if let Some(h) = self {
             T::validate_regex(h, regex)
@@ -74,8 +80,9 @@ impl<T> ValidateRegex for Option<T>
 }
 
 impl<'cow, T> ValidateRegex for Cow<'cow, T>
-    where T: ToOwned + ?Sized,
-          for<'a> &'a T: ValidateRegex
+where
+    T: ToOwned + ?Sized,
+    for<'a> &'a T: ValidateRegex,
 {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         self.as_ref().validate_regex(regex)
