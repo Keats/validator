@@ -120,28 +120,28 @@ impl ToTokens for ValidateField {
 
         // Required validation
         let required = if let Some(required) = self.required.clone() {
-            wrapper_closure(required_tokens(
+            required_tokens(
                 match required {
                     Override::Inherit => Required::default(),
                     Override::Explicit(r) => r,
                 },
-                &actual_field,
+                &field_name,
                 &field_name_str,
-            ))
+            )
         } else {
             quote!()
         };
 
         // Required nested validation
         let required_nested = if let Some(required_nested) = self.required_nested.clone() {
-            wrapper_closure(required_nested_tokens(
+            required_nested_tokens(
                 match required_nested {
                     Override::Inherit => Required::default(),
                     Override::Explicit(r) => r,
                 },
-                &actual_field,
+                &field_name,
                 &field_name_str,
-            ))
+            )
         } else {
             quote!()
         };
@@ -181,14 +181,14 @@ impl ToTokens for ValidateField {
 
         // Custom validation
         let custom = if let Some(custom) = self.custom.clone() {
-            wrapper_closure(custom_tokens(custom, &actual_field, &field_name_str))
+            custom_tokens(custom, &field_name, &field_name_str)
         } else {
             quote!()
         };
 
         let nested = if let Some(n) = self.nested {
             if n {
-                wrapper_closure(nested_tokens(&field_name, &field_name_str))
+                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
             } else {
                 quote!()
             }
