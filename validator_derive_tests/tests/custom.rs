@@ -4,6 +4,10 @@ fn valid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn another_valid_custom_fn(_: &String) -> Result<(), ValidationError> {
+    Ok(())
+}
+
 fn invalid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Err(ValidationError::new("meh"))
 }
@@ -13,6 +17,19 @@ fn can_validate_custom_fn_ok() {
     #[derive(Debug, Validate)]
     struct TestStruct {
         #[validate(custom(function = valid_custom_fn))]
+        val: String,
+    }
+
+    let s = TestStruct { val: "hello".to_string() };
+
+    assert!(s.validate().is_ok());
+}
+
+#[test]
+fn can_validate_multiple_custom_fn_ok() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(custom(function = valid_custom_fn), custom(function=another_valid_custom_fn))]
         val: String,
     }
 

@@ -180,11 +180,13 @@ impl ToTokens for ValidateField {
         };
 
         // Custom validation
-        let custom = if let Some(custom) = self.custom.clone() {
-            custom_tokens(custom, &field_name, &field_name_str)
-        } else {
-            quote!()
-        };
+        let mut custom = quote!();
+        for c in &self.custom {
+            let tokens = custom_tokens(c.clone(), &field_name, &field_name_str);
+            custom = quote!(
+              #tokens
+            );
+        }
 
         let nested = if let Some(n) = self.nested {
             if n {
