@@ -12,7 +12,7 @@
 //!     mail: String,
 //!     #[validate(url)]
 //!     site: String,
-//!     #[validate(length(min = 1), custom = "validate_unique_username")]
+//!     #[validate(length(min = 1), custom(function = "validate_unique_username"))]
 //!     #[serde(rename = "firstName")]
 //!     first_name: String,
 //!     #[validate(range(min = 18, max = 20))]
