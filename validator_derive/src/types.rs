@@ -79,7 +79,8 @@ pub struct ValidateField {
     pub required_nested: Option<Override<Required>>,
     pub url: Option<Override<Url>>,
     pub regex: Option<Regex>,
-    pub custom: Option<Custom>,
+    #[darling(multiple)]
+    pub custom: Vec<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
 }
@@ -89,9 +90,9 @@ impl ValidateField {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
 
-        if let Some(custom) = &self.custom {
+        for c in &self.custom {
             // If function is not a path
-            if let Err(e) = &custom.function {
+            if let Err(e) = &c.function {
                 abort!(
                     e.span(), "Invalid attribute #[validate(custom(...))] on field `{}`:", field_name;
                     note = "Invalid argument for `custom` validator, only paths are allowed";
