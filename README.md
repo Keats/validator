@@ -47,7 +47,7 @@ struct SignupData {
     mail: String,
     #[validate(url)]
     site: String,
-    #[validate(length(min = 1), custom = "validate_unique_username")]
+    #[validate(length(min = 1), custom(function = "validate_unique_username"))]
     #[serde(rename = "firstName")]
     first_name: String,
     #[validate(range(min = 18, max = 20))]
@@ -281,9 +281,8 @@ which should return a `Result<(), ValidationError>`.
 Examples:
 
 ```rust
-#[validate(custom = "validate_something")]
-#[validate(custom = "::utils::validate_something")]
 #[validate(custom(function = "validate_something"))]
+#[validate(custom(function = "::utils::validate_something"))]
 ```
 
 You can also parse arguments from the validation function to your custom validation by setting the `arg` parameter. `arg` can only be set to one type but you can set it to a tuple to pass multiple types at once. Defining the `arg` parameter will implement the `ValidateArgs` trait with the corresponding function types like this:
