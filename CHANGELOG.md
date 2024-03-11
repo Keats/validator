@@ -9,7 +9,8 @@
 
 - Derive macro has been entirely rewritten
 - Validation is now done through traits that you can implement
-
+- Remove phone validator
+- Remove automatic use of serde rename for fields name (temporary)
 
 ## 0.16.0 (2022/06/27)
 
