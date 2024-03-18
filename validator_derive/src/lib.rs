@@ -182,10 +182,13 @@ impl ToTokens for ValidateField {
         // Custom validation
         let mut custom = quote!();
         for c in &self.custom {
-            let tokens = custom_tokens(c.clone(), &field_name, &field_name_str);
+            let tokens = custom_tokens(c.clone(), &actual_field, &field_name_str);
             custom = quote!(
               #tokens
             );
+        }
+        if !self.custom.is_empty() {
+            custom = wrapper_closure(custom);
         }
 
         let nested = if let Some(n) = self.nested {

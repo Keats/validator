@@ -3,7 +3,7 @@ use validator::{Validate, ValidationError};
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct CountryCode(pub String);
 
-fn validate_country_code(_country_code: &Option<CountryCode>) -> Result<(), ValidationError> {
+fn validate_country_code(_country_code: &CountryCode) -> Result<(), ValidationError> {
     if false {
         Ok(())
     } else {

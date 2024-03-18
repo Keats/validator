@@ -97,7 +97,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         custom: Option<&'a str>,
     }
 
-    fn check_str(_: &Option<&str>) -> Result<(), ValidationError> {
+    fn check_str(_: &&str) -> Result<(), ValidationError> {
         Ok(())
     }
 
@@ -145,7 +145,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         custom: Option<String>,
     }
 
-    fn check_str(_: &Option<String>) -> Result<(), ValidationError> {
+    fn check_str(_: &String) -> Result<(), ValidationError> {
         Ok(())
     }
 
