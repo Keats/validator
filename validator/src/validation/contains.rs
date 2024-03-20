@@ -58,9 +58,6 @@ impl<S, H: BuildHasher> ValidateContains for HashMap<String, S, H> {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-    use std::collections::HashMap;
-
     use super::*;
 
     #[test]

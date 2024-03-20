@@ -18,7 +18,6 @@ fn is_fine_with_nested_validations() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct A {
         #[validate(length(min = 5, max = 10))]
         value: String,
@@ -27,7 +26,6 @@ fn is_fine_with_nested_validations() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct B {
         #[validate(length(min = 5, max = 10))]
         value: String,
@@ -52,7 +50,6 @@ fn fails_nested_validation() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct A {
         #[validate(length(min = 5, max = 10))]
         value: String,
@@ -61,7 +58,6 @@ fn fails_nested_validation() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct B {
         #[validate(length(min = 5, max = 10))]
         value: String,
@@ -142,7 +138,6 @@ fn test_can_validate_option_fields_without_lifetime() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -182,7 +177,6 @@ fn test_can_validate_option_fields_with_lifetime() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -223,7 +217,6 @@ fn test_works_with_none_values() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -245,7 +238,6 @@ fn test_can_validate_vector_fields() {
     }
 
     #[derive(Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -311,7 +303,6 @@ fn test_can_validate_slice_fields() {
     }
 
     #[derive(Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -375,7 +366,6 @@ fn test_can_validate_array_fields() {
     }
 
     #[derive(Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -445,7 +435,6 @@ fn test_can_validate_option_vector_fields() {
     }
 
     #[derive(Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -513,7 +502,6 @@ fn test_can_validate_map_fields() {
     }
 
     #[derive(Validate, Serialize, Clone)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -562,7 +550,6 @@ fn test_can_validate_ref_map_fields() {
     }
 
     #[derive(Validate, Serialize, Clone)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -609,7 +596,6 @@ fn test_can_validate_option_map_fields() {
     }
 
     #[derive(Validate, Serialize, Clone)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -658,7 +644,6 @@ fn test_can_validate_set_fields() {
     }
 
     #[derive(Validate, Serialize, Clone, PartialEq, Eq, Hash)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -701,13 +686,11 @@ fn test_can_validate_set_fields() {
 fn test_can_validate_ref_set_fields() {
     #[derive(Validate)]
     struct ParentWithRefSetOfChildren<'a> {
-        #[validate(length(min = 1))]
-        #[validate(nested)]
+        #[validate(length(min = 1), nested)]
         child: &'a HashSet<Child>,
     }
 
     #[derive(Validate, Serialize, Clone, PartialEq, Eq, Hash)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -748,13 +731,11 @@ fn test_can_validate_ref_set_fields() {
 fn test_can_validate_option_set_fields() {
     #[derive(Validate)]
     struct ParentWithOptionSetOfChildren {
-        #[validate(length(min = 1))]
-        #[validate(nested)]
+        #[validate(length(min = 1), nested)]
         child: Option<HashSet<Child>>,
     }
 
     #[derive(Validate, Serialize, Clone, PartialEq, Eq, Hash)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -798,12 +779,10 @@ fn test_field_validations_take_priority_over_nested_validations() {
     #[derive(Validate)]
     struct ParentWithVectorOfChildren {
         #[validate(length(min = 1))]
-        #[validate(nested)]
         child: Vec<Child>,
     }
 
     #[derive(Validate, Serialize, Clone, PartialEq, Eq, Hash)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -836,7 +815,6 @@ fn test_field_validation_errors_replaced_with_nested_validations_fails() {
     }
 
     #[derive(Debug, Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,
@@ -891,7 +869,6 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
     }
 
     #[derive(Debug, Validate, Serialize)]
-    #[validate(nested)]
     struct Child {
         #[validate(length(min = 1))]
         value: String,

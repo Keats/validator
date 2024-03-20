@@ -35,9 +35,9 @@ struct SignupData {
     first_name: String,
     #[validate(range(min = 18, max = 20))]
     age: u32,
-    #[validate]
+    #[validate(nested)]
     card: Option<Card>,
-    #[validate]
+    #[validate(nested)]
     preferences: Vec<Preference>,
 }
 
