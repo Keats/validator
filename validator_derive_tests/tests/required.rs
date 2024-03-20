@@ -23,7 +23,7 @@ struct Required {
 
 #[derive(Validate)]
 struct RequiredNested {
-    #[validate(required_nested)]
+    #[validate(required, nested)]
     val: Option<CheckedObjectRef>,
 }
 

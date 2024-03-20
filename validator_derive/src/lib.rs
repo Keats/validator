@@ -18,7 +18,6 @@ use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
 use tokens::regex::regex_tokens;
 use tokens::required::required_tokens;
-use tokens::required_nested::required_nested_tokens;
 use tokens::schema::schema_tokens;
 use tokens::url::url_tokens;
 use types::*;
@@ -132,20 +131,6 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
-        // Required nested validation
-        let required_nested = if let Some(required_nested) = self.required_nested.clone() {
-            required_nested_tokens(
-                match required_nested {
-                    Override::Inherit => Required::default(),
-                    Override::Explicit(r) => r,
-                },
-                &field_name,
-                &field_name_str,
-            )
-        } else {
-            quote!()
-        };
-
         // Contains validation
         let contains = if let Some(contains) = self.contains.clone() {
             wrapper_closure(contains_tokens(contains, &actual_field, &field_name_str))
@@ -210,7 +195,6 @@ impl ToTokens for ValidateField {
             #ncc
             #range
             #required
-            #required_nested
             #contains
             #does_not_contain
             #must_match
@@ -234,7 +218,6 @@ struct ValidationData {
     schema: Vec<Schema>,
     context: Option<Path>,
     mutable: Option<bool>,
-    nested: Option<bool>,
     nest_all_fields: Option<bool>,
 }
 
@@ -369,27 +352,6 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!(<'v_a, #struct_generics_quote>)
     };
 
-    let nested_validation = if validation_data.nested.is_some_and(|n| n) {
-        quote! {
-            impl #imp_args ::validator::ValidateNested<'v_a> for #ident #ty #whr {
-                type Args = #custom_context;
-                fn validate_nested(&self, field_name: &'static str, args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                    use validator::ValidateArgs;
-                    let res = self.validate_with_args(args);
-
-                    if let Err(e) = res {
-                        let new_err = validator::ValidationErrorsKind::Struct(::std::boxed::Box::new(e));
-                        std::result::Result::Err(validator::ValidationErrors(::std::collections::HashMap::from([(field_name, new_err)])))
-                    } else {
-                        std::result::Result::Ok(())
-                    }
-                }
-            }
-        }
-    } else {
-        quote!()
-    };
-
     let argless_validation = if validation_data.context.is_none() {
         quote! {
             impl #imp ::validator::Validate for #ident #ty #whr {
@@ -405,8 +367,6 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     quote!(
         #argless_validation
-
-        #nested_validation
 
         impl #imp_args ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;

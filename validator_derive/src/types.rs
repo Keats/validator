@@ -66,6 +66,7 @@ static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|
 pub struct ValidateField {
     pub ident: Option<syn::Ident>,
     pub ty: syn::Type,
+    pub attrs: Vec<syn::Attribute>,
     pub credit_card: Option<Override<Card>>,
     pub contains: Option<Contains>,
     pub does_not_contain: Option<DoesNotContain>,
@@ -76,7 +77,6 @@ pub struct ValidateField {
     pub non_control_character: Option<Override<NonControlCharacter>>,
     pub range: Option<Range>,
     pub required: Option<Override<Required>>,
-    pub required_nested: Option<Override<Required>>,
     pub url: Option<Override<Url>>,
     pub regex: Option<Regex>,
     #[darling(multiple)]
@@ -89,6 +89,14 @@ impl ValidateField {
     pub fn validate(&self, struct_ident: &Ident, all_fields: &[&Field], current_field: &Field) {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
+        for attr in field_attrs {
+            if matches!(attr.meta, syn::Meta::Path(_)) {
+                abort!(
+                    current_field.span(), "You need to set at least one validator on field `{}`", field_name;
+                    note = "If you want nested validation, use `#[validate(nested)]`"
+                )
+            }
+        }
 
         for c in &self.custom {
             // If function is not a path
