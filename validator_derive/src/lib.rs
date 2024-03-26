@@ -166,8 +166,19 @@ impl ToTokens for ValidateField {
 
         // Custom validation
         let mut custom = quote!();
+        // We try to be smart when passing arguments
+        let type_name = self.ty.to_token_stream().to_string();
+        let is_cow = type_name.contains("Cow <");
+        let is_number = NUMBER_TYPES.contains(&type_name.as_str());
+        let custom_actual_field = if is_cow {
+            quote!(#actual_field.as_ref())
+        } else if is_number || type_name.starts_with("&") {
+            quote!(#actual_field)
+        } else {
+            quote!(&#actual_field)
+        };
         for c in &self.custom {
-            let tokens = custom_tokens(c.clone(), &actual_field, &field_name_str);
+            let tokens = custom_tokens(c.clone(), &custom_actual_field, &field_name_str);
             custom = quote!(
               #tokens
             );
