@@ -12,12 +12,12 @@ pub fn custom_tokens(
 
     let args = if let Some(arg) = custom.use_context {
         if arg {
-            quote!(&#field_name, args)
+            quote!(#field_name, args)
         } else {
-            quote!(&#field_name)
+            quote!(#field_name)
         }
     } else {
-        quote!(&#field_name)
+        quote!(#field_name)
     };
 
     let message = quote_message(custom.message);
