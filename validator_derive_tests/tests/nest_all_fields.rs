@@ -14,7 +14,6 @@ fn field_without_attribute_ignored() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct NestedValidated {
         #[validate(length(min = 5, max = 10))]
         val: String,
@@ -43,7 +42,6 @@ fn nest_all_fields_attribute_works() {
     }
 
     #[derive(Validate)]
-    #[validate(nested)]
     struct NestedValidated {
         #[validate(length(min = 5, max = 10))]
         val: String,

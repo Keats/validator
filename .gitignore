@@ -2,3 +2,4 @@
 /.idea
 target/
 Cargo.lock
+testing-bugs/

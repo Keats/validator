@@ -1,10 +1,13 @@
 use quote::quote;
-use syn::Ident;
 
 use crate::types::Ip;
 use crate::utils::{quote_code, quote_message};
 
-pub fn ip_tokens(ip: Ip, field_name: &Ident, field_name_str: &str) -> proc_macro2::TokenStream {
+pub fn ip_tokens(
+    ip: Ip,
+    field_name: &proc_macro2::TokenStream,
+    field_name_str: &str,
+) -> proc_macro2::TokenStream {
     let message = quote_message(ip.message);
     let code = quote_code(ip.code, "ip");
 
@@ -32,10 +35,10 @@ pub fn ip_tokens(ip: Ip, field_name: &Ident, field_name_str: &str) -> proc_macro
     };
 
     quote! {
-        if !self.#field_name.#version {
+        if !#field_name.#version {
             #code
             #message
-            err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
+            err.add_param(::std::borrow::Cow::from("value"), &#field_name);
             errors.add(#field_name_str, err);
         }
     }

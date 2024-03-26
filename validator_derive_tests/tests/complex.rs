@@ -35,9 +35,9 @@ struct SignupData {
     first_name: String,
     #[validate(range(min = 18, max = 20))]
     age: u32,
-    #[validate]
+    #[validate(nested)]
     card: Option<Card>,
-    #[validate]
+    #[validate(nested)]
     preferences: Vec<Preference>,
 }
 
@@ -73,9 +73,7 @@ fn is_fine_with_many_valid_validations() {
 
 #[test]
 fn test_can_validate_option_fields_with_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^[a-z]{2}$").unwrap()
-    });
+    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct<'a> {
@@ -99,7 +97,7 @@ fn test_can_validate_option_fields_with_lifetime() {
         custom: Option<&'a str>,
     }
 
-    fn check_str(_: &Option<&str>) -> Result<(), ValidationError> {
+    fn check_str(_: &&str) -> Result<(), ValidationError> {
         Ok(())
     }
 
@@ -119,9 +117,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^[a-z]{2}$").unwrap()
-    });
+    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct {
@@ -149,7 +145,7 @@ fn test_can_validate_option_fields_without_lifetime() {
         custom: Option<String>,
     }
 
-    fn check_str(_: &Option<String>) -> Result<(), ValidationError> {
+    fn check_str(_: &String) -> Result<(), ValidationError> {
         Ok(())
     }
 

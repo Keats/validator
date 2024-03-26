@@ -1,12 +1,11 @@
 use quote::quote;
-use syn::Ident;
 
 use crate::types::Range;
 use crate::utils::{quote_code, quote_message};
 
 pub fn range_tokens(
     range: Range,
-    field_name: &Ident,
+    field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let (min, min_err) = if let Some(m) = range.min {
@@ -37,14 +36,14 @@ pub fn range_tokens(
     let code = quote_code(range.code, "range");
 
     quote! {
-        if !self.#field_name.validate_range(#min, #max, #ex_min, #ex_max) {
+        if !#field_name.validate_range(#min, #max, #ex_min, #ex_max) {
             #code
             #message
             #min_err
             #max_err
             #ex_min_err
             #ex_max_err
-            err.add_param(::std::borrow::Cow::from("value"), &self.#field_name);
+            err.add_param(::std::borrow::Cow::from("value"), &#field_name);
             errors.add(#field_name_str, err);
         }
     }

@@ -18,5 +18,4 @@ syn = "2"
 quote = "1"
 proc-macro2 = "1"
 proc-macro-error = "1"
-regex = { version = "1", default-features = false, features = ["std"] }
 darling = { version = "0.20", features = ["suggestions"] }

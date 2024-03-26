@@ -2,10 +2,57 @@ use darling::util::Override;
 use darling::{FromField, FromMeta};
 
 use proc_macro_error::abort;
+use quote::quote;
 use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
 
 use crate::utils::get_attr;
+
+static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
+pub(crate) static NUMBER_TYPES: [&str; 42] = [
+    "usize",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "u128",
+    "isize",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "i128",
+    "f32",
+    "f64",
+    "Option<usize>",
+    "Option<u8>",
+    "Option<u16>",
+    "Option<u32>",
+    "Option<u64>",
+    "Option<u128>",
+    "Option<isize>",
+    "Option<i8>",
+    "Option<i16>",
+    "Option<i32>",
+    "Option<i64>",
+    "Option<i128>",
+    "Option<f32>",
+    "Option<f64>",
+    "Option<Option<usize>>",
+    "Option<Option<u8>>",
+    "Option<Option<u16>>",
+    "Option<Option<u32>>",
+    "Option<Option<u64>>",
+    "Option<Option<u128>>",
+    "Option<Option<isize>>",
+    "Option<Option<i8>>",
+    "Option<Option<i16>>",
+    "Option<Option<i32>>",
+    "Option<Option<i64>>",
+    "Option<Option<i128>>",
+    "Option<Option<f32>>",
+    "Option<Option<f64>>",
+];
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`
@@ -13,11 +60,13 @@ use crate::utils::get_attr;
 // #[validate(email(message = "asdfg"))]
 //            ^^^^^
 //
+
 #[derive(Debug, FromField, Clone)]
 #[darling(attributes(validate))]
 pub struct ValidateField {
     pub ident: Option<syn::Ident>,
     pub ty: syn::Type,
+    pub attrs: Vec<syn::Attribute>,
     pub credit_card: Option<Override<Card>>,
     pub contains: Option<Contains>,
     pub does_not_contain: Option<DoesNotContain>,
@@ -28,10 +77,10 @@ pub struct ValidateField {
     pub non_control_character: Option<Override<NonControlCharacter>>,
     pub range: Option<Range>,
     pub required: Option<Override<Required>>,
-    pub required_nested: Option<Override<Required>>,
     pub url: Option<Override<Url>>,
     pub regex: Option<Regex>,
-    pub custom: Option<Custom>,
+    #[darling(multiple)]
+    pub custom: Vec<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
 }
@@ -40,10 +89,18 @@ impl ValidateField {
     pub fn validate(&self, struct_ident: &Ident, all_fields: &[&Field], current_field: &Field) {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
+        for attr in field_attrs {
+            if matches!(attr.meta, syn::Meta::Path(_)) {
+                abort!(
+                    current_field.span(), "You need to set at least one validator on field `{}`", field_name;
+                    note = "If you want nested validation, use `#[validate(nested)]`"
+                )
+            }
+        }
 
-        if let Some(custom) = &self.custom {
+        for c in &self.custom {
             // If function is not a path
-            if let Err(e) = &custom.function {
+            if let Err(e) = &c.function {
                 abort!(
                     e.span(), "Invalid attribute #[validate(custom(...))] on field `{}`:", field_name;
                     note = "Invalid argument for `custom` validator, only paths are allowed";
@@ -102,6 +159,75 @@ impl ValidateField {
                     help = "Add the argument `min` or `max`, `exclusive_min` or `exclusive_max`"
                 )
             }
+        }
+    }
+
+    /// How many Option<Option< are there before the actual field
+    pub fn number_options(&self) -> u8 {
+        fn find_option(mut count: u8, ty: &syn::Type) -> u8 {
+            if let syn::Type::Path(p) = ty {
+                let idents_of_path =
+                    p.path.segments.iter().into_iter().fold(String::new(), |mut acc, v| {
+                        acc.push_str(&v.ident.to_string());
+                        acc.push('|');
+                        acc
+                    });
+
+                if OPTIONS_TYPE.contains(&idents_of_path.as_str()) {
+                    count += 1;
+                    if let Some(p) = p.path.segments.first() {
+                        if let syn::PathArguments::AngleBracketed(ref params) = p.arguments {
+                            if let syn::GenericArgument::Type(ref ty) = params.args.first().unwrap()
+                            {
+                                count = find_option(count, ty);
+                            }
+                        }
+                    }
+                }
+            }
+            count
+        }
+
+        find_option(0, &self.ty)
+    }
+
+    pub fn if_let_option_wrapper(
+        &self,
+        field_name: &Ident,
+    ) -> (proc_macro2::TokenStream, Box<dyn Fn(proc_macro2::TokenStream) -> proc_macro2::TokenStream>)
+    {
+        let number_options = self.number_options();
+        let field_name = field_name.clone();
+        let actual_field =
+            if number_options > 0 { quote!(#field_name) } else { quote!(self.#field_name) };
+        let option_val = quote!(ref #field_name);
+
+        match number_options {
+            0 => (actual_field.clone(), Box::new(move |tokens| tokens)),
+            1 => (
+                actual_field.clone(),
+                Box::new(move |tokens| {
+                    quote!(
+                        if let Some(#option_val) = self.#field_name {
+                            #tokens
+                        }
+                    )
+                }),
+            ),
+            2 => (
+                actual_field.clone(),
+                Box::new(move |tokens| {
+                    quote!(
+                        if let Some(Some(#option_val)) = self.#field_name {
+                            #tokens
+                        }
+                    )
+                }),
+            ),
+            _ => abort!(
+                field_name.span(),
+                "Validation on values nested in more than 2 Option are not supported"
+            ),
         }
     }
 }

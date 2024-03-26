@@ -3,7 +3,7 @@ use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Field, Path, PathArguments};
+use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -18,7 +18,6 @@ use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
 use tokens::regex::regex_tokens;
 use tokens::required::required_tokens;
-use tokens::required_nested::required_nested_tokens;
 use tokens::schema::schema_tokens;
 use tokens::url::url_tokens;
 use types::*;
@@ -32,87 +31,88 @@ impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
+        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name);
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {
-            length_tokens(length, &field_name, &field_name_str)
+            wrapper_closure(length_tokens(length, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Email validation
         let email = if let Some(email) = self.email.clone() {
-            email_tokens(
+            wrapper_closure(email_tokens(
                 match email {
                     Override::Inherit => Email::default(),
                     Override::Explicit(e) => e,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Credit card validation
         let card = if let Some(credit_card) = self.credit_card.clone() {
-            credit_card_tokens(
+            wrapper_closure(credit_card_tokens(
                 match credit_card {
                     Override::Inherit => Card::default(),
                     Override::Explicit(c) => c,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Url validation
         let url = if let Some(url) = self.url.clone() {
-            url_tokens(
+            wrapper_closure(url_tokens(
                 match url {
                     Override::Inherit => Url::default(),
                     Override::Explicit(u) => u,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Ip address validation
         let ip = if let Some(ip) = self.ip.clone() {
-            ip_tokens(
+            wrapper_closure(ip_tokens(
                 match ip {
                     Override::Inherit => Ip::default(),
                     Override::Explicit(i) => i,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Non control character validation
         let ncc = if let Some(ncc) = self.non_control_character.clone() {
-            non_control_char_tokens(
+            wrapper_closure(non_control_char_tokens(
                 match ncc {
                     Override::Inherit => NonControlCharacter::default(),
                     Override::Explicit(n) => n,
                 },
-                &field_name,
+                &actual_field,
                 &field_name_str,
-            )
+            ))
         } else {
             quote!()
         };
 
         // Range validation
         let range = if let Some(range) = self.range.clone() {
-            range_tokens(range, &field_name, &field_name_str)
+            wrapper_closure(range_tokens(range, &actual_field, &field_name_str))
         } else {
             quote!()
         };
@@ -131,58 +131,65 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
-        // Required nested validation
-        let required_nested = if let Some(required_nested) = self.required_nested.clone() {
-            required_nested_tokens(
-                match required_nested {
-                    Override::Inherit => Required::default(),
-                    Override::Explicit(r) => r,
-                },
-                &field_name,
-                &field_name_str,
-            )
-        } else {
-            quote!()
-        };
-
         // Contains validation
         let contains = if let Some(contains) = self.contains.clone() {
-            contains_tokens(contains, &field_name, &field_name_str)
+            wrapper_closure(contains_tokens(contains, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Does not contain validation
         let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
-            does_not_contain_tokens(does_not_contain, &field_name, &field_name_str)
+            wrapper_closure(does_not_contain_tokens(
+                does_not_contain,
+                &actual_field,
+                &field_name_str,
+            ))
         } else {
             quote!()
         };
 
         // Must match validation
         let must_match = if let Some(must_match) = self.must_match.clone() {
-            must_match_tokens(must_match, &field_name, &field_name_str)
+            // TODO: handle option for other
+            wrapper_closure(must_match_tokens(must_match, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Regex validation
         let regex = if let Some(regex) = self.regex.clone() {
-            regex_tokens(regex, &field_name, &field_name_str)
+            wrapper_closure(regex_tokens(regex, &actual_field, &field_name_str))
         } else {
             quote!()
         };
 
         // Custom validation
-        let custom = if let Some(custom) = self.custom.clone() {
-            custom_tokens(custom, &field_name, &field_name_str)
+        let mut custom = quote!();
+        // We try to be smart when passing arguments
+        let type_name = self.ty.to_token_stream().to_string();
+        let is_cow = type_name.contains("Cow <");
+        let is_number = NUMBER_TYPES.contains(&type_name.as_str());
+        let custom_actual_field = if is_cow {
+            quote!(#actual_field.as_ref())
+        } else if is_number || type_name.starts_with("&") {
+            quote!(#actual_field)
         } else {
-            quote!()
+            quote!(&#actual_field)
         };
+        for c in &self.custom {
+            let tokens = custom_tokens(c.clone(), &custom_actual_field, &field_name_str);
+            custom = quote!(
+              #tokens
+            );
+        }
+        if !self.custom.is_empty() {
+            custom = wrapper_closure(custom);
+        }
 
         let nested = if let Some(n) = self.nested {
             if n {
-                nested_tokens(&field_name, &field_name_str)
+                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
             } else {
                 quote!()
             }
@@ -199,7 +206,6 @@ impl ToTokens for ValidateField {
             #ncc
             #range
             #required
-            #required_nested
             #contains
             #does_not_contain
             #must_match
@@ -223,7 +229,6 @@ struct ValidationData {
     schema: Vec<Schema>,
     context: Option<Path>,
     mutable: Option<bool>,
-    nested: Option<bool>,
     nest_all_fields: Option<bool>,
 }
 
@@ -336,7 +341,19 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     let struct_generics_quote =
         validation_data.generics.params.iter().fold(quote!(), |mut q, g| {
-            q.extend(quote!(#g, ));
+            if let GenericParam::Type(t) = g {
+                // Default types are not allowed in trait impl
+                if t.default.is_some() {
+                    let mut t2 = t.clone();
+                    t2.default = None;
+                    let g2 = GenericParam::Type(t2);
+                    q.extend(quote!(#g2, ));
+                } else {
+                    q.extend(quote!(#g, ));
+                }
+            } else {
+                q.extend(quote!(#g, ));
+            }
             q
         });
 
@@ -344,27 +361,6 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!(<'v_a>)
     } else {
         quote!(<'v_a, #struct_generics_quote>)
-    };
-
-    let nested_validation = if validation_data.nested.is_some_and(|n| n) {
-        quote! {
-            impl #imp_args ::validator::ValidateNested<'v_a> for #ident #ty #whr {
-                type Args = #custom_context;
-                fn validate_nested(&self, field_name: &'static str, args: Self::Args) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                    use validator::ValidateArgs;
-                    let res = self.validate_with_args(args);
-
-                    if let Err(e) = res {
-                        let new_err = validator::ValidationErrorsKind::Struct(::std::boxed::Box::new(e));
-                        std::result::Result::Err(validator::ValidationErrors(::std::collections::HashMap::from([(field_name, new_err)])))
-                    } else {
-                        std::result::Result::Ok(())
-                    }
-                }
-            }
-        }
-    } else {
-        quote!()
     };
 
     let argless_validation = if validation_data.context.is_none() {
@@ -382,8 +378,6 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     quote!(
         #argless_validation
-
-        #nested_validation
 
         impl #imp_args ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;

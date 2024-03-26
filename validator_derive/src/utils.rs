@@ -33,11 +33,10 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
     let mut ip = quote!();
     let mut ncc = quote!();
     let mut range = quote!();
-    let mut reqired = quote!();
+    let mut required = quote!();
     let mut contains = quote!();
     let mut does_not_contain = quote!();
     let mut regex = quote!();
-    let mut nested = quote!();
 
     for f in fields {
         if f.length.is_some() {
@@ -82,8 +81,8 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
             );
         }
 
-        if f.required.is_some() || f.required_nested.is_some() {
-            reqired = quote!(
+        if f.required.is_some() {
+            required = quote!(
                 use validator::ValidateRequired;
             );
         }
@@ -105,12 +104,6 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
                 use validator::ValidateRegex;
             );
         }
-
-        if f.nested.is_some() {
-            nested = quote!(
-                use validator::ValidateNested;
-            );
-        }
     }
 
     quote!(
@@ -121,11 +114,10 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
         #ip
         #ncc
         #range
-        #reqired
+        #required
         #contains
         #does_not_contain
         #regex
-        #nested
     )
 }
 

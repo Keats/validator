@@ -1,8 +1,8 @@
 use std::{
     borrow::Cow,
+    cell::{Ref, RefMut},
     rc::Rc,
     sync::Arc,
-    cell::{Ref, RefMut},
 };
 use url::Url;
 
@@ -22,7 +22,9 @@ pub trait ValidateUrl {
 macro_rules! validate_type_that_derefs {
     ($type_:ty) => {
         impl<T> ValidateUrl for $type_
-        where T: ValidateUrl {
+        where
+            T: ValidateUrl,
+        {
             fn as_url_string(&self) -> Option<Cow<str>> {
                 T::as_url_string(self)
             }
@@ -52,7 +54,9 @@ validate_type_of_str!(&str);
 validate_type_of_str!(String);
 
 impl<T> ValidateUrl for Option<T>
-    where T: ValidateUrl {
+where
+    T: ValidateUrl,
+{
     fn as_url_string(&self) -> Option<Cow<str>> {
         let Some(u) = self else {
             return None;

@@ -48,7 +48,6 @@
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
 //! | `non_control_character` | (Required the feature `unic` to be enabled)           |
-//! | `nested`                | (Uses the validation of the field type it self)       |
 //! | `required`              |                                                       |
 //!
 //! [Checkout the project README of an in-depth usage description with examples.](https://github.com/Keats/validator/blob/master/README.md)
@@ -74,7 +73,6 @@ pub use validation::email::ValidateEmail;
 pub use validation::ip::ValidateIp;
 pub use validation::length::ValidateLength;
 pub use validation::must_match::validate_must_match;
-pub use validation::nested::ValidateNested;
 #[cfg(feature = "unic")]
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;

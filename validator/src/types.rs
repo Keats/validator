@@ -73,8 +73,15 @@ impl ValidationErrors {
         match child {
             Ok(()) => self,
             Err(errors) => {
-                for (_, e) in errors.0 {
-                    self.add_nested(field, e);
+                for (_, e) in &errors.0 {
+                    if matches!(e, ValidationErrorsKind::Field(..)) {
+                        self.add_nested(
+                            field,
+                            ValidationErrorsKind::Struct(Box::new(errors.clone())),
+                        );
+                    } else {
+                        self.add_nested(field, e.clone());
+                    }
                 }
                 self
             }

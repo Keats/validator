@@ -3,23 +3,21 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::borrow::Cow;
 
-use crate::{ValidateIp};
+use crate::ValidateIp;
 
 // Regex from the specs
 // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 // It will mark esoteric email addresses like quoted string as invalid
-static EMAIL_USER_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap()
-});
+static EMAIL_USER_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap());
 static EMAIL_DOMAIN_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
         r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
     ).unwrap()
 });
 // literal form, ipv4 or ipv6 address (SMTP 4.1.3)
-static EMAIL_LITERAL_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap()
-});
+static EMAIL_LITERAL_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap());
 
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
 #[must_use]
@@ -43,7 +41,11 @@ fn validate_domain_part(domain_part: &str) -> bool {
 /// that are unfamiliar to most users.
 pub trait ValidateEmail {
     fn validate_email(&self) -> bool {
-        let val = if let Some(v) = self.as_email_string() { v } else { return true; };
+        let val = if let Some(v) = self.as_email_string() {
+            v
+        } else {
+            return true;
+        };
 
         if val.is_empty() || !val.contains('@') {
             return false;
@@ -80,7 +82,9 @@ pub trait ValidateEmail {
 }
 
 impl<T> ValidateEmail for &T
-    where T: ValidateEmail {
+where
+    T: ValidateEmail,
+{
     fn as_email_string(&self) -> Option<Cow<str>> {
         T::as_email_string(self)
     }
@@ -93,8 +97,9 @@ impl ValidateEmail for String {
 }
 
 impl<T> ValidateEmail for Option<T>
-    where
-        T: ValidateEmail, {
+where
+    T: ValidateEmail,
+{
     fn as_email_string(&self) -> Option<Cow<str>> {
         let Some(u) = self else {
             return None;
