@@ -1,4 +1,6 @@
-use validator::{Validate, ValidationError};
+use std::collections::HashMap;
+
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 fn valid_custom_fn(_: &String) -> Result<(), ValidationError> {
     Ok(())
@@ -118,4 +120,41 @@ fn can_nest_custom_validations() {
 
     let t = TestStruct { a: A { val: "invalid value".to_string() } };
     assert!(t.validate().is_err());
+}
+
+#[test]
+fn custom_fn_on_optional_types_work() {
+    fn number_type_custom_fn(val: i16) -> Result<(), ValidationError> {
+        if val == 0 {
+            Ok(())
+        } else {
+            Err(ValidationError::new("custom"))
+        }
+    }
+
+    #[derive(Validate)]
+    struct TestStruct {
+        #[validate(custom(function = number_type_custom_fn))]
+        plain: i16,
+        #[validate(custom(function = number_type_custom_fn))]
+        option: Option<i16>,
+        #[validate(custom(function = number_type_custom_fn))]
+        option_option: Option<Option<i16>>,
+    }
+
+    let t = TestStruct { plain: 0, option: Some(0), option_option: Some(Some(0)) };
+    assert!(t.validate().is_ok());
+
+    let t = TestStruct { plain: 1, option: Some(1), option_option: Some(Some(1)) };
+    let mut error = ValidationError::new("custom");
+    error.add_param("value".into(), &1);
+    let error_kind = ValidationErrorsKind::Field(vec![{ error }]);
+    assert_eq!(
+        t.validate(),
+        Err(ValidationErrors(HashMap::from_iter([
+            ("plain", error_kind.clone()),
+            ("option", error_kind.clone()),
+            ("option_option", error_kind),
+        ])))
+    );
 }
