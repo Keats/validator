@@ -1,3 +1,5 @@
+use once_cell::sync::Lazy;
+
 use darling::util::Override;
 use darling::{FromField, FromMeta};
 
@@ -9,50 +11,32 @@ use syn::{Expr, Field, Ident, Path};
 use crate::utils::get_attr;
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
-pub(crate) static NUMBER_TYPES: [&str; 42] = [
-    "usize",
-    "u8",
-    "u16",
-    "u32",
-    "u64",
-    "u128",
-    "isize",
-    "i8",
-    "i16",
-    "i32",
-    "i64",
-    "i128",
-    "f32",
-    "f64",
-    "Option<usize>",
-    "Option<u8>",
-    "Option<u16>",
-    "Option<u32>",
-    "Option<u64>",
-    "Option<u128>",
-    "Option<isize>",
-    "Option<i8>",
-    "Option<i16>",
-    "Option<i32>",
-    "Option<i64>",
-    "Option<i128>",
-    "Option<f32>",
-    "Option<f64>",
-    "Option<Option<usize>>",
-    "Option<Option<u8>>",
-    "Option<Option<u16>>",
-    "Option<Option<u32>>",
-    "Option<Option<u64>>",
-    "Option<Option<u128>>",
-    "Option<Option<isize>>",
-    "Option<Option<i8>>",
-    "Option<Option<i16>>",
-    "Option<Option<i32>>",
-    "Option<Option<i64>>",
-    "Option<Option<i128>>",
-    "Option<Option<f32>>",
-    "Option<Option<f64>>",
-];
+
+pub(crate) static NUMBER_TYPES: Lazy<Vec<String>> = Lazy::new(|| {
+    let number_types = [
+        quote!(usize),
+        quote!(u8),
+        quote!(u16),
+        quote!(u32),
+        quote!(u64),
+        quote!(u128),
+        quote!(isize),
+        quote!(i8),
+        quote!(i16),
+        quote!(i32),
+        quote!(i64),
+        quote!(i128),
+        quote!(f32),
+        quote!(f64),
+    ];
+    let mut tys = Vec::with_capacity(number_types.len() * 3);
+    for ty in number_types {
+        tys.push(ty.to_string());
+        tys.push(quote!(Option<#ty>).to_string());
+        tys.push(quote!(Option<Option<#ty> >).to_string());
+    }
+    tys
+});
 
 // This struct holds all the validation information on a field
 // The "ident" and "ty" fields are populated by `darling`

@@ -169,7 +169,7 @@ impl ToTokens for ValidateField {
         // We try to be smart when passing arguments
         let type_name = self.ty.to_token_stream().to_string();
         let is_cow = type_name.contains("Cow <");
-        let is_number = NUMBER_TYPES.contains(&type_name.as_str());
+        let is_number = NUMBER_TYPES.contains(&type_name);
         let custom_actual_field = if is_cow {
             quote!(#actual_field.as_ref())
         } else if is_number || type_name.starts_with("&") {
