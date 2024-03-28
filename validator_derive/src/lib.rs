@@ -31,7 +31,11 @@ impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
-        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name);
+
+        let type_name = self.ty.to_token_stream().to_string();
+        let is_number = NUMBER_TYPES.contains(&type_name);
+
+        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name, is_number);
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {
@@ -167,9 +171,7 @@ impl ToTokens for ValidateField {
         // Custom validation
         let mut custom = quote!();
         // We try to be smart when passing arguments
-        let type_name = self.ty.to_token_stream().to_string();
         let is_cow = type_name.contains("Cow <");
-        let is_number = NUMBER_TYPES.contains(&type_name);
         let custom_actual_field = if is_cow {
             quote!(#actual_field.as_ref())
         } else if is_number || type_name.starts_with("&") {

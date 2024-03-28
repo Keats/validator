@@ -178,13 +178,15 @@ impl ValidateField {
     pub fn if_let_option_wrapper(
         &self,
         field_name: &Ident,
+        is_number_type: bool,
     ) -> (proc_macro2::TokenStream, Box<dyn Fn(proc_macro2::TokenStream) -> proc_macro2::TokenStream>)
     {
         let number_options = self.number_options();
         let field_name = field_name.clone();
         let actual_field =
             if number_options > 0 { quote!(#field_name) } else { quote!(self.#field_name) };
-        let option_val = quote!(ref #field_name);
+        let binding_pattern =
+            if is_number_type { quote!(#field_name) } else { quote!(ref #field_name) };
 
         match number_options {
             0 => (actual_field.clone(), Box::new(move |tokens| tokens)),
@@ -192,7 +194,7 @@ impl ValidateField {
                 actual_field.clone(),
                 Box::new(move |tokens| {
                     quote!(
-                        if let Some(#option_val) = self.#field_name {
+                        if let Some(#binding_pattern) = self.#field_name {
                             #tokens
                         }
                     )
@@ -202,7 +204,7 @@ impl ValidateField {
                 actual_field.clone(),
                 Box::new(move |tokens| {
                     quote!(
-                        if let Some(Some(#option_val)) = self.#field_name {
+                        if let Some(Some(#binding_pattern)) = self.#field_name {
                             #tokens
                         }
                     )
