@@ -19,3 +19,4 @@ quote = "1"
 proc-macro2 = "1"
 proc-macro-error = "1"
 darling = { version = "0.20", features = ["suggestions"] }
+once_cell = "1.18.0"
