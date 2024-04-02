@@ -257,7 +257,7 @@ Examples:
 ```rust
 use once_cell::sync::Lazy;
 
-static ref RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
+static RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"[a-z]{2}$").unwrap()
 });
 
