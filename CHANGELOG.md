@@ -1,8 +1,10 @@
 ## Changelog
 
-## 0.17.1 (unreleased)
+## 0.18.0 (2024/04/05)
 
-- Fix regressions from the derive rewrite
+- Fix regressions from the derive rewrite, some things are back to 0.16 (eg custom functions)
+- Remove require_nested, use required and nested validators instead
+- Always require `nested` on the field for nested validation
 
 
 ## 0.17.0 (2024/03/04)
