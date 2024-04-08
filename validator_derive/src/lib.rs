@@ -179,10 +179,13 @@ impl ToTokens for ValidateField {
         } else {
             quote!(&#actual_field)
         };
+
         for c in &self.custom {
             let tokens = custom_tokens(c.clone(), &custom_actual_field, &field_name_str);
             custom = quote!(
-              #tokens
+                #custom
+
+                #tokens
             );
         }
         if !self.custom.is_empty() {
