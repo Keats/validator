@@ -1,5 +1,10 @@
 ## Changelog
 
+## 0.18.1 (unreleased)
+
+- Fix multiple custom validation
+
+
 ## 0.18.0 (2024/04/05)
 
 - Fix regressions from the derive rewrite, some things are back to 0.16 (eg custom functions)
