@@ -72,17 +72,16 @@ impl ValidationErrors {
     ) -> &mut ValidationErrors {
         match child {
             Ok(()) => self,
-            Err(errors) => {
-                for (_, e) in &errors.0 {
-                    if matches!(e, ValidationErrorsKind::Field(..)) {
-                        self.add_nested(
-                            field,
-                            ValidationErrorsKind::Struct(Box::new(errors.clone())),
-                        );
-                    } else {
-                        self.add_nested(field, e.clone());
-                    }
+            Err(mut errors) => {
+                // This is a bit of a hack to be able to support collections which return a
+                // `ValidationErrors` with a made-up `_tmp_validator` entry which we need to strip
+                // off.
+                if let Some(collection) = errors.0.remove("_tmp_validator") {
+                    self.add_nested(field, collection);
+                } else {
+                    self.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
                 }
+
                 self
             }
         }

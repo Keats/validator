@@ -40,6 +40,48 @@ fn is_fine_with_nested_validations() {
 }
 
 #[test]
+fn fails_nested_validation_multiple_members() {
+    #[derive(Validate)]
+    struct Root<'a> {
+        #[validate(length(min = 5, max = 10))]
+        value: String,
+        #[validate(nested)]
+        a: &'a A,
+    }
+
+    #[derive(Validate)]
+    struct A {
+        #[validate(length(min = 5, max = 10))]
+        value1: String,
+        #[validate(length(min = 5, max = 10))]
+        value2: String,
+    }
+
+    let root = Root {
+        value: "valid".to_string(),
+        a: &A { value1: "invalid value".to_string(), value2: "invalid value".to_string() },
+    };
+
+    let error_kind = ValidationErrorsKind::Field(vec![{
+        let mut error = ValidationError::new("length");
+        error.add_param("min".into(), &5);
+        error.add_param("max".into(), &10);
+        error.add_param("value".into(), &"invalid value");
+        error
+    }]);
+    assert_eq!(
+        root.validate(),
+        Err(ValidationErrors(HashMap::from_iter([(
+            "a",
+            ValidationErrorsKind::Struct(Box::new(ValidationErrors(HashMap::from_iter([
+                ("value1", error_kind.clone()),
+                ("value2", error_kind),
+            ]))))
+        )])))
+    );
+}
+
+#[test]
 fn fails_nested_validation() {
     #[derive(Validate)]
     struct Root<'a> {
