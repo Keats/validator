@@ -1,8 +1,9 @@
 ## Changelog
 
-## 0.18.1 (unreleased)
+## 0.18.1 (2024/04/11)
 
 - Fix multiple custom validation
+- Fix nested error handling
 
 
 ## 0.18.0 (2024/04/05)
