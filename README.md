@@ -30,7 +30,7 @@ Installation:
 
 ```toml
 [dependencies]
-validator = { version = "0.16", features = ["derive"] }
+validator = { version = "0.18", features = ["derive"] }
 ```
 
 A short example:
@@ -113,9 +113,9 @@ use validator::Validate;
 
 #[derive(Debug, Validate, Deserialize)]
 struct SignupData {
-    #[validate]
+    #[validate(nested)]
     contact_details: ContactDetails,
-    #[validate]
+    #[validate(nested)]
     preferences: Vec<Preference>,
     #[validate(required)]
     allow_cookies: Option<bool>,
@@ -222,7 +222,6 @@ mentioned is missing or has a different type than the field the attribute is on.
 Examples:
 
 ```rust
-#[validate(must_match = "password2")]
 #[validate(must_match(other = "password2"))]
 ```
 
@@ -285,23 +284,27 @@ Examples:
 #[validate(custom(function = "::utils::validate_something"))]
 ```
 
-You can also parse arguments from the validation function to your custom validation by setting the `arg` parameter. `arg` can only be set to one type but you can set it to a tuple to pass multiple types at once. Defining the `arg` parameter will implement the `ValidateArgs` trait with the corresponding function types like this:
+You can also do your own validation by parsing the arguments from the validation function by setting `context` for struct.　Applying custom validation using the `use_context` argument is accomplished by setting the `use_context` parameter. Defining the `context` parameter will implement the `ValidateArgs` trait with the corresponding function types like this:
 
 ```rust
 use validator::{Validate, ValidateArgs, ValidationError};
 
-fn validate(value: &str, arg: (i64, i64)) -> Result<(), ValidationError> {
+fn validate(value: &str, context: &TestContext) -> Result<(), ValidationError> {
     [...]
 }
 
+struct TestContext(i64, i64);
+
 #[derive(Debug, Validate)]
+#[validate(context = TestContext)]
 struct TestStruct {
-    #[validate(custom(function = "validate", arg = "(i64, i64)"))]
+    #[validate(custom(function = "validate", use_context))]
     value: String,
 }
 
-let test_struct: TestStruct = [...]
-test_struct.validate_args((77, 555)).is_ok();
+let test_struct: TestStruct = [...];
+let test_context: TestContext = [...];
+test_struct.validate_with_args(&test_context).is_ok();
 ```
 
 It is also possible to pass references by using the lifetime `'v_a` note that this lifetime should only be used for the function parameters like this:
@@ -311,16 +314,16 @@ fn validate_value(_: &str, arg: &mut Database) -> Result<(), ValidationError> {
     [...]
 }
 
-#[derive(Debug, Validate)]
+#[derive(Debug, Validate)] //   vvvv This is the lifetime for references
+#[validate(context = "Database<'v_a>", mutable)]
 struct TestStruct {
-    //                                                     vvvv This is the lifetime for references
-    #[validate(custom(function = "validate_value", arg = "&'v_a mut Database"))]
+    #[validate(custom(function = "validate_value", use_context))]
     value: String,
 }
 
-let mut database: Database = [...]
-let test_struct: TestStruct = [...]
-test_struct.validate_args(&mut database).is_ok();
+let mut database: Database = [...];
+let test_struct: TestStruct = [...];
+test_struct.validate_with_args(&mut database).is_ok();
 ```
 
 Custom validation with arguments doesn't work on nested validation. See [`validator_derive_tests/tests/custom.rs`](https://github.com/Keats/validator/blob/master/validator_derive_tests/tests/custom.rs) and [`validator_derive_tests/tests/custom_args.rs`](https://github.com/Keats/validator/blob/master/validator_derive_tests/tests/custom_args.rs) for more examples.
