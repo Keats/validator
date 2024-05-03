@@ -260,8 +260,8 @@ static RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"[a-z]{2}$").unwrap()
 });
 
-#[validate(regex = "RE_TWO_CHARS")]
-#[validate(regex(path = "RE_TWO_CHARS"))]
+#[validate(regex = *RE_TWO_CHARS)]
+#[validate(regex(path = *RE_TWO_CHARS")]
 ```
 
 ### credit\_card
@@ -382,7 +382,7 @@ For example, the following attributes all work:
 #[validate(credit_card(code = "code_str"))]
 #[validate(length(min = 5, max = 10, code = "code_str"))]
 
-#[validate(regex(path = "static_regex", code = "code_str"))]
+#[validate(regex(path = *static_regex, code = "code_str"))]
 #[validate(custom(function = "custom_fn", code = "code_str"))]
 #[validate(contains(pattern = "pattern_str", code = "code_str"))]
 #[validate(does_not_contain(pattern = "pattern_str", code = "code_str"))]
@@ -392,7 +392,7 @@ For example, the following attributes all work:
 #[validate(url(message = "message_str"))]
 #[validate(length(min = 5, max = 10, message = "message_str"))]
 
-#[validate(regex(path = "static_regex", message = "message_str"))]
+#[validate(regex(path = *static_regex, message = "message_str"))]
 #[validate(custom(function = "custom_fn", message = "message_str"))]
 #[validate(contains(pattern = "pattern_str", message = "message_str"))]
 #[validate(does_not_contain(pattern = "pattern_str", message = "message_str"))]
