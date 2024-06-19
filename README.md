@@ -261,7 +261,7 @@ static RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
 });
 
 #[validate(regex = *RE_TWO_CHARS)]
-#[validate(regex(path = *RE_TWO_CHARS")]
+#[validate(regex(path = *RE_TWO_CHARS)]
 ```
 
 ### credit\_card
