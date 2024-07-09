@@ -1,6 +1,7 @@
 use crate::types::{ValidationErrors, ValidationErrorsKind};
 use std::collections::btree_map::BTreeMap;
 use std::collections::HashMap;
+use indexmap::IndexMap;
 
 /// This is the original trait that was implemented by deriving `Validate`. It will still be
 /// implemented for struct validations that don't take custom arguments. The call is being
@@ -31,7 +32,7 @@ macro_rules! impl_validate_list {
                     Ok(())
                 } else {
                     let err_kind = ValidationErrorsKind::List(vec_err);
-                    let errors = ValidationErrors(std::collections::HashMap::from([(
+                    let errors = ValidationErrors(indexmap::IndexMap::from([(
                         "_tmp_validator",
                         err_kind,
                     )]));
@@ -65,7 +66,7 @@ impl<T: Validate, const N: usize> Validate for [T; N] {
         } else {
             let err_kind = ValidationErrorsKind::List(vec_err);
             let errors =
-                ValidationErrors(std::collections::HashMap::from([("_tmp_validator", err_kind)]));
+                ValidationErrors(indexmap::IndexMap::from([("_tmp_validator", err_kind)]));
             Err(errors)
         }
     }
@@ -85,7 +86,7 @@ impl<K, V: Validate, S> Validate for &HashMap<K, V, S> {
             Ok(())
         } else {
             let err_kind = ValidationErrorsKind::List(vec_err);
-            let errors = ValidationErrors(HashMap::from([("_tmp_validator", err_kind)]));
+            let errors = ValidationErrors(IndexMap::from([("_tmp_validator", err_kind)]));
             Err(errors)
         }
     }
@@ -105,7 +106,7 @@ impl<K, V: Validate> Validate for &BTreeMap<K, V> {
             Ok(())
         } else {
             let err_kind = ValidationErrorsKind::List(vec_err);
-            let errors = ValidationErrors(HashMap::from([("_tmp_validator", err_kind)]));
+            let errors = ValidationErrors(IndexMap::from([("_tmp_validator", err_kind)]));
             Err(errors)
         }
     }

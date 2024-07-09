@@ -1,9 +1,10 @@
 use std::borrow::Cow;
-use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
+use indexmap::{IndexMap, map::Entry};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
@@ -47,11 +48,11 @@ pub enum ValidationErrorsKind {
 }
 
 #[derive(Default, Debug, Serialize, Clone, PartialEq)]
-pub struct ValidationErrors(pub HashMap<&'static str, ValidationErrorsKind>);
+pub struct ValidationErrors(pub IndexMap<&'static str, ValidationErrorsKind>);
 
 impl ValidationErrors {
     pub fn new() -> ValidationErrors {
-        ValidationErrors(HashMap::new())
+        ValidationErrors(IndexMap::new())
     }
 
     /// Returns a boolean indicating whether a validation result includes validation errors for a
@@ -76,7 +77,7 @@ impl ValidationErrors {
                 // This is a bit of a hack to be able to support collections which return a
                 // `ValidationErrors` with a made-up `_tmp_validator` entry which we need to strip
                 // off.
-                if let Some(collection) = errors.0.remove("_tmp_validator") {
+                if let Some(collection) = errors.0.shift_remove("_tmp_validator") {
                     self.add_nested(field, collection);
                 } else {
                     self.add_nested(field, ValidationErrorsKind::Struct(Box::new(errors)));
@@ -134,23 +135,23 @@ impl ValidationErrors {
 
     /// Returns a map of field-level validation errors found for the struct that was validated and
     /// any of it's nested structs that are tagged for validation.
-    pub fn errors(&self) -> &HashMap<&'static str, ValidationErrorsKind> {
+    pub fn errors(&self) -> &IndexMap<&'static str, ValidationErrorsKind> {
         &self.0
     }
 
     /// Returns a mutable map of field-level validation errors found for the struct that was validated and
     /// any of it's nested structs that are tagged for validation.
-    pub fn errors_mut(&mut self) -> &mut HashMap<&'static str, ValidationErrorsKind> {
+    pub fn errors_mut(&mut self) -> &mut IndexMap<&'static str, ValidationErrorsKind> {
         &mut self.0
     }
 
     /// Consume the struct, returning the validation errors found
-    pub fn into_errors(self) -> HashMap<&'static str, ValidationErrorsKind> {
+    pub fn into_errors(self) -> IndexMap<&'static str, ValidationErrorsKind> {
         self.0
     }
 
     /// Returns a map of only field-level validation errors found for the struct that was validated.
-    pub fn field_errors(&self) -> HashMap<&'static str, &Vec<ValidationError>> {
+    pub fn field_errors(&self) -> IndexMap<&'static str, &Vec<ValidationError>> {
         self.0
             .iter()
             .filter_map(|(k, v)| {
@@ -160,7 +161,7 @@ impl ValidationErrors {
                     None
                 }
             })
-            .collect::<HashMap<_, _>>()
+            .collect::<IndexMap<_, _>>()
     }
 
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
@@ -179,7 +180,7 @@ impl ValidationErrors {
     }
 
     fn add_nested(&mut self, field: &'static str, errors: ValidationErrorsKind) {
-        if let Vacant(entry) = self.0.entry(field) {
+        if let Entry::Vacant(entry) = self.0.entry(field) {
             entry.insert(errors);
         } else {
             panic!("Attempt to replace non-empty ValidationErrors entry");
@@ -192,7 +193,7 @@ impl ValidationErrors {
     }
 
     fn remove(&mut self, field: &'static str) -> Option<ValidationErrorsKind> {
-        self.0.remove(field)
+        self.0.shift_remove(field)
     }
 }
 
