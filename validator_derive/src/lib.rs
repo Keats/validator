@@ -285,7 +285,7 @@ impl darling::FromMeta for CrateName {
 
 impl Default for CrateName {
     fn default() -> Self {
-        CrateName { inner: syn::parse_str("validator").expect("invalid valid crate name") }
+        CrateName { inner: syn::parse_str("::validator").expect("invalid valid crate name") }
     }
 }
 
@@ -425,9 +425,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     let argless_validation = if validation_data.context.is_none() {
         quote! {
-            impl #imp ::#crate_name::Validate for #ident #ty #whr {
-                fn validate(&self) -> ::std::result::Result<(), ::#crate_name::ValidationErrors> {
-                    use ::#crate_name::ValidateArgs;
+            impl #imp #crate_name::Validate for #ident #ty #whr {
+                fn validate(&self) -> ::std::result::Result<(), #crate_name::ValidationErrors> {
+                    use #crate_name::ValidateArgs;
                     self.validate_with_args(())
                 }
             }
@@ -439,15 +439,15 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     quote!(
         #argless_validation
 
-        impl #imp_args ::#crate_name::ValidateArgs<'v_a> for #ident #ty #whr {
+        impl #imp_args #crate_name::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;
 
             fn validate_with_args(&self, args: Self::Args)
-            -> ::std::result::Result<(), ::#crate_name::ValidationErrors>
+            -> ::std::result::Result<(), #crate_name::ValidationErrors>
              {
                 #use_statements
 
-                let mut errors = ::#crate_name::ValidationErrors::new();
+                let mut errors = #crate_name::ValidationErrors::new();
 
                 #(#validation_fields)*
 

@@ -18,7 +18,7 @@ pub fn must_match_tokens(
     let code = quote_code(crate_name, must_match.code, "must_match");
 
     quote! {
-        if !::#crate_name::validate_must_match(&#field_name, &#other) {
+        if !#crate_name::validate_must_match(&#field_name, &#other) {
             #code
             #message
             #other_err

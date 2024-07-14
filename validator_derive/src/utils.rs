@@ -20,11 +20,11 @@ pub fn quote_code(
 ) -> proc_macro2::TokenStream {
     if let Some(c) = code {
         quote!(
-            let mut err = ::#crate_name::ValidationError::new(#c);
+            let mut err = #crate_name::ValidationError::new(#c);
         )
     } else {
         quote!(
-            let mut err = ::#crate_name::ValidationError::new(#default);
+            let mut err = #crate_name::ValidationError::new(#default);
         )
     }
 }
@@ -48,67 +48,67 @@ pub fn quote_use_stmts(
     for f in fields {
         if f.length.is_some() {
             length = quote!(
-                use ::#crate_name::ValidateLength;
+                use #crate_name::ValidateLength;
             );
         }
 
         if f.email.is_some() {
             email = quote!(
-                use ::#crate_name::ValidateEmail;
+                use #crate_name::ValidateEmail;
             );
         }
 
         if f.credit_card.is_some() {
             card = quote!(
-                use ::#crate_name::ValidateCreditCard;
+                use #crate_name::ValidateCreditCard;
             );
         }
 
         if f.url.is_some() {
             url = quote!(
-                use ::#crate_name::ValidateUrl;
+                use #crate_name::ValidateUrl;
             );
         }
 
         if f.ip.is_some() {
             ip = quote!(
-                use ::#crate_name::ValidateIp;
+                use #crate_name::ValidateIp;
             );
         }
 
         if f.non_control_character.is_some() {
             ncc = quote!(
-                use ::#crate_name::ValidateNonControlCharacter;
+                use #crate_name::ValidateNonControlCharacter;
             );
         }
 
         if f.range.is_some() {
             range = quote!(
-                use ::#crate_name::ValidateRange;
+                use #crate_name::ValidateRange;
             );
         }
 
         if f.required.is_some() {
             required = quote!(
-                use ::#crate_name::ValidateRequired;
+                use #crate_name::ValidateRequired;
             );
         }
 
         if f.contains.is_some() {
             contains = quote!(
-                use ::#crate_name::ValidateContains;
+                use #crate_name::ValidateContains;
             );
         }
 
         if f.does_not_contain.is_some() {
             does_not_contain = quote!(
-                use ::#crate_name::ValidateDoesNotContain;
+                use #crate_name::ValidateDoesNotContain;
             );
         }
 
         if f.regex.is_some() {
             regex = quote!(
-                use ::#crate_name::ValidateRegex;
+                use #crate_name::ValidateRegex;
             );
         }
     }
