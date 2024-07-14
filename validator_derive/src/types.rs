@@ -9,6 +9,7 @@ use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
 
 use crate::utils::get_attr;
+use crate::CrateName;
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
 
@@ -67,6 +68,9 @@ pub struct ValidateField {
     pub custom: Vec<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
+    /// Placeholder for the crate name, filled in by the [`ValidationData`](crate::ValidationData) value.
+    #[darling(skip)]
+    pub crate_name: CrateName,
 }
 
 impl ValidateField {

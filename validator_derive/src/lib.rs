@@ -39,7 +39,7 @@ impl ToTokens for ValidateField {
 
         // Length validation
         let length = if let Some(length) = self.length.clone() {
-            wrapper_closure(length_tokens(length, &actual_field, &field_name_str))
+            wrapper_closure(length_tokens(&self.crate_name, length, &actual_field, &field_name_str))
         } else {
             quote!()
         };
@@ -47,6 +47,7 @@ impl ToTokens for ValidateField {
         // Email validation
         let email = if let Some(email) = self.email.clone() {
             wrapper_closure(email_tokens(
+                &self.crate_name,
                 match email {
                     Override::Inherit => Email::default(),
                     Override::Explicit(e) => e,
@@ -61,6 +62,7 @@ impl ToTokens for ValidateField {
         // Credit card validation
         let card = if let Some(credit_card) = self.credit_card.clone() {
             wrapper_closure(credit_card_tokens(
+                &self.crate_name,
                 match credit_card {
                     Override::Inherit => Card::default(),
                     Override::Explicit(c) => c,
@@ -75,6 +77,7 @@ impl ToTokens for ValidateField {
         // Url validation
         let url = if let Some(url) = self.url.clone() {
             wrapper_closure(url_tokens(
+                &self.crate_name,
                 match url {
                     Override::Inherit => Url::default(),
                     Override::Explicit(u) => u,
@@ -89,6 +92,7 @@ impl ToTokens for ValidateField {
         // Ip address validation
         let ip = if let Some(ip) = self.ip.clone() {
             wrapper_closure(ip_tokens(
+                &self.crate_name,
                 match ip {
                     Override::Inherit => Ip::default(),
                     Override::Explicit(i) => i,
@@ -103,6 +107,7 @@ impl ToTokens for ValidateField {
         // Non control character validation
         let ncc = if let Some(ncc) = self.non_control_character.clone() {
             wrapper_closure(non_control_char_tokens(
+                &self.crate_name,
                 match ncc {
                     Override::Inherit => NonControlCharacter::default(),
                     Override::Explicit(n) => n,
@@ -116,7 +121,7 @@ impl ToTokens for ValidateField {
 
         // Range validation
         let range = if let Some(range) = self.range.clone() {
-            wrapper_closure(range_tokens(range, &actual_field, &field_name_str))
+            wrapper_closure(range_tokens(&self.crate_name, range, &actual_field, &field_name_str))
         } else {
             quote!()
         };
@@ -124,6 +129,7 @@ impl ToTokens for ValidateField {
         // Required validation
         let required = if let Some(required) = self.required.clone() {
             required_tokens(
+                &self.crate_name,
                 match required {
                     Override::Inherit => Required::default(),
                     Override::Explicit(r) => r,
@@ -137,7 +143,12 @@ impl ToTokens for ValidateField {
 
         // Contains validation
         let contains = if let Some(contains) = self.contains.clone() {
-            wrapper_closure(contains_tokens(contains, &actual_field, &field_name_str))
+            wrapper_closure(contains_tokens(
+                &self.crate_name,
+                contains,
+                &actual_field,
+                &field_name_str,
+            ))
         } else {
             quote!()
         };
@@ -145,6 +156,7 @@ impl ToTokens for ValidateField {
         // Does not contain validation
         let does_not_contain = if let Some(does_not_contain) = self.does_not_contain.clone() {
             wrapper_closure(does_not_contain_tokens(
+                &self.crate_name,
                 does_not_contain,
                 &actual_field,
                 &field_name_str,
@@ -156,14 +168,19 @@ impl ToTokens for ValidateField {
         // Must match validation
         let must_match = if let Some(must_match) = self.must_match.clone() {
             // TODO: handle option for other
-            wrapper_closure(must_match_tokens(must_match, &actual_field, &field_name_str))
+            wrapper_closure(must_match_tokens(
+                &self.crate_name,
+                must_match,
+                &actual_field,
+                &field_name_str,
+            ))
         } else {
             quote!()
         };
 
         // Regex validation
         let regex = if let Some(regex) = self.regex.clone() {
-            wrapper_closure(regex_tokens(regex, &actual_field, &field_name_str))
+            wrapper_closure(regex_tokens(&self.crate_name, regex, &actual_field, &field_name_str))
         } else {
             quote!()
         };
@@ -235,6 +252,41 @@ struct ValidationData {
     context: Option<Path>,
     mutable: Option<bool>,
     nest_all_fields: Option<bool>,
+    /// The name of the crate to use for the generated code,
+    /// defaults to `validator`.
+    #[darling(rename = "crate", default)]
+    crate_name: CrateName,
+}
+
+#[derive(Debug, Clone)]
+struct CrateName {
+    inner: Path,
+}
+
+impl ToTokens for CrateName {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        self.inner.to_tokens(tokens);
+    }
+}
+
+impl darling::FromMeta for CrateName {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        Path::from_string(value).map(|inner| CrateName { inner })
+    }
+
+    fn from_value(value: &syn::Lit) -> darling::Result<Self> {
+        Path::from_value(value).map(|inner| CrateName { inner })
+    }
+
+    fn from_expr(value: &syn::Expr) -> darling::Result<Self> {
+        Path::from_expr(value).map(|inner| CrateName { inner })
+    }
+}
+
+impl Default for CrateName {
+    fn default() -> Self {
+        CrateName { inner: syn::parse_str("validator").expect("invalid valid crate name") }
+    }
 }
 
 impl ValidationData {
@@ -290,6 +342,8 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         Err(e) => return e.write_errors().into(),
     };
 
+    let crate_name = validation_data.crate_name;
+
     let custom_context = if let Some(context) = &validation_data.context {
         if let Some(mutable) = validation_data.mutable {
             if mutable {
@@ -314,6 +368,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .map(|f| f.parsed)
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
+        .map(|f| ValidateField { crate_name: crate_name.clone(), ..f })
         .collect();
 
     if let Some(nest_all_fields) = validation_data.nest_all_fields {
@@ -329,7 +384,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     }
 
     // generate `use` statements for all used validator traits
-    let use_statements = quote_use_stmts(&validation_fields);
+    let use_statements = quote_use_stmts(&crate_name, &validation_fields);
 
     // Schema validation
     let schema = validation_data.schema.iter().fold(quote!(), |acc, s| {
@@ -370,9 +425,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     let argless_validation = if validation_data.context.is_none() {
         quote! {
-            impl #imp ::validator::Validate for #ident #ty #whr {
-                fn validate(&self) -> ::std::result::Result<(), ::validator::ValidationErrors> {
-                    use validator::ValidateArgs;
+            impl #imp ::#crate_name::Validate for #ident #ty #whr {
+                fn validate(&self) -> ::std::result::Result<(), ::#crate_name::ValidationErrors> {
+                    use ::#crate_name::ValidateArgs;
                     self.validate_with_args(())
                 }
             }
@@ -384,15 +439,15 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     quote!(
         #argless_validation
 
-        impl #imp_args ::validator::ValidateArgs<'v_a> for #ident #ty #whr {
+        impl #imp_args ::#crate_name::ValidateArgs<'v_a> for #ident #ty #whr {
             type Args = #custom_context;
 
             fn validate_with_args(&self, args: Self::Args)
-            -> ::std::result::Result<(), ::validator::ValidationErrors>
+            -> ::std::result::Result<(), ::#crate_name::ValidationErrors>
              {
                 #use_statements
 
-                let mut errors = ::validator::ValidationErrors::new();
+                let mut errors = ::#crate_name::ValidationErrors::new();
 
                 #(#validation_fields)*
 

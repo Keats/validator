@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::Attribute;
 
-use crate::ValidateField;
+use crate::{CrateName, ValidateField};
 
 pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     if let Some(m) = message {
@@ -13,19 +13,26 @@ pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     }
 }
 
-pub fn quote_code(code: Option<String>, default: &str) -> proc_macro2::TokenStream {
+pub fn quote_code(
+    crate_name: &CrateName,
+    code: Option<String>,
+    default: &str,
+) -> proc_macro2::TokenStream {
     if let Some(c) = code {
         quote!(
-            let mut err = ::validator::ValidationError::new(#c);
+            let mut err = ::#crate_name::ValidationError::new(#c);
         )
     } else {
         quote!(
-            let mut err = ::validator::ValidationError::new(#default);
+            let mut err = ::#crate_name::ValidationError::new(#default);
         )
     }
 }
 
-pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream {
+pub fn quote_use_stmts(
+    crate_name: &CrateName,
+    fields: &Vec<ValidateField>,
+) -> proc_macro2::TokenStream {
     let mut length = quote!();
     let mut email = quote!();
     let mut card = quote!();
@@ -41,67 +48,67 @@ pub fn quote_use_stmts(fields: &Vec<ValidateField>) -> proc_macro2::TokenStream 
     for f in fields {
         if f.length.is_some() {
             length = quote!(
-                use validator::ValidateLength;
+                use ::#crate_name::ValidateLength;
             );
         }
 
         if f.email.is_some() {
             email = quote!(
-                use validator::ValidateEmail;
+                use ::#crate_name::ValidateEmail;
             );
         }
 
         if f.credit_card.is_some() {
             card = quote!(
-                use validator::ValidateCreditCard;
+                use ::#crate_name::ValidateCreditCard;
             );
         }
 
         if f.url.is_some() {
             url = quote!(
-                use validator::ValidateUrl;
+                use ::#crate_name::ValidateUrl;
             );
         }
 
         if f.ip.is_some() {
             ip = quote!(
-                use validator::ValidateIp;
+                use ::#crate_name::ValidateIp;
             );
         }
 
         if f.non_control_character.is_some() {
             ncc = quote!(
-                use validator::ValidateNonControlCharacter;
+                use ::#crate_name::ValidateNonControlCharacter;
             );
         }
 
         if f.range.is_some() {
             range = quote!(
-                use validator::ValidateRange;
+                use ::#crate_name::ValidateRange;
             );
         }
 
         if f.required.is_some() {
             required = quote!(
-                use validator::ValidateRequired;
+                use ::#crate_name::ValidateRequired;
             );
         }
 
         if f.contains.is_some() {
             contains = quote!(
-                use validator::ValidateContains;
+                use ::#crate_name::ValidateContains;
             );
         }
 
         if f.does_not_contain.is_some() {
             does_not_contain = quote!(
-                use validator::ValidateDoesNotContain;
+                use ::#crate_name::ValidateDoesNotContain;
             );
         }
 
         if f.regex.is_some() {
             regex = quote!(
-                use validator::ValidateRegex;
+                use ::#crate_name::ValidateRegex;
             );
         }
     }

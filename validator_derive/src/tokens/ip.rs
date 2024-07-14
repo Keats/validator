@@ -2,14 +2,16 @@ use quote::quote;
 
 use crate::types::Ip;
 use crate::utils::{quote_code, quote_message};
+use crate::CrateName;
 
 pub fn ip_tokens(
+    crate_name: &CrateName,
     ip: Ip,
     field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let message = quote_message(ip.message);
-    let code = quote_code(ip.code, "ip");
+    let code = quote_code(crate_name, ip.code, "ip");
 
     let version = match (ip.v4, ip.v6) {
         (Some(v4), Some(v6)) => match (v4, v6) {
