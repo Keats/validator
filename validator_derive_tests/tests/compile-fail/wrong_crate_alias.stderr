@@ -1,0 +1,37 @@
+error[E0432]: unresolved import `validator_other`
+ --> tests/compile-fail/wrong_crate_alias.rs:9:24
+  |
+9 |     #[validate(crate = "validator_other")]
+  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+
+error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+ --> tests/compile-fail/wrong_crate_alias.rs:9:24
+  |
+9 |     #[validate(crate = "validator_other")]
+  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |
+help: consider importing one of these items
+  |
+4 +     use crate::validator_renamed::ValidationErrors;
+  |
+4 +     use validator::ValidationErrors;
+  |
+
+error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+ --> tests/compile-fail/wrong_crate_alias.rs:9:24
+  |
+9 |     #[validate(crate = "validator_other")]
+  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |
+help: consider importing one of these items
+  |
+4 +     use crate::validator_renamed::ValidationError;
+  |
+4 +     use validator::ValidationError;
+  |
+
+error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+ --> tests/compile-fail/wrong_crate_alias.rs:9:24
+  |
+9 |     #[validate(crate = "validator_other")]
+  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`

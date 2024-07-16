@@ -259,7 +259,7 @@ struct ValidationData {
 }
 
 #[derive(Debug, Clone)]
-struct CrateName {
+pub(crate) struct CrateName {
     inner: Path,
 }
 
