@@ -334,7 +334,7 @@ Performs validation on a field with a type that also implements the Validate tra
 Examples:
 
 ```rust
-#[validate]
+#[validate(nested)]
 ```
 
 ### non_control_character
