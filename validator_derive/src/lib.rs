@@ -21,7 +21,7 @@ use tokens::required::required_tokens;
 use tokens::schema::schema_tokens;
 use tokens::url::url_tokens;
 use types::*;
-use utils::quote_use_stmts;
+use utils::{quote_use_stmts, CrateName};
 
 mod tokens;
 mod types;
@@ -256,37 +256,6 @@ struct ValidationData {
     /// defaults to `validator`.
     #[darling(rename = "crate", default)]
     crate_name: CrateName,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct CrateName {
-    inner: Path,
-}
-
-impl ToTokens for CrateName {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        self.inner.to_tokens(tokens);
-    }
-}
-
-impl darling::FromMeta for CrateName {
-    fn from_string(value: &str) -> darling::Result<Self> {
-        Path::from_string(value).map(|inner| CrateName { inner })
-    }
-
-    fn from_value(value: &syn::Lit) -> darling::Result<Self> {
-        Path::from_value(value).map(|inner| CrateName { inner })
-    }
-
-    fn from_expr(value: &syn::Expr) -> darling::Result<Self> {
-        Path::from_expr(value).map(|inner| CrateName { inner })
-    }
-}
-
-impl Default for CrateName {
-    fn default() -> Self {
-        CrateName { inner: syn::parse_str("::validator").expect("invalid valid crate name") }
-    }
 }
 
 impl ValidationData {

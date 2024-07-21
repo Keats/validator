@@ -8,8 +8,7 @@ use quote::quote;
 use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
 
-use crate::utils::get_attr;
-use crate::CrateName;
+use crate::utils::{get_attr, CrateName};
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
 

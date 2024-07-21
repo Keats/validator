@@ -1,7 +1,38 @@
-use quote::quote;
-use syn::Attribute;
+use quote::{quote, ToTokens};
+use syn::{Attribute, Path};
 
-use crate::{CrateName, ValidateField};
+use crate::ValidateField;
+
+#[derive(Debug, Clone)]
+pub struct CrateName {
+    inner: Path,
+}
+
+impl ToTokens for CrateName {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        self.inner.to_tokens(tokens);
+    }
+}
+
+impl darling::FromMeta for CrateName {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        Path::from_string(value).map(|inner| CrateName { inner })
+    }
+
+    fn from_value(value: &syn::Lit) -> darling::Result<Self> {
+        Path::from_value(value).map(|inner| CrateName { inner })
+    }
+
+    fn from_expr(value: &syn::Expr) -> darling::Result<Self> {
+        Path::from_expr(value).map(|inner| CrateName { inner })
+    }
+}
+
+impl Default for CrateName {
+    fn default() -> Self {
+        CrateName { inner: syn::parse_str("::validator").expect("invalid valid crate name") }
+    }
+}
 
 pub fn quote_message(message: Option<String>) -> proc_macro2::TokenStream {
     if let Some(m) = message {

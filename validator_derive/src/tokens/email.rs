@@ -1,8 +1,7 @@
 use quote::quote;
 
 use crate::types::Email;
-use crate::utils::{quote_code, quote_message};
-use crate::CrateName;
+use crate::utils::{quote_code, quote_message, CrateName};
 
 pub fn email_tokens(
     crate_name: &CrateName,
