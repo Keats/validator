@@ -4,10 +4,24 @@ use darling::util::Override;
 use darling::{FromField, FromMeta};
 
 use proc_macro_error::abort;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
 
+use crate::tokens::cards::credit_card_tokens;
+use crate::tokens::contains::contains_tokens;
+use crate::tokens::custom::custom_tokens;
+use crate::tokens::does_not_contain::does_not_contain_tokens;
+use crate::tokens::email::email_tokens;
+use crate::tokens::ip::ip_tokens;
+use crate::tokens::length::length_tokens;
+use crate::tokens::must_match::must_match_tokens;
+use crate::tokens::nested::nested_tokens;
+use crate::tokens::non_control_character::non_control_char_tokens;
+use crate::tokens::range::range_tokens;
+use crate::tokens::regex::regex_tokens;
+use crate::tokens::required::required_tokens;
+use crate::tokens::url::url_tokens;
 use crate::utils::get_attr;
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
@@ -215,6 +229,155 @@ impl ValidateField {
                 "Validation on values nested in more than 2 Option are not supported"
             ),
         }
+    }
+
+    pub(crate) fn into_tokens(self) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+        let field_name = self.ident.clone().unwrap();
+        let field_name_str = self.ident.clone().unwrap().to_string();
+
+        let type_name = self.ty.to_token_stream().to_string();
+        let is_number = NUMBER_TYPES.contains(&type_name);
+
+        let (actual_field, wrapper_closure) = self.if_let_option_wrapper(&field_name, is_number);
+
+        let mut validations = Vec::new();
+        let mut constraints = Vec::new();
+
+        macro_rules! constraint {
+            ($field:expr, $fn:expr) => {
+                if let Some(value) = $field {
+                    let (validation, constraint) = $fn(value);
+                    validations.push(wrapper_closure(validation));
+                    constraints.push(constraint);
+                }
+            };
+        }
+
+        // Length validation
+        constraint!(self.length, |length| length_tokens(length, &actual_field, &field_name_str));
+
+        // Email validation
+        constraint!(self.email, |email| email_tokens(
+            match email {
+                Override::Inherit => Email::default(),
+                Override::Explicit(e) => e,
+            },
+            &actual_field,
+            &field_name_str,
+        ));
+
+        // Credit card validation
+        constraint!(self.credit_card, |credit_card| credit_card_tokens(
+            match credit_card {
+                Override::Inherit => Card::default(),
+                Override::Explicit(c) => c,
+            },
+            &actual_field,
+            &field_name_str,
+        ));
+
+        // Url validation
+        constraint!(self.url, |url| url_tokens(
+            match url {
+                Override::Inherit => Url::default(),
+                Override::Explicit(u) => u,
+            },
+            &actual_field,
+            &field_name_str,
+        ));
+
+        // Ip address validation
+        constraint!(self.ip, |ip| ip_tokens(
+            match ip {
+                Override::Inherit => Ip::default(),
+                Override::Explicit(i) => i,
+            },
+            &actual_field,
+            &field_name_str,
+        ));
+
+        // Non control character validation
+        constraint!(self.non_control_character, |ncc| non_control_char_tokens(
+            match ncc {
+                Override::Inherit => NonControlCharacter::default(),
+                Override::Explicit(n) => n,
+            },
+            &actual_field,
+            &field_name_str,
+        ));
+
+        // Range validation
+        constraint!(self.range, |range| range_tokens(range, &actual_field, &field_name_str));
+
+        // Required validation
+        if let Some(required) = self.required {
+            let (validation, constraint) = required_tokens(
+                match required {
+                    Override::Inherit => Required::default(),
+                    Override::Explicit(r) => r,
+                },
+                &field_name,
+                &field_name_str,
+            );
+            validations.push(validation);
+            constraints.push(constraint);
+        }
+
+        // Contains validation
+        constraint!(self.contains, |contains| contains_tokens(
+            contains,
+            &actual_field,
+            &field_name_str
+        ));
+
+        // Does not contain validation
+        constraint!(self.does_not_contain, |does_not_contain| does_not_contain_tokens(
+            does_not_contain,
+            &actual_field,
+            &field_name_str
+        ));
+
+        // Must match validation
+        // TODO: handle option for other
+        constraint!(self.must_match, |must_match| must_match_tokens(
+            must_match,
+            &actual_field,
+            &field_name_str
+        ));
+
+        // Regex validation
+        constraint!(self.regex, |regex| regex_tokens(regex, &actual_field, &field_name_str));
+
+        // Custom validation
+        // We try to be smart when passing arguments
+        let is_cow = type_name.contains("Cow <");
+        let custom_actual_field = if is_cow {
+            quote!(#actual_field.as_ref())
+        } else if is_number || type_name.starts_with("&") {
+            quote!(#actual_field)
+        } else {
+            quote!(&#actual_field)
+        };
+        for c in self.custom {
+            let (validation, constraint) = custom_tokens(c, &custom_actual_field, &field_name_str);
+            validations.push(wrapper_closure(validation));
+            constraints.push(constraint);
+        }
+
+        if let Some(true) = self.nested {
+            let (validation, constraint) = nested_tokens(&actual_field, &field_name_str, &self.ty);
+            validations.push(wrapper_closure(validation));
+            constraints.push(constraint);
+        }
+
+        (
+            quote! {
+                #(#validations)*
+            },
+            quote! {
+                #(#constraints)*
+            },
+        )
     }
 }
 

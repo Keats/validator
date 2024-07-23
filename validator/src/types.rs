@@ -204,3 +204,137 @@ impl std::error::Error for ValidationErrors {
         None
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum LengthConstraint {
+    Range { min: Option<u64>, max: Option<u64> },
+    Equal(u64),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[non_exhaustive]
+pub enum ValidationConstraint {
+    CreditCard {
+        code: Cow<'static, str>,
+    },
+    Contains {
+        code: Cow<'static, str>,
+        pattern: Cow<'static, str>,
+    },
+    DoesNotContain {
+        code: Cow<'static, str>,
+        pattern: Cow<'static, str>,
+    },
+    Email {
+        code: Cow<'static, str>,
+    },
+    Ip {
+        code: Cow<'static, str>,
+        v4: bool,
+        v6: bool,
+    },
+    Length {
+        code: Cow<'static, str>,
+        length: LengthConstraint,
+    },
+    MustMatch {
+        code: Cow<'static, str>,
+        other: Cow<'static, str>,
+    },
+    Nested,
+    NonControlCharacter {
+        code: Cow<'static, str>,
+    },
+    Range {
+        code: Cow<'static, str>,
+        min: Option<Cow<'static, str>>,
+        max: Option<Cow<'static, str>>,
+        exclusive_min: Option<Cow<'static, str>>,
+        exclusive_max: Option<Cow<'static, str>>,
+    },
+    Regex {
+        code: Cow<'static, str>,
+        path: Cow<'static, str>,
+    },
+    Required {
+        code: Cow<'static, str>,
+    },
+    RequiredNested {
+        code: Cow<'static, str>,
+    },
+    Url {
+        code: Cow<'static, str>,
+    },
+    Custom {
+        code: Option<Cow<'static, str>>,
+        function: Cow<'static, str>,
+    },
+}
+
+impl ValidationConstraint {
+    pub fn code(&self) -> &str {
+        match self {
+            Self::CreditCard { code, .. } => &code,
+            Self::Contains { code, .. } => &code,
+            Self::Custom { code, .. } => code.as_deref().unwrap_or("custom"),
+            Self::DoesNotContain { code, .. } => &code,
+            Self::Email { code, .. } => &code,
+            Self::Ip { code, .. } => &code,
+            Self::Length { code, .. } => &code,
+            Self::MustMatch { code, .. } => &code,
+            Self::Nested => "nested",
+            Self::NonControlCharacter { code, .. } => &code,
+            Self::Range { code, .. } => &code,
+            Self::Regex { code, .. } => &code,
+            Self::Required { code, .. } => &code,
+            Self::RequiredNested { code, .. } => &code,
+            Self::Url { code, .. } => &code,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum ValidationConstraintsKind {
+    Struct(Box<ValidationConstraints>),
+    Collection(Box<ValidationConstraints>),
+    Field(Vec<ValidationConstraint>),
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize)]
+pub struct ValidationConstraints(pub HashMap<Cow<'static, str>, Vec<ValidationConstraintsKind>>);
+
+impl ValidationConstraints {
+    pub fn add(&mut self, field: impl Into<Cow<'static, str>>, constraint: ValidationConstraint) {
+        let entry = self.0.entry(field.into()).or_default();
+
+        match entry.iter_mut().find_map(|kind| match kind {
+            ValidationConstraintsKind::Field(field) => Some(field),
+            _ => None,
+        }) {
+            Some(field) => field.push(constraint),
+            None => entry.push(ValidationConstraintsKind::Field(vec![constraint])),
+        }
+    }
+
+    pub fn merge(
+        &mut self,
+        field: impl Into<Cow<'static, str>>,
+        child: ValidationConstraints,
+        is_collection: bool,
+    ) {
+        if is_collection {
+            self.add_nested(field.into(), ValidationConstraintsKind::Collection(Box::new(child)));
+        } else {
+            self.add_nested(field.into(), ValidationConstraintsKind::Struct(Box::new(child)));
+        }
+    }
+
+    fn add_nested(
+        &mut self,
+        field: impl Into<Cow<'static, str>>,
+        constraints: ValidationConstraintsKind,
+    ) {
+        self.0.entry(field.into()).or_default().push(constraints);
+    }
+}
