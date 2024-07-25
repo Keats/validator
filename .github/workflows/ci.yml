@@ -10,7 +10,6 @@ jobs:
         include:
           - rust: 1.70.0 # MSRV
           - rust: stable
-          - rust: beta
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
