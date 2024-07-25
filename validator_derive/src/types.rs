@@ -50,7 +50,7 @@ pub(crate) static NUMBER_TYPES: Lazy<Vec<String>> = Lazy::new(|| {
 pub struct ValidateField {
     pub ident: Option<syn::Ident>,
     pub ty: syn::Type,
-    pub attrs: Vec<syn::Attribute>,
+    // pub attrs: Vec<syn::Attribute>,
     pub credit_card: Option<Override<Card>>,
     pub contains: Option<Contains>,
     pub does_not_contain: Option<DoesNotContain>,

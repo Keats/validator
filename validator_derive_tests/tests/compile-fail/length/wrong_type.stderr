@@ -2,6 +2,17 @@ error[E0599]: no method named `validate_length` found for type `usize` in the cu
  --> tests/compile-fail/length/wrong_type.rs:3:10
   |
 3 | #[derive(Validate)]
-  |          ^^^^^^^^ method not found in `usize`
+  |          ^^^^^^^^
   |
+help: there is a method `validate_range` with a similar name, but with different arguments
+ --> $WORKSPACE/validator/src/validation/range.rs
+  |
+  | /     fn validate_range(
+  | |         &self,
+  | |         min: Option<T>,
+  | |         max: Option<T>,
+  | |         exclusive_min: Option<T>,
+  | |         exclusive_max: Option<T>,
+  | |     ) -> bool {
+  | |_____________^
   = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

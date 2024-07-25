@@ -99,10 +99,6 @@ pub struct ValidationError {
 ```
 The value of the field will automatically be added to the params with a key of `value`.
 
-Note that `validator` works in conjunction with serde: in the example we can see that the `first_name`
-field is renamed from/to `firstName`. Any error on that field will be in the `firstName` key of the hashmap,
-not `first_name`.
-
 The other two `ValidationErrorsKind` types represent errors discovered in nested (vectors of) structs, as described in
 this example:
 
