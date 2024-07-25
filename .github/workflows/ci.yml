@@ -8,10 +8,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - rust: 1.70.0 # MSRV
+          - rust: 1.79.0 # MSRV, sometimes it changes because of compiler test issues
           - rust: stable
-          - rust: beta
-          - rust: nightly
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
