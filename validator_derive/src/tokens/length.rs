@@ -1,9 +1,10 @@
 use quote::quote;
 
 use crate::types::Length;
-use crate::utils::{quote_code, quote_message};
+use crate::utils::{quote_code, quote_message, CrateName};
 
 pub fn length_tokens(
+    crate_name: &CrateName,
     length: Length,
     field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
@@ -25,7 +26,7 @@ pub fn length_tokens(
     };
 
     let message = quote_message(length.message);
-    let code = quote_code(length.code, "length");
+    let code = quote_code(crate_name, length.code, "length");
 
     quote! {
         if !#field_name.validate_length(#min, #max, #equal) {

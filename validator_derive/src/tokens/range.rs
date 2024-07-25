@@ -1,9 +1,10 @@
 use quote::quote;
 
 use crate::types::Range;
-use crate::utils::{quote_code, quote_message};
+use crate::utils::{quote_code, quote_message, CrateName};
 
 pub fn range_tokens(
+    crate_name: &CrateName,
     range: Range,
     field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
@@ -33,7 +34,7 @@ pub fn range_tokens(
     };
 
     let message = quote_message(range.message);
-    let code = quote_code(range.code, "range");
+    let code = quote_code(crate_name, range.code, "range");
 
     quote! {
         if !#field_name.validate_range(#min, #max, #ex_min, #ex_max) {

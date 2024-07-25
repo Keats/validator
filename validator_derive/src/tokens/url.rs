@@ -1,15 +1,16 @@
 use quote::quote;
 
 use crate::types::Url;
-use crate::utils::{quote_code, quote_message};
+use crate::utils::{quote_code, quote_message, CrateName};
 
 pub fn url_tokens(
+    crate_name: &CrateName,
     url: Url,
     field_name: &proc_macro2::TokenStream,
     field_name_str: &str,
 ) -> proc_macro2::TokenStream {
     let message = quote_message(url.message);
-    let code = quote_code(url.code, "url");
+    let code = quote_code(crate_name, url.code, "url");
 
     quote! {
         if !#field_name.validate_url() {
