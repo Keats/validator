@@ -242,7 +242,7 @@ impl ToTokens for ValidateField {
 // The "supports(struct_named)" attribute guarantees only named structs to work with this macro
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(validate), supports(struct_named))]
-#[darling(and_then = ValidationData::validate)]
+#[darling(and_then = "ValidationData::validate")]
 struct ValidationData {
     ident: syn::Ident,
     generics: syn::Generics,
