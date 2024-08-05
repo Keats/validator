@@ -77,7 +77,7 @@ impl ValidateField {
         let field_name = self.ident.clone().expect("Field is not a named field").to_string();
         let field_attrs = &current_field.attrs;
         for attr in field_attrs {
-            if matches!(attr.meta, syn::Meta::Path(_)) {
+            if attr.path().is_ident("validate") && matches!(attr.meta, syn::Meta::Path(_)) {
                 abort!(
                     current_field.span(), "You need to set at least one validator on field `{}`", field_name;
                     note = "If you want nested validation, use `#[validate(nested)]`"
