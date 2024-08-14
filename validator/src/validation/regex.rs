@@ -5,7 +5,6 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use regex::Regex;
 
-use crate::Validate;
 
 pub trait AsRegex {
     fn as_regex(&self) -> Cow<Regex>;
