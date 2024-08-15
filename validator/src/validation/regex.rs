@@ -102,6 +102,12 @@ impl ValidateRegex for &str {
     }
 }
 
+impl ValidateRegex for str {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
+    }
+}
+
 impl<T:ValidateRegex> ValidateRegex for Box<T> {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         self.as_ref().validate_regex(regex)
