@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::cell::OnceCell;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use regex::Regex;
@@ -98,5 +99,29 @@ impl ValidateRegex for String {
 impl ValidateRegex for &str {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         regex.as_regex().is_match(self)
+    }
+}
+
+impl ValidateRegex for str {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        regex.as_regex().is_match(self)
+    }
+}
+
+impl<T:ValidateRegex> ValidateRegex for Box<T> {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        self.as_ref().validate_regex(regex)
+    }
+}
+
+impl<T:ValidateRegex> ValidateRegex for Rc<T> {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        self.as_ref().validate_regex(regex)
+    }
+}
+
+impl<T:ValidateRegex> ValidateRegex for Arc<T> {
+    fn validate_regex(&self, regex: impl AsRegex) -> bool {
+        self.as_ref().validate_regex(regex)
     }
 }
