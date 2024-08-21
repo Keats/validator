@@ -1,5 +1,10 @@
 ## Changelog
 
+## 0.18.2 (unreleased)
+
+- Add more ValidateRegex impl
+
+
 ## 0.18.1 (2024/04/11)
 
 - Fix multiple custom validation
