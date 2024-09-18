@@ -76,7 +76,7 @@ pub use validation::must_match::validate_must_match;
 #[cfg(feature = "unic")]
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
-pub use validation::regex::{ValidateRegex, AsRegex};
+pub use validation::regex::{AsRegex, ValidateRegex};
 pub use validation::required::ValidateRequired;
 pub use validation::urls::ValidateUrl;
 

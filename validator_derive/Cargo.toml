@@ -22,4 +22,4 @@ darling = { version = "0.20", features = ["suggestions"] }
 once_cell = "1.18.0"
 
 [features]
-nightly = ["proc-macro-error2/nightly"]
+nightly_features = ["proc-macro-error2/nightly"]
