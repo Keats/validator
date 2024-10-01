@@ -1,5 +1,9 @@
 ## Changelog
 
+## 0.19 (unreleased)
+
+- Swap to using proc-macro-error-2 instead of proc-macro-error for Syn
+
 ## 0.18.2 (unreleased)
 
 - Add more ValidateRegex impl
