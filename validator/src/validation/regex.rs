@@ -108,19 +108,19 @@ impl ValidateRegex for str {
     }
 }
 
-impl<T:ValidateRegex> ValidateRegex for Box<T> {
+impl<T: ValidateRegex> ValidateRegex for Box<T> {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         self.as_ref().validate_regex(regex)
     }
 }
 
-impl<T:ValidateRegex> ValidateRegex for Rc<T> {
+impl<T: ValidateRegex> ValidateRegex for Rc<T> {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         self.as_ref().validate_regex(regex)
     }
 }
 
-impl<T:ValidateRegex> ValidateRegex for Arc<T> {
+impl<T: ValidateRegex> ValidateRegex for Arc<T> {
     fn validate_regex(&self, regex: impl AsRegex) -> bool {
         self.as_ref().validate_regex(regex)
     }

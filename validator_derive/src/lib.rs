@@ -1,7 +1,7 @@
 use darling::ast::Data;
 use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
-use proc_macro_error::{abort, proc_macro_error};
+use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
 

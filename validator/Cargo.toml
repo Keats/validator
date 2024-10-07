@@ -27,3 +27,4 @@ indexmap = { version = "2.0.0", features = ["serde"], optional = true }
 card = ["card-validate"]
 unic = ["unic-ucd-common"]
 derive = ["validator_derive"]
+derive_nightly_features = ["derive","validator_derive/nightly_features"]
