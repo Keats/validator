@@ -3,6 +3,7 @@
 ## 0.19 (unreleased)
 
 - Swap to using proc-macro-error-2 instead of proc-macro-error for Syn
+- Bumped MSRV to 1.81 because of error naming changes.
 
 ## 0.18.2 (unreleased)
 

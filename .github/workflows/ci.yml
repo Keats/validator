@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - rust: 1.79.0 # MSRV, sometimes it changes because of compiler test issues
+          - rust: 1.81.0 # MSRV, sometimes it changes because of compiler test issues
           - rust: stable
     steps:
       - uses: actions/checkout@v3
