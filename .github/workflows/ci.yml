@@ -24,5 +24,5 @@ jobs:
         run: |
           cargo build --no-default-features
           cargo test --no-default-features
-          cargo build --all-features
-          cargo test --all-features
+          cargo build --features unic --features derive --features card
+          cargo test  --features unic --features derive --features card
