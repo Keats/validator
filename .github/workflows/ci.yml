@@ -44,7 +44,7 @@ jobs:
       - name: Build System Info
         run: rustc --version
       - name: Tests
-        run:
+        run: |
           cargo build --no-default-features
           cargo test --no-default-features
           cargo build --all-features
