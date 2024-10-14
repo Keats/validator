@@ -47,5 +47,5 @@ jobs:
         run:
           cargo build --no-default-features
           cargo test --no-default-features
-          cargo build --features all
-          cargo test  --features all
+          cargo build --all-features
+          cargo test  --all-features
