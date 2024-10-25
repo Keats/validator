@@ -399,3 +399,7 @@ For example, the following attributes all work:
 #[validate(custom(function = "custom_fn", code = "code_str", message = "message_str"))]
 
 ```
+
+## Features
+`derive` - This allows for the use of the derive macro.
+`derive_nightly_features` - This imports both derive as well as proc-macro-error2 nightly features. This allows proc-macro-error2 to emit extra nightly warnings.
