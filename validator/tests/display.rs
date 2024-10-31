@@ -1,4 +1,4 @@
-#[cfg(derive)]
+#[cfg(feature = "derive")]
 mod tests {
     use validator::Validate;
 
@@ -17,13 +17,13 @@ mod tests {
 
     #[derive(Validate)]
     struct Bar {
-        #[validate]
+        #[validate(nested)]
         bar: Foo,
     }
 
     #[derive(Validate)]
     struct DeepBar {
-        #[validate]
+        #[validate(nested)]
         deep_bar: Bar,
     }
 
@@ -41,7 +41,7 @@ mod tests {
 
     #[derive(Validate)]
     struct Baz {
-        #[validate]
+        #[validate(nested)]
         baz: Vec<Foo>,
     }
 
