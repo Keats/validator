@@ -10,7 +10,7 @@ test_ui = []
 nightly = []
 
 [dev-dependencies]
-validator = { version = "0.18", path = "../validator", features = [
+validator = { version = "0.19", path = "../validator", features = [
     "card",
     "unic",
     "derive",
