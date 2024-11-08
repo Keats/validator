@@ -24,8 +24,6 @@
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 
-The minimum supported version is Rust 1.81.
-
 Installation:
 
 ```toml
