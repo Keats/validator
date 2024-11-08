@@ -9,6 +9,7 @@ repository = "https://github.com/Keats/validator"
 keywords = ["validation", "api", "validator"]
 edition = "2021"
 readme = "../README.md"
+rust-version = { workspace = true }
 
 [lib]
 proc-macro = true

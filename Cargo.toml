@@ -1,3 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["validator", "validator_derive", "validator_derive_tests"]
+
+[workspace.package]
+rust-version = "1.81"

@@ -5,17 +5,17 @@ jobs:
   test_validator:
     name: Continuous integration
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - rust: 1.81.0 # MSRV, sometimes it changes because of compiler test issues
-          - rust: stable
     steps:
       - uses: actions/checkout@v3
+      - name: Extract Rust version from Cargo.toml
+        run: |
+          MSRV=$(sed -n 's/^rust-version = "\([^"]*\)"/\1/p' Cargo.toml)
+          echo "rust-version: $MSRV"
+          echo "MSRV=$MSRV" >> $GITHUB_ENV
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@stable # actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: ${{ env.MSRV }}
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
       - name: Build System Info
