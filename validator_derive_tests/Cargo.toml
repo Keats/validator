@@ -3,6 +3,7 @@ name = "validator_derive_tests"
 version = "0.1.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com>"]
 edition = "2021"
+rust-version = { workspace = true }
 
 [features]
 default = ["test_ui"]
