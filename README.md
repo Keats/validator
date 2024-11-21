@@ -270,7 +270,7 @@ Examples:
 ```
 
 ### custom
-Calls one of your functions to perform a custom validation. The field reference will be given as a parameter to the function,
+Calls one of your functions to perform a custom validation. The field reference (or value if it can be copied cheaply like numbers) will be given as a parameter to the function,
 which should return a `Result<(), ValidationError>`.
 
 Examples:
