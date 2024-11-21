@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::{hash_map::Entry::Vacant, BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
@@ -179,10 +179,16 @@ impl ValidationErrors {
     }
 
     fn add_nested(&mut self, field: &'static str, errors: ValidationErrorsKind) {
-        if let Vacant(entry) = self.0.entry(field) {
-            entry.insert(errors);
-        } else {
-            panic!("Attempt to replace non-empty ValidationErrors entry");
+        match self.0.get(field) {
+            None => {
+                self.0.insert(field, errors);
+            }
+            Some(entry) => {
+                let mut new_table = ValidationErrors::new();
+                new_table.0.insert("self", entry.clone());
+                new_table.0.insert("nested", errors);
+                self.0.insert(field, ValidationErrorsKind::Struct(Box::new(new_table)));
+            }
         }
     }
 
