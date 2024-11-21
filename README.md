@@ -207,6 +207,9 @@ const MIN_CONSTANT: i32 = 0;
 #[validate(range(min = "crate::MAX_CONSTANT"))]
 #[validate(range(exclusive_min = 0.0, max = 100.0))]
 #[validate(range(exclusive_max = 10))]
+// If you get an error saying the literal doesn't fit in i32, specify a number type in the literal directly
+#[validate(range(max = 1000000000u64))]
+
 ```
 
 ### must_match
