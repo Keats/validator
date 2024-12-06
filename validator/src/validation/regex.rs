@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::cell::OnceCell;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 
 use regex::Regex;
 
@@ -51,6 +51,12 @@ impl AsRegex for &Arc<Mutex<OnceCell<Regex>>> {
 impl AsRegex for &Arc<Mutex<OnceLock<Regex>>> {
     fn as_regex(&self) -> Cow<Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
+    }
+}
+
+impl AsRegex for LazyLock<Regex> {
+    fn as_regex(&self) -> Cow<Regex> {
+        Cow::Borrowed(self)
     }
 }
 

@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use std::cell::OnceCell;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{LazyLock, Mutex, OnceLock};
 
 use regex::Regex;
 use validator::Validate;
@@ -10,6 +10,7 @@ static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 static REGEX_ONCE_LOCK: OnceLock<Regex> = OnceLock::new();
 static REGEX_MUTEX_ONCE_CELL: Mutex<OnceCell<Regex>> = Mutex::new(OnceCell::new());
 static REGEX_MUTEX_ONCE_LOCK: Mutex<OnceLock<Regex>> = Mutex::new(OnceLock::new());
+static REGEX_LAZY_LOCK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
 #[test]
 fn can_validate_valid_regex() {
@@ -118,6 +119,21 @@ fn can_specify_mutex_once_lock_for_regex() {
     }
 
     let _ = REGEX_MUTEX_ONCE_LOCK.lock().unwrap().set(Regex::new(r"^[a-z]{2}$").unwrap());
+    let t = TestStruct { val: "aa".to_string() };
+    assert!(t.validate().is_ok());
+
+    let t = TestStruct { val: "aaa".to_string() };
+    assert!(t.validate().is_err());
+}
+
+#[test]
+fn can_specify_lazy_lock_for_regex() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(regex(path = crate::REGEX_LAZY_LOCK))]
+        val: String,
+    }
+
     let t = TestStruct { val: "aa".to_string() };
     assert!(t.validate().is_ok());
 
