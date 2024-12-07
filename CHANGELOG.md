@@ -1,5 +1,8 @@
 ## Changelog
 
+## Unreleased
+- Implement `AsRegex` for `std::sync::LazyLock<Regex>`
+
 ## 0.19.0 (2024/11/03)
 
 - Swap to using proc-macro-error-2 instead of proc-macro-error for Syn
