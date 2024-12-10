@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::cmp::Ordering;
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
@@ -79,6 +80,53 @@ fn fails_nested_validation_multiple_members() {
             ]))))
         )])))
     );
+}
+
+#[test]
+fn fails_nested_validation_multiple_members_and_custom_validations() {
+    #[derive(Validate)]
+    struct Root {
+        #[validate(length(min = 5, max = 10))]
+        value: String,
+        #[validate(nested, custom(function = "all_value1s_are_unique"))]
+        a: Vec<A>,
+    }
+
+    #[derive(Serialize, Validate)]
+    struct A {
+        #[validate(length(min = 5, max = 10))]
+        value1: String,
+        #[validate(length(min = 5, max = 10))]
+        value2: String,
+    }
+
+    // Top-level custom validation
+    fn all_value1s_are_unique(items: &[A]) -> Result<(), ValidationError> {
+        let unique_value1s: HashSet<String> =
+            HashSet::from_iter(items.iter().map(|a| a.value1.to_string()));
+        match unique_value1s.len().cmp(&items.len()) {
+            Ordering::Equal => Ok(()),
+            _ => Err(ValidationError::new("not all value1s are unique")),
+        }
+    }
+
+    let root = Root {
+        value: "valid".to_string(),
+        // "a" should be invalid because multiple items have the same "value1"
+        // but also "a[1].value2" should be invalid because it is too long.
+        a: vec![
+            A { value1: "non unique".to_string(), value2: "a value 2".to_string() },
+            A { value1: "non unique".to_string(), value2: "b value 2 too long".to_string() },
+            A { value1: "unique-ish".to_string(), value2: "c value 2".to_string() },
+        ],
+    };
+
+    // This is currently panicking with "Attempt to replace non-empty ValidationErrors entry"
+    let result = root.validate();
+
+    // Not sure what the correct full assertion should be,
+    // but the panic isn't letting me get any further.
+    assert_ne!(result, Ok(()))
 }
 
 #[test]
