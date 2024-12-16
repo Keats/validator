@@ -24,8 +24,6 @@
 Macros 1.1 custom derive to simplify struct validation inspired by [marshmallow](http://marshmallow.readthedocs.io/en/latest/) and
 [Django validators](https://docs.djangoproject.com/en/1.10/ref/validators/).
 
-The minimum supported version is Rust 1.70.
-
 Installation:
 
 ```toml
@@ -209,6 +207,9 @@ const MIN_CONSTANT: i32 = 0;
 #[validate(range(min = "crate::MAX_CONSTANT"))]
 #[validate(range(exclusive_min = 0.0, max = 100.0))]
 #[validate(range(exclusive_max = 10))]
+// If you get an error saying the literal doesn't fit in i32, specify a number type in the literal directly
+#[validate(range(max = 1000000000u64))]
+
 ```
 
 ### must_match
@@ -269,7 +270,7 @@ Examples:
 ```
 
 ### custom
-Calls one of your functions to perform a custom validation. The field reference will be given as a parameter to the function,
+Calls one of your functions to perform a custom validation. The field reference (or value if it can be copied cheaply like numbers) will be given as a parameter to the function,
 which should return a `Result<(), ValidationError>`.
 
 Examples:
