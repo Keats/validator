@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::{
     borrow::Cow,
+    cmp::Ordering,
     collections::{HashMap, HashSet},
 };
 use validator::{
@@ -845,58 +846,6 @@ fn test_field_validations_take_priority_over_nested_validations() {
     } else {
         panic!("Expected field validation errors");
     }
-}
-
-#[test]
-#[should_panic(expected = "Attempt to replace non-empty ValidationErrors entry")]
-#[allow(unused)]
-fn test_field_validation_errors_replaced_with_nested_validations_fails() {
-    #[derive(Debug)]
-    struct ParentWithOverridingStructValidations {
-        child: Vec<Child>,
-    }
-
-    #[derive(Debug, Validate, Serialize)]
-    struct Child {
-        #[validate(length(min = 1))]
-        value: String,
-    }
-
-    impl Validate for ParentWithOverridingStructValidations {
-        // Evaluating structs after fields validations have discovered errors should fail because
-        // field validations are expected to take priority over nested struct validations
-        #[allow(unused_mut)]
-        fn validate(&self) -> Result<(), ValidationErrors> {
-            // First validate the length of the vector:
-            let mut errors = ValidationErrors::new();
-            if !self.child.validate_length(Some(2u64), None, None) {
-                let mut err = ValidationError::new("length");
-                err.add_param(Cow::from("min"), &2u64);
-                err.add_param(Cow::from("value"), &&self.child);
-                errors.add("child", err);
-            }
-
-            // Then validate the nested vector of structs without checking for existing field errors:
-            let mut result = if errors.is_empty() { Ok(()) } else { Err(errors) };
-            {
-                let results: Vec<_> = self
-                    .child
-                    .iter()
-                    .map(|child| {
-                        let mut result = Ok(());
-                        result = ValidationErrors::merge(result, "child", child.validate());
-                        result
-                    })
-                    .collect();
-                result = ValidationErrors::merge_all(result, "child", results);
-            }
-            result
-        }
-    }
-
-    let instance =
-        ParentWithOverridingStructValidations { child: vec![Child { value: String::new() }] };
-    instance.validate();
 }
 
 #[test]

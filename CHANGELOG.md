@@ -1,7 +1,10 @@
 ## Changelog
 
+
 ## Unreleased
 - Implement `AsRegex` for `std::sync::LazyLock<Regex>`
+- Bug fix for nested issue with custom only running nested if outer passes
+
 
 ## 0.19.0 (2024/11/03)
 
