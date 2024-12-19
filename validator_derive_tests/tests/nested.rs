@@ -1,7 +1,6 @@
 use serde::Serialize;
 use std::{
     borrow::Cow,
-    cmp::Ordering,
     collections::{HashMap, HashSet},
 };
 use validator::{

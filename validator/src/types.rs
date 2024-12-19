@@ -181,10 +181,9 @@ impl ValidationErrors {
     fn add_nested(&mut self, field: &'static str, errors: ValidationErrorsKind) {
         if let Vacant(entry) = self.0.entry(field) {
             entry.insert(errors);
+        } else {
+            panic!("Attempt to replace non-empty ValidationErrors entry");
         }
-        // Else case here is simply do nothing. Pretty sure this is caught earlier to not run but since
-        // If we get here, just not adding it does the same thing (although waste extra compute)
-        // probably better to just ignore here.
     }
 
     #[must_use]
