@@ -72,10 +72,10 @@ fn fails_nested_validation_multiple_members() {
     assert_eq!(
         root.validate(),
         Err(ValidationErrors(HashMap::from_iter([(
-            "a",
+            Cow::Borrowed("a"),
             ValidationErrorsKind::Struct(Box::new(ValidationErrors(HashMap::from_iter([
-                ("value1", error_kind.clone()),
-                ("value2", error_kind),
+                (Cow::Borrowed("value1"), error_kind.clone()),
+                (Cow::Borrowed("value2"), error_kind),
             ]))))
         )])))
     );
@@ -905,7 +905,7 @@ fn test_field_validations_evaluated_after_nested_validations_fails() {
 #[allow(dead_code)]
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
-    F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
+    F: FnOnce(HashMap<Cow<'static, str>, ValidationErrorsKind>),
 {
     let errors = errors.clone();
     f(errors.errors().clone());

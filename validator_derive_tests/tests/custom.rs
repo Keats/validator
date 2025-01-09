@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
@@ -171,9 +171,9 @@ fn custom_fn_on_optional_types_work() {
     assert_eq!(
         t.validate(),
         Err(ValidationErrors(HashMap::from_iter([
-            ("plain", error_kind.clone()),
-            ("option", error_kind.clone()),
-            ("option_option", error_kind),
+            (Cow::Borrowed("plain"), error_kind.clone()),
+            (Cow::Borrowed("option"), error_kind.clone()),
+            (Cow::Borrowed("option_option"), error_kind),
         ])))
     );
 }
