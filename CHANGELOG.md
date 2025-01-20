@@ -1,8 +1,10 @@
 ## Changelog
 
-## Unreleased
+## 0.20.0 (2025/01/20)
+
 - Implement `AsRegex` for `std::sync::LazyLock<Regex>`
 - Bug fix for nested issue with custom only running nested if outer passes
+- Support `Deserialize` for `ValidationErrors`
 
 ## 0.19.0 (2024/11/03)
 
