@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -213,7 +213,7 @@ fn test_works_with_none_values() {
 #[allow(dead_code)]
 fn unwrap_map<F>(errors: &ValidationErrors, f: F)
 where
-    F: FnOnce(HashMap<&'static str, ValidationErrorsKind>),
+    F: FnOnce(HashMap<Cow<'static, str>, ValidationErrorsKind>),
 {
     let errors = errors.clone();
     f(errors.errors().clone());
