@@ -42,6 +42,7 @@
 //! | `length`                |                                                       |
 //! | `range`                 |                                                       |
 //! | `must_match`            |                                                       |
+//! | `must_not_match`        |                                                       |
 //! | `contains`              |                                                       |
 //! | `does_not_contain`      |                                                       |
 //! | `custom`                |                                                       |
@@ -73,6 +74,7 @@ pub use validation::email::ValidateEmail;
 pub use validation::ip::ValidateIp;
 pub use validation::length::ValidateLength;
 pub use validation::must_match::validate_must_match;
+pub use validation::must_not_match::validate_must_not_match;
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
 pub use validation::regex::{AsRegex, ValidateRegex};

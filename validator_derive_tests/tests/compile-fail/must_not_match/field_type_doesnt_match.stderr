@@ -1,0 +1,17 @@
+error[E0308]: mismatched types
+ --> tests/compile-fail/must_not_match/field_type_doesnt_match.rs:3:10
+  |
+3 | #[derive(Validate)]
+  |          ^^^^^^^^
+  |          |
+  |          expected `&String`, found `&i32`
+  |          arguments to this function are incorrect
+  |
+  = note: expected reference `&String`
+             found reference `&i32`
+note: function defined here
+ --> $WORKSPACE/validator/src/validation/must_not_match.rs
+  |
+  | pub fn validate_must_not_match<T: Eq>(a: T, b: T) -> bool {
+  |        ^^^^^^^^^^^^^^^^^^^^^^^
+  = note: this error originates in the derive macro `Validate` (in Nightly builds, run with -Z macro-backtrace for more info)

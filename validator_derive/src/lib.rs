@@ -13,6 +13,7 @@ use tokens::email::email_tokens;
 use tokens::ip::ip_tokens;
 use tokens::length::length_tokens;
 use tokens::must_match::must_match_tokens;
+use tokens::must_not_match::must_not_match_tokens;
 use tokens::nested::nested_tokens;
 use tokens::non_control_character::non_control_char_tokens;
 use tokens::range::range_tokens;
@@ -178,6 +179,19 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
+        // Must not match validation
+        let must_not_match = if let Some(must_not_match) = self.must_not_match.clone() {
+            // TODO: handle option for other
+            wrapper_closure(must_not_match_tokens(
+                &self.crate_name,
+                must_not_match,
+                &actual_field,
+                &field_name_str,
+            ))
+        } else {
+            quote!()
+        };
+
         // Regex validation
         let regex = if let Some(regex) = self.regex.clone() {
             wrapper_closure(regex_tokens(&self.crate_name, regex, &actual_field, &field_name_str))
@@ -231,6 +245,7 @@ impl ToTokens for ValidateField {
             #contains
             #does_not_contain
             #must_match
+            #must_not_match
             #regex
             #custom
             #nested

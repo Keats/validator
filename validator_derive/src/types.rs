@@ -58,6 +58,7 @@ pub struct ValidateField {
     pub ip: Option<Override<Ip>>,
     pub length: Option<Length>,
     pub must_match: Option<MustMatch>,
+    pub must_not_match: Option<MustNotMatch>,
     pub non_control_character: Option<Override<NonControlCharacter>>,
     pub range: Option<Range>,
     pub required: Option<Override<Required>>,
@@ -271,6 +272,13 @@ pub struct Length {
 
 #[derive(Debug, Clone, FromMeta)]
 pub struct MustMatch {
+    pub other: Path,
+    pub message: Option<String>,
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Clone, FromMeta)]
+pub struct MustNotMatch {
     pub other: Path,
     pub message: Option<String>,
     pub code: Option<String>,
