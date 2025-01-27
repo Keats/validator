@@ -181,7 +181,6 @@ impl ToTokens for ValidateField {
 
         // Must not match validation
         let must_not_match = if let Some(must_not_match) = self.must_not_match.clone() {
-            // TODO: handle option for other
             wrapper_closure(must_not_match_tokens(
                 &self.crate_name,
                 must_not_match,

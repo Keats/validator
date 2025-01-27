@@ -15,7 +15,7 @@ fn can_validate_valid_must_not_match() {
 }
 
 #[test]
-fn not_matching_fails_validation() {
+fn matching_fails_validation() {
     #[derive(Debug, Validate)]
     struct TestStruct {
         #[validate(must_not_match(other = "val2"))]
