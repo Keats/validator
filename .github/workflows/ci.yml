@@ -24,8 +24,8 @@ jobs:
         run: |
           cargo build --no-default-features
           cargo test --no-default-features
-          cargo build --features unic --features derive --features card
-          cargo test  --features unic --features derive --features card
+          cargo build --features derive --features card
+          cargo test --features derive --features card
   test_validator-nightly:
     name: Continuous integration
     runs-on: ubuntu-latest

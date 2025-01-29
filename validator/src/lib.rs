@@ -47,7 +47,7 @@
 //! | `custom`                |                                                       |
 //! | `regex`                 |                                                       |
 //! | `credit_card`           | (Requires the feature `card` to be enabled)           |
-//! | `non_control_character` | (Required the feature `unic` to be enabled)           |
+//! | `non_control_character` |                                                       |
 //! | `required`              |                                                       |
 //!
 //! [Checkout the project README of an in-depth usage description with examples.](https://github.com/Keats/validator/blob/master/README.md)
@@ -73,7 +73,6 @@ pub use validation::email::ValidateEmail;
 pub use validation::ip::ValidateIp;
 pub use validation::length::ValidateLength;
 pub use validation::must_match::validate_must_match;
-#[cfg(feature = "unic")]
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
 pub use validation::regex::{AsRegex, ValidateRegex};

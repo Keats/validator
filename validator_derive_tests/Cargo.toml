@@ -13,7 +13,6 @@ nightly = []
 [dev-dependencies]
 validator = { version = "0.20", path = "../validator", features = [
     "card",
-    "unic",
     "derive",
     "indexmap",
 ] }
