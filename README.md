@@ -335,7 +335,6 @@ Examples:
 
 ### non_control_character
 Tests whether the String has any utf-8 control characters, fails validation if it does.
-To use this validator, you must enable the `unic` feature for the `validator` crate.
 This validator doesn't take any arguments: `#[validate(non_control_character)]`;
 
 ### required

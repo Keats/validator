@@ -1,9 +1,6 @@
-#[cfg(feature = "unic")]
-use unic_ucd_common::control;
-
 pub trait ValidateNonControlCharacter {
     fn validate_non_control_character(&self) -> bool {
-        self.as_non_control_character_iterator().all(|code| !control::is_control(code))
+        self.as_non_control_character_iterator().all(|code| !code.is_control())
     }
 
     fn as_non_control_character_iterator(&self) -> Box<dyn Iterator<Item = char> + '_>;
@@ -16,7 +13,6 @@ impl<T: AsRef<str>> ValidateNonControlCharacter for T {
 }
 
 #[cfg(test)]
-#[cfg(feature = "unic")]
 mod tests {
     use super::ValidateNonControlCharacter;
     use std::borrow::Cow;
