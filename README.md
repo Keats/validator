@@ -257,7 +257,7 @@ static RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"[a-z]{2}$").unwrap()
 });
 
-#[validate(regex(path = *RE_TWO_CHARS)]
+#[validate(regex(path = *RE_TWO_CHARS))]
 ```
 
 ### credit\_card
