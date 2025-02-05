@@ -1,7 +1,7 @@
 /// Validates that the 2 given fields do not match.
 /// Both fields are optionals
 #[must_use]
-pub fn validate_must_not_match<T: Eq>(a: T, b: T) -> bool {
+pub fn validate_must_not_match<T: PartialEq>(a: T, b: T) -> bool {
     a != b
 }
 
