@@ -1,0 +1,10 @@
+error[E0609]: no field `password2` on type `&Test`
+ --> tests/compile-fail/must_not_match/field_doesnt_exist.rs:5:39
+  |
+5 |     #[validate(must_not_match(other = password2))]
+  |                                       ^^^^^^^^^ unknown field
+  |
+help: a field with a similar name exists
+  |
+5 |     #[validate(must_not_match(other = password))]
+  |                                       ~~~~~~~~

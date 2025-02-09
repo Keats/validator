@@ -212,14 +212,20 @@ const MIN_CONSTANT: i32 = 0;
 
 ```
 
-### must_match
-Tests whether the 2 fields are equal. `must_match` takes 1 string argument. It will error if the field
+### must_match and must_not_match
+`must_match` tests whether the 2 fields are equal  
+`must_not_match` tests whether the 2 fields are not equal  
+They take 1 string argument. It will error if the field
 mentioned is missing or has a different type than the field the attribute is on.
 
 Examples:
 
 ```rust
 #[validate(must_match(other = "password2"))]
+```
+
+```rust
+#[validate(must_not_match(other = "id"))]
 ```
 
 ### contains
