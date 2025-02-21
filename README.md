@@ -251,9 +251,10 @@ Tests whether the string matches the regex given. `regex` takes
 Examples:
 
 ```rust
+use regex::Regex;
 use std::sync::LazyLock;
 
-static RE_TWO_CHARS: Lazy<Regex> = Lazy::new(|| {
+static RE_TWO_CHARS: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"[a-z]{2}$").unwrap()
 });
 
