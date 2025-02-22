@@ -1,0 +1,5 @@
+error: Unknown field: `not_a`
+ --> tests/compile-fail/must_not_match/unexpected_name_value.rs:5:16
+  |
+5 |     #[validate(not_a(other = "validator"))]
+  |                ^^^^^
