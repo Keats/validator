@@ -108,7 +108,7 @@ where
     }
 }
 
-impl<'a> ValidateEmail for &'a str {
+impl ValidateEmail for &str {
     fn as_email_string(&self) -> Option<Cow<'_, str>> {
         Some(Cow::from(*self))
     }
@@ -208,9 +208,9 @@ mod tests {
     fn test_validate_email_rfc5321() {
         // 65 character local part
         let test = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@mail.com";
-        assert_eq!(test.validate_email(), false);
+        assert!(!test.validate_email());
         // 256 character domain part
         let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
-        assert_eq!(test.validate_email(), false);
+        assert!(!test.validate_email());
     }
 }

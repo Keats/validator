@@ -34,7 +34,7 @@ where
     }
 }
 
-impl<'cow, T> ValidateContains for Cow<'cow, T>
+impl<T> ValidateContains for Cow<'_, T>
 where
     T: ToOwned + ?Sized,
     for<'a> &'a T: ValidateContains,
@@ -44,7 +44,7 @@ where
     }
 }
 
-impl<'a> ValidateContains for &'a str {
+impl ValidateContains for &str {
     fn validate_contains(&self, needle: &str) -> bool {
         self.contains(needle)
     }

@@ -154,7 +154,7 @@ impl ValidateField {
         fn find_option(mut count: u8, ty: &syn::Type) -> u8 {
             if let syn::Type::Path(p) = ty {
                 let idents_of_path =
-                    p.path.segments.iter().into_iter().fold(String::new(), |mut acc, v| {
+                    p.path.segments.iter().fold(String::new(), |mut acc, v| {
                         acc.push_str(&v.ident.to_string());
                         acc.push('|');
                         acc

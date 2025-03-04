@@ -86,7 +86,7 @@ where
     }
 }
 
-impl<'cow, T> ValidateRegex for Cow<'cow, T>
+impl<T> ValidateRegex for Cow<'_, T>
 where
     T: ToOwned + ?Sized,
     for<'a> &'a T: ValidateRegex,

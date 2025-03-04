@@ -263,37 +263,28 @@ impl ValidationData {
         if let Some(context) = &self.context {
             // Check if context lifetime is not `'v_a`
             for segment in &context.segments {
-                match &segment.arguments {
-                    PathArguments::AngleBracketed(args) => {
-                        for arg in &args.args {
-                            match arg {
-                                syn::GenericArgument::Lifetime(lt) => {
-                                    if lt.ident != "v_a" {
-                                        abort! {
-                                            lt.ident, "Invalid argument reference";
-                                            note = "The lifetime `'{}` is not supported.", lt.ident;
-                                            help = "Please use the validator lifetime `'v_a`";
-                                        }
-                                    }
+                if let PathArguments::AngleBracketed(args) = &segment.arguments {
+                    for arg in &args.args {
+                        if let syn::GenericArgument::Lifetime(lt) = arg {
+                            if lt.ident != "v_a" {
+                                abort! {
+                                    lt.ident, "Invalid argument reference";
+                                    note = "The lifetime `'{}` is not supported.", lt.ident;
+                                    help = "Please use the validator lifetime `'v_a`";
                                 }
-                                _ => (),
                             }
                         }
                     }
-                    _ => (),
                 }
             }
         }
 
-        match &self.data {
-            Data::Struct(fields) => {
-                let original_fields: Vec<&Field> =
-                    fields.fields.iter().map(|f| &f.original).collect();
-                for f in &fields.fields {
-                    f.parsed.validate(&self.ident, &original_fields, &f.original);
-                }
+        if let Data::Struct(fields) = &self.data {
+            let original_fields: Vec<&Field> =
+                fields.fields.iter().map(|f| &f.original).collect();
+            for f in &fields.fields {
+                f.parsed.validate(&self.ident, &original_fields, &f.original);
             }
-            _ => (),
         }
 
         Ok(self)
