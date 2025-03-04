@@ -1,12 +1,8 @@
-
-use once_cell::sync::Lazy;
 use regex::Regex;
+use std::sync::LazyLock;
 use validator::Validate;
 
-static RE2: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[a-z]{2}$").unwrap()
-});
-
+static RE2: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
 #[derive(Validate)]
 struct Test {
