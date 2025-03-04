@@ -1,23 +1,22 @@
 use idna::domain_to_ascii;
-use once_cell::sync::Lazy;
 use regex::Regex;
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::LazyLock};
 
 use crate::ValidateIp;
 
 // Regex from the specs
 // https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address
 // It will mark esoteric email addresses like quoted string as invalid
-static EMAIL_USER_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap());
-static EMAIL_DOMAIN_RE: Lazy<Regex> = Lazy::new(|| {
+static EMAIL_USER_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+\z").unwrap());
+static EMAIL_DOMAIN_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
     ).unwrap()
 });
 // literal form, ipv4 or ipv6 address (SMTP 4.1.3)
-static EMAIL_LITERAL_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap());
+static EMAIL_LITERAL_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap());
 
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
 #[must_use]

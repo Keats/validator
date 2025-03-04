@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use darling::util::Override;
 use darling::{FromField, FromMeta};
@@ -12,7 +12,7 @@ use crate::utils::{get_attr, CrateName};
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
 
-pub(crate) static NUMBER_TYPES: Lazy<Vec<String>> = Lazy::new(|| {
+pub(crate) static NUMBER_TYPES: LazyLock<Vec<String>> = LazyLock::new(|| {
     let number_types = [
         quote!(usize),
         quote!(u8),
