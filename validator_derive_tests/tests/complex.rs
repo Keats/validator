@@ -1,6 +1,5 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, sync::LazyLock};
 
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -73,7 +72,7 @@ fn is_fine_with_many_valid_validations() {
 
 #[test]
 fn test_can_validate_option_fields_with_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
+    static RE2: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct<'a> {
@@ -117,7 +116,7 @@ fn test_can_validate_option_fields_with_lifetime() {
 
 #[test]
 fn test_can_validate_option_fields_without_lifetime() {
-    static RE2: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
+    static RE2: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z]{2}$").unwrap());
 
     #[derive(Debug, Validate)]
     struct PutStruct {

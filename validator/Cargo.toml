@@ -14,7 +14,6 @@ rust-version = { workspace = true }
 [dependencies]
 url = "2"
 regex = { version = "1", default-features = false, features = ["std"] }
-once_cell = "1.18.0"
 idna = "1"
 serde = "1"
 serde_derive = "1"
@@ -26,4 +25,4 @@ indexmap = { version = "2.0.0", features = ["serde"], optional = true }
 [features]
 card = ["card-validate"]
 derive = ["validator_derive"]
-derive_nightly_features = ["derive","validator_derive/nightly_features"]
+derive_nightly_features = ["derive", "validator_derive/nightly_features"]

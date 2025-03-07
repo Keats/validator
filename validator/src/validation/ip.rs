@@ -15,11 +15,11 @@ where
     T: ToString,
 {
     fn validate_ipv4(&self) -> bool {
-        IpAddr::from_str(&self.to_string()).map_or(false, |i| i.is_ipv4())
+        IpAddr::from_str(&self.to_string()).is_ok_and(|i| i.is_ipv4())
     }
 
     fn validate_ipv6(&self) -> bool {
-        IpAddr::from_str(&self.to_string()).map_or(false, |i| i.is_ipv6())
+        IpAddr::from_str(&self.to_string()).is_ok_and(|i| i.is_ipv6())
     }
 
     fn validate_ip(&self) -> bool {

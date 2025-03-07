@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use darling::util::Override;
 use darling::{FromField, FromMeta};
@@ -12,7 +12,7 @@ use crate::utils::{get_attr, CrateName};
 
 static OPTIONS_TYPE: [&str; 3] = ["Option|", "std|option|Option|", "core|option|Option|"];
 
-pub(crate) static NUMBER_TYPES: Lazy<Vec<String>> = Lazy::new(|| {
+pub(crate) static NUMBER_TYPES: LazyLock<Vec<String>> = LazyLock::new(|| {
     let number_types = [
         quote!(usize),
         quote!(u8),
@@ -154,7 +154,7 @@ impl ValidateField {
         fn find_option(mut count: u8, ty: &syn::Type) -> u8 {
             if let syn::Type::Path(p) = ty {
                 let idents_of_path =
-                    p.path.segments.iter().into_iter().fold(String::new(), |mut acc, v| {
+                    p.path.segments.iter().fold(String::new(), |mut acc, v| {
                         acc.push_str(&v.ident.to_string());
                         acc.push('|');
                         acc
