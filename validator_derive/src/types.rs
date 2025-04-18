@@ -219,6 +219,27 @@ impl ValidateField {
             ),
         }
     }
+
+    /// Check to see if the field has validation instruction
+    pub fn has_validate_instruction(&self) -> bool {
+        [
+            self.credit_card.is_some(),
+            self.contains.is_some(),
+            self.does_not_contain.is_some(),
+            self.email.is_some(),
+            self.ip.is_some(),
+            self.length.is_some(),
+            self.must_match.is_some(),
+            self.non_control_character.is_some(),
+            self.range.is_some(),
+            self.required.is_some(),
+            self.url.is_some(),
+            self.regex.is_some(),
+            !self.custom.is_empty(),
+        ]
+        .into_iter()
+        .any(|b| b)
+    }
 }
 
 // Structs to hold the validation information and to provide attributes

@@ -336,7 +336,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
             validation_fields = validation_fields
                 .iter_mut()
                 .map(|f| {
+                    if !f.has_validate_instruction() {
                     f.nested = Some(true);
+                    }
                     f.to_owned()
                 })
                 .collect();
