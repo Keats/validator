@@ -67,6 +67,8 @@ pub struct ValidateField {
     pub custom: Vec<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
+    #[darling(skip)]
+    pub rename: Option<String>,
     /// Placeholder for the crate name, filled in by the [`ValidationData`](crate::ValidationData) value.
     #[darling(skip)]
     pub crate_name: CrateName,
@@ -153,12 +155,11 @@ impl ValidateField {
     pub fn number_options(&self) -> u8 {
         fn find_option(mut count: u8, ty: &syn::Type) -> u8 {
             if let syn::Type::Path(p) = ty {
-                let idents_of_path =
-                    p.path.segments.iter().fold(String::new(), |mut acc, v| {
-                        acc.push_str(&v.ident.to_string());
-                        acc.push('|');
-                        acc
-                    });
+                let idents_of_path = p.path.segments.iter().fold(String::new(), |mut acc, v| {
+                    acc.push_str(&v.ident.to_string());
+                    acc.push('|');
+                    acc
+                });
 
                 if OPTIONS_TYPE.contains(&idents_of_path.as_str()) {
                     count += 1;

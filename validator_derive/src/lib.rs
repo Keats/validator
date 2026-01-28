@@ -3,7 +3,7 @@ use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
+use syn::{parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path, PathArguments};
 
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
@@ -30,7 +30,10 @@ mod utils;
 impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
-        let field_name_str = self.ident.clone().unwrap().to_string();
+        let field_name_str = match &self.rename {
+            Some(rename) => rename.clone(),
+            None => self.ident.as_ref().unwrap().to_string(),
+        };
 
         let type_name = self.ty.to_token_stream().to_string();
         let is_number = NUMBER_TYPES.contains(&type_name);
@@ -280,8 +283,7 @@ impl ValidationData {
         }
 
         if let Data::Struct(fields) = &self.data {
-            let original_fields: Vec<&Field> =
-                fields.fields.iter().map(|f| &f.original).collect();
+            let original_fields: Vec<&Field> = fields.fields.iter().map(|f| &f.original).collect();
             for f in &fields.fields {
                 f.parsed.validate(&self.ident, &original_fields, &f.original);
             }
@@ -325,7 +327,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .unwrap()
         .fields
         .into_iter()
-        .map(|f| f.parsed)
+        .map(|f| parse_serde_attrs(f.parsed, f.original))
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .map(|f| ValidateField { crate_name: crate_name.clone(), ..f })
@@ -422,4 +424,23 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         }
     )
     .into()
+}
+
+fn parse_serde_attrs(mut vf: ValidateField, field: Field) -> ValidateField {
+    for attr in field.attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("rename") {
+                let value = meta.value()?;
+                let s: LitStr = value.parse()?;
+                vf.rename = Some(s.value());
+            }
+            Ok(())
+        });
+    }
+
+    vf
 }
