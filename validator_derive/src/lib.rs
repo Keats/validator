@@ -5,8 +5,7 @@ use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
 use syn::meta::ParseNestedMeta;
 use syn::{
-    parenthesized, parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path,
-    PathArguments, Token,
+    parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path, PathArguments, Token,
 };
 
 use case::RenameRule;
