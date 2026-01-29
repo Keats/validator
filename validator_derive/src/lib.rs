@@ -3,7 +3,11 @@ use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path, PathArguments};
+use syn::meta::ParseNestedMeta;
+use syn::{
+    parenthesized, parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path,
+    PathArguments, Token,
+};
 
 use case::RenameRule;
 use tokens::cards::credit_card_tokens;
@@ -446,9 +450,8 @@ fn parse_serde_container_attrs(di: &DeriveInput) -> SerdeData {
         }
 
         let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("rename_all") {
-                let value = meta.value()?;
-                RenameRule::parse(value.parse()?).map(|rule| data.rename_all = rule);
+            if let Some(rename_all) = parse_serde_rename(meta, "rename_all")? {
+                RenameRule::parse(rename_all).map(|rule| data.rename_all = rule);
             }
             Ok(())
         });
@@ -472,14 +475,34 @@ fn parse_serde_attrs(
         }
 
         let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("rename") {
-                let value = meta.value()?;
-                let s: LitStr = value.parse()?;
-                vf.rename = Some(s.value());
+            if let Some(rename) = parse_serde_rename(meta, "rename")? {
+                vf.rename = Some(rename.value());
             }
             Ok(())
         });
     }
 
     vf
+}
+
+fn parse_serde_rename(meta: ParseNestedMeta, id: &str) -> syn::Result<Option<LitStr>> {
+    if !meta.path.is_ident(id) {
+        return Ok(None);
+    }
+
+    if meta.input.peek(Token![=]) {
+        let value = meta.value()?;
+        Ok(Some(value.parse()?))
+    } else {
+        let mut res = None;
+        meta.parse_nested_meta(|meta| {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            if meta.path.is_ident("deserialize") {
+                res = Some(s);
+            }
+            Ok(())
+        })?;
+        Ok(res)
+    }
 }
