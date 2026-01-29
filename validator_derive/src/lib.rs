@@ -5,6 +5,7 @@ use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path, PathArguments};
 
+use case::RenameRule;
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
 use tokens::custom::custom_tokens;
@@ -23,6 +24,7 @@ use tokens::url::url_tokens;
 use types::*;
 use utils::{quote_use_stmts, CrateName};
 
+mod case;
 mod tokens;
 mod types;
 mod utils;
@@ -261,6 +263,11 @@ struct ValidationData {
     crate_name: CrateName,
 }
 
+#[derive(Debug, Default, Clone)]
+struct SerdeData {
+    rename_all: RenameRule,
+}
+
 impl ValidationData {
     fn validate(self) -> darling::Result<Self> {
         if let Some(context) = &self.context {
@@ -298,6 +305,10 @@ impl ValidationData {
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
 
+    // parse struct-level serde attributes
+    // i.e. rename_all
+    let serde = parse_serde_container_attrs(&input);
+
     // parse the input to the ValidationData struct defined above
     let validation_data = match ValidationData::from_derive_input(&input) {
         Ok(data) => data,
@@ -327,7 +338,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .unwrap()
         .fields
         .into_iter()
-        .map(|f| parse_serde_attrs(f.parsed, f.original))
+        .map(|f| parse_serde_attrs(f.parsed, f.original, &serde))
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .map(|f| ValidateField { crate_name: crate_name.clone(), ..f })
@@ -426,7 +437,35 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     .into()
 }
 
-fn parse_serde_attrs(mut vf: ValidateField, field: Field) -> ValidateField {
+fn parse_serde_container_attrs(di: &DeriveInput) -> SerdeData {
+    let mut data = SerdeData::default();
+
+    for attr in &di.attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("rename_all") {
+                let value = meta.value()?;
+                RenameRule::parse(value.parse()?).map(|rule| data.rename_all = rule);
+            }
+            Ok(())
+        });
+    }
+
+    data
+}
+
+fn parse_serde_attrs(
+    mut vf: ValidateField,
+    field: Field,
+    serde_struct: &SerdeData,
+) -> ValidateField {
+    if serde_struct.rename_all.is_some() {
+        vf.rename = Some(serde_struct.rename_all.apply(&vf.ident.as_ref().unwrap().to_string()));
+    }
+
     for attr in field.attrs {
         if !attr.path().is_ident("serde") {
             continue;
