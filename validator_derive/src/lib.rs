@@ -220,7 +220,7 @@ impl ToTokens for ValidateField {
 
         let nested = if let Some(n) = self.nested {
             if n {
-                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
+                wrapper_closure(nested_tokens(&actual_field, &field_name_str, self.flatten))
             } else {
                 quote!()
             }
@@ -450,7 +450,7 @@ fn parse_serde_container_attrs(di: &DeriveInput) -> SerdeData {
         }
 
         let _ = attr.parse_nested_meta(|meta| {
-            if let Some(rename_all) = parse_serde_rename(meta, "rename_all")? {
+            if let Some(rename_all) = parse_serde_rename(&meta, "rename_all")? {
                 RenameRule::parse(rename_all).map(|rule| data.rename_all = rule);
             }
             Ok(())
@@ -475,8 +475,10 @@ fn parse_serde_attrs(
         }
 
         let _ = attr.parse_nested_meta(|meta| {
-            if let Some(rename) = parse_serde_rename(meta, "rename")? {
+            if let Some(rename) = parse_serde_rename(&meta, "rename")? {
                 vf.rename = Some(rename.value());
+            } else if meta.path.is_ident("flatten") {
+                vf.flatten = true;
             }
             Ok(())
         });
@@ -485,7 +487,7 @@ fn parse_serde_attrs(
     vf
 }
 
-fn parse_serde_rename(meta: ParseNestedMeta, id: &str) -> syn::Result<Option<LitStr>> {
+fn parse_serde_rename(meta: &ParseNestedMeta, id: &str) -> syn::Result<Option<LitStr>> {
     if !meta.path.is_ident(id) {
         return Ok(None);
     }
