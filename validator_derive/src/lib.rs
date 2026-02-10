@@ -3,8 +3,12 @@ use darling::util::{Override, WithOriginal};
 use darling::FromDeriveInput;
 use proc_macro_error2::{abort, proc_macro_error};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, DeriveInput, Field, GenericParam, Path, PathArguments};
+use syn::meta::ParseNestedMeta;
+use syn::{
+    parse_macro_input, DeriveInput, Field, GenericParam, LitStr, Path, PathArguments, Token,
+};
 
+use case::RenameRule;
 use tokens::cards::credit_card_tokens;
 use tokens::contains::contains_tokens;
 use tokens::custom::custom_tokens;
@@ -23,6 +27,7 @@ use tokens::url::url_tokens;
 use types::*;
 use utils::{quote_use_stmts, CrateName};
 
+mod case;
 mod tokens;
 mod types;
 mod utils;
@@ -30,7 +35,10 @@ mod utils;
 impl ToTokens for ValidateField {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let field_name = self.ident.clone().unwrap();
-        let field_name_str = self.ident.clone().unwrap().to_string();
+        let field_name_str = match &self.rename {
+            Some(rename) => rename.clone(),
+            None => self.ident.as_ref().unwrap().to_string(),
+        };
 
         let type_name = self.ty.to_token_stream().to_string();
         let is_number = NUMBER_TYPES.contains(&type_name);
@@ -211,7 +219,7 @@ impl ToTokens for ValidateField {
 
         let nested = if let Some(n) = self.nested {
             if n {
-                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
+                wrapper_closure(nested_tokens(&actual_field, &field_name_str, self.flatten))
             } else {
                 quote!()
             }
@@ -258,6 +266,11 @@ struct ValidationData {
     crate_name: CrateName,
 }
 
+#[derive(Debug, Default, Clone)]
+struct SerdeData {
+    rename_all: RenameRule,
+}
+
 impl ValidationData {
     fn validate(self) -> darling::Result<Self> {
         if let Some(context) = &self.context {
@@ -280,8 +293,7 @@ impl ValidationData {
         }
 
         if let Data::Struct(fields) = &self.data {
-            let original_fields: Vec<&Field> =
-                fields.fields.iter().map(|f| &f.original).collect();
+            let original_fields: Vec<&Field> = fields.fields.iter().map(|f| &f.original).collect();
             for f in &fields.fields {
                 f.parsed.validate(&self.ident, &original_fields, &f.original);
             }
@@ -295,6 +307,10 @@ impl ValidationData {
 #[proc_macro_derive(Validate, attributes(validate))]
 pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
+
+    // parse struct-level serde attributes
+    // i.e. rename_all
+    let serde = parse_serde_container_attrs(&input);
 
     // parse the input to the ValidationData struct defined above
     let validation_data = match ValidationData::from_derive_input(&input) {
@@ -325,7 +341,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         .unwrap()
         .fields
         .into_iter()
-        .map(|f| f.parsed)
+        .map(|f| parse_serde_attrs(f.parsed, f.original, &serde))
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .map(|f| ValidateField { crate_name: crate_name.clone(), ..f })
@@ -422,4 +438,72 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         }
     )
     .into()
+}
+
+fn parse_serde_container_attrs(di: &DeriveInput) -> SerdeData {
+    let mut data = SerdeData::default();
+
+    for attr in &di.attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if let Some(rename_all) = parse_serde_rename(&meta, "rename_all")? {
+                RenameRule::parse(rename_all).map(|rule| data.rename_all = rule);
+            }
+            Ok(())
+        });
+    }
+
+    data
+}
+
+fn parse_serde_attrs(
+    mut vf: ValidateField,
+    field: Field,
+    serde_struct: &SerdeData,
+) -> ValidateField {
+    if serde_struct.rename_all.is_some() {
+        vf.rename = Some(serde_struct.rename_all.apply(&vf.ident.as_ref().unwrap().to_string()));
+    }
+
+    for attr in field.attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if let Some(rename) = parse_serde_rename(&meta, "rename")? {
+                vf.rename = Some(rename.value());
+            } else if meta.path.is_ident("flatten") {
+                vf.flatten = true;
+            }
+            Ok(())
+        });
+    }
+
+    vf
+}
+
+fn parse_serde_rename(meta: &ParseNestedMeta, id: &str) -> syn::Result<Option<LitStr>> {
+    if !meta.path.is_ident(id) {
+        return Ok(None);
+    }
+
+    if meta.input.peek(Token![=]) {
+        let value = meta.value()?;
+        Ok(Some(value.parse()?))
+    } else {
+        let mut res = None;
+        meta.parse_nested_meta(|meta| {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            if meta.path.is_ident("deserialize") {
+                res = Some(s);
+            }
+            Ok(())
+        })?;
+        Ok(res)
+    }
 }

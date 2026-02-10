@@ -87,6 +87,19 @@ impl ValidationErrors {
         }
     }
 
+    pub fn merge_self_flatten(
+        &mut self,
+        child: Result<(), ValidationErrors>,
+    ) -> &mut ValidationErrors {
+        match child {
+            Ok(()) => self,
+            Err(errors) => {
+                self.0.extend(errors.0);
+                self
+            }
+        }
+    }
+
     /// Returns the combined outcome of a struct's validation result along with the nested
     /// validation result for one of its fields.
     pub fn merge(
