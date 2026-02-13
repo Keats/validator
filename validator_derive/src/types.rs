@@ -151,7 +151,12 @@ impl ValidateField {
 
     /// How many Option<Option< are there before the actual field
     pub fn number_options(&self) -> u8 {
-        fn find_option(mut count: u8, ty: &syn::Type) -> u8 {
+        fn find_option(mut count: u8, mut ty: &syn::Type) -> u8 {
+            // Unwrap `Type::Group`s, these might occur when used with other derive macros.
+            while let syn::Type::Group(inner) = ty {
+                ty = &inner.elem;
+            }
+
             if let syn::Type::Path(p) = ty {
                 let idents_of_path =
                     p.path.segments.iter().fold(String::new(), |mut acc, v| {
