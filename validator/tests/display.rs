@@ -47,9 +47,13 @@ mod tests {
 
     #[test]
     fn test_nested_vec() {
-        let bad_foo = Foo { foo: "hi!".into() };
-        let bad_baz = Baz { baz: vec![bad_foo] };
+        let bad_foo_1 = Foo { foo: "hi!".into() };
+        let bad_foo_2 = Foo { foo: "hi!".into() };
+        let bad_baz = Baz { baz: vec![bad_foo_1, bad_foo_2] };
         let err = format!("{}", bad_baz.validate().unwrap_err());
-        assert_eq!(err, "baz[0].foo: Please provide a valid foo!");
+        assert_eq!(
+            err,
+            "baz[0].foo: Please provide a valid foo!\nbaz[1].foo: Please provide a valid foo!"
+        );
     }
 }

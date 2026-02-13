@@ -5,9 +5,9 @@ use crate::{ValidationError, ValidationErrors, ValidationErrorsKind};
 impl fmt::Display for ValidationError {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(msg) = self.message.as_ref() {
-            write!(fmt, "{}", msg)
+            writeln!(fmt, "{}", msg)
         } else {
-            write!(fmt, "Validation error: {} [{:?}]", self.code, self.params)
+            writeln!(fmt, "Validation error: {} [{:?}]", self.code, self.params)
         }
     }
 }
