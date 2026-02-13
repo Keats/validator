@@ -155,12 +155,12 @@ validation functions and types.
 ## Validators
 The crate comes with some built-in validators and you can have several validators for a given field.
 
-### email
+### email (optional)
 Tests whether the String is a valid email according to the HTML5 regex, which means it will mark
 some esoteric emails as invalid that won't be valid in a `email` input as well.
 This validator doesn't take any arguments: `#[validate(email)]`.
 
-### url
+### url (optional)
 Tests whether the String is a valid URL.
 This validator doesn't take any arguments: `#[validate(url)]`;
 
@@ -244,7 +244,7 @@ Examples:
 #[validate(does_not_contain(pattern = "gmail"))]
 ```
 
-### regex
+### regex (optional)
 Tests whether the string matches the regex given. `regex` takes
 1 string argument: the path to a static Regex instance.
 
@@ -402,5 +402,10 @@ For example, the following attributes all work:
 ```
 
 ## Features
+By default, the `email`, `url` and `regex` features are enabled to provide compatibility with versions < 0.21.0.s
+
 `derive` - This allows for the use of the derive macro.
 `derive_nightly_features` - This imports both derive as well as proc-macro-error2 nightly features. This allows proc-macro-error2 to emit extra nightly warnings.
+`email` - Allows for email validation, pulls in idna and turns on `regex` feature flag.
+`url` - Allows for url validation, pulls in url optional dependency.
+`regex` - Allows for regex validation, pulling in regex optional dependency.

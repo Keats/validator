@@ -1,6 +1,6 @@
 [package]
 name = "validator"
-version = "0.20.0"
+version = "0.21.0"
 authors = ["Vincent Prouillet <hello@vincentprouillet.com"]
 license = "MIT"
 description = "Common validation functions (email, url, length, ...) and trait - to be used with `validator_derive`"
@@ -12,9 +12,9 @@ readme = "../README.md"
 rust-version = { workspace = true }
 
 [dependencies]
-url = "2"
-regex = { version = "1", default-features = false, features = ["std"] }
-idna = "1"
+url = { version = "2", optional = true }
+regex = { version = "1", default-features = false, features = ["std"], optional = true }
+idna = { version = "1", optional = true }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
@@ -23,6 +23,10 @@ card-validate = { version = "2.3", optional = true }
 indexmap = { version = "2.0.0", features = ["serde"], optional = true }
 
 [features]
+default = ["regex", "url", "email"]
 card = ["card-validate"]
 derive = ["validator_derive"]
 derive_nightly_features = ["derive", "validator_derive/nightly_features"]
+regex = ["dep:regex"]
+url = ["dep:url"]
+email = ["dep:idna", "regex"]

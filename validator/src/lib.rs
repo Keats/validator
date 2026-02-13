@@ -69,14 +69,17 @@ mod validation;
 pub use validation::cards::ValidateCreditCard;
 pub use validation::contains::ValidateContains;
 pub use validation::does_not_contain::ValidateDoesNotContain;
+#[cfg(feature = "email")]
 pub use validation::email::ValidateEmail;
 pub use validation::ip::ValidateIp;
 pub use validation::length::ValidateLength;
 pub use validation::must_match::validate_must_match;
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
+#[cfg(feature = "regex")]
 pub use validation::regex::{AsRegex, ValidateRegex};
 pub use validation::required::ValidateRequired;
+#[cfg(feature = "url")]
 pub use validation::urls::ValidateUrl;
 
 pub use traits::{Validate, ValidateArgs};
