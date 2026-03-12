@@ -9,12 +9,12 @@ use serde_json::{to_value, Value};
 pub struct ValidationError {
     pub code: Cow<'static, str>,
     pub message: Option<Cow<'static, str>>,
-    pub params: HashMap<Cow<'static, str>, Value>,
+    pub params: ValidationErrorParams,
 }
 
 impl ValidationError {
     pub fn new(code: &'static str) -> ValidationError {
-        ValidationError { code: Cow::from(code), message: None, params: HashMap::new() }
+        ValidationError { code: Cow::from(code), message: None, params: Default::default() }
     }
 
     pub fn add_param<T: Serialize>(&mut self, name: Cow<'static, str>, val: &T) {
@@ -204,5 +204,32 @@ impl std::error::Error for ValidationErrors {
     }
     fn cause(&self) -> Option<&dyn std::error::Error> {
         None
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ValidationErrorParams(HashMap<Cow<'static, str>, Value>);
+
+impl std::fmt::Display for ValidationErrorParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            f.write_str(&serde_json::to_string_pretty(&self.0).map_err(|_| std::fmt::Error)?)
+        } else {
+            f.write_str(&serde_json::to_string(&self.0).map_err(|_| std::fmt::Error)?)
+        }
+    }
+}
+
+impl std::ops::Deref for ValidationErrorParams {
+    type Target = HashMap<Cow<'static, str>, Value>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for ValidationErrorParams {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
