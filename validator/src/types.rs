@@ -233,3 +233,45 @@ impl std::ops::DerefMut for ValidationErrorParams {
         &mut self.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_params_display_empty() {
+        let params = ValidationErrorParams::default();
+        assert_eq!(format!("{}", params), "{}");
+    }
+
+    #[test]
+    fn test_params_display_with_values() {
+        let mut params = ValidationErrorParams::default();
+        params.insert(Cow::Borrowed("min"), serde_json::json!(5));
+        assert_eq!(format!("{}", params), r#"{"min":5}"#);
+    }
+
+    #[test]
+    fn test_params_display_alternate() {
+        let mut params = ValidationErrorParams::default();
+        params.insert(Cow::Borrowed("min"), serde_json::json!(5));
+        let pretty = format!("{:#}", params);
+        assert!(pretty.contains('\n'), "alternate format should be pretty-printed");
+        assert!(pretty.contains("\"min\": 5"));
+    }
+
+    #[test]
+    fn test_params_deref() {
+        let mut params = ValidationErrorParams::default();
+        params.insert(Cow::Borrowed("key"), serde_json::json!("value"));
+        assert_eq!(params.len(), 1);
+        assert!(params.contains_key("key"));
+    }
+
+    #[test]
+    fn test_params_deref_mut() {
+        let mut params = ValidationErrorParams::default();
+        params.insert(Cow::Borrowed("key"), serde_json::json!(42));
+        assert_eq!(params.get("key"), Some(&serde_json::json!(42)));
+    }
+}
