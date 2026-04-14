@@ -2,14 +2,17 @@ error[E0432]: unresolved import `validator_other`
  --> tests/compile-fail/wrong_crate_alias.rs:9:24
   |
 9 |     #[validate(crate = "validator_other")]
-  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |                        ^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `validator_other`
+  |
+  = help: if you wanted to use a crate named `validator_other`, use `cargo add validator_other` to add it to your `Cargo.toml`
 
-error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `validator_other`
  --> tests/compile-fail/wrong_crate_alias.rs:9:24
   |
 9 |     #[validate(crate = "validator_other")]
-  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |                        ^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `validator_other`
   |
+  = help: if you wanted to use a crate named `validator_other`, use `cargo add validator_other` to add it to your `Cargo.toml`
 help: consider importing one of these structs
   |
 4 +     use crate::validator_renamed::ValidationErrors;
@@ -17,12 +20,13 @@ help: consider importing one of these structs
 4 +     use validator::ValidationErrors;
   |
 
-error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `validator_other`
  --> tests/compile-fail/wrong_crate_alias.rs:9:24
   |
 9 |     #[validate(crate = "validator_other")]
-  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |                        ^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `validator_other`
   |
+  = help: if you wanted to use a crate named `validator_other`, use `cargo add validator_other` to add it to your `Cargo.toml`
 help: consider importing one of these structs
   |
 4 +     use crate::validator_renamed::ValidationError;
@@ -30,8 +34,10 @@ help: consider importing one of these structs
 4 +     use validator::ValidationError;
   |
 
-error[E0433]: failed to resolve: use of undeclared crate or module `validator_other`
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `validator_other`
  --> tests/compile-fail/wrong_crate_alias.rs:9:24
   |
 9 |     #[validate(crate = "validator_other")]
-  |                        ^^^^^^^^^^^^^^^^^ use of undeclared crate or module `validator_other`
+  |                        ^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `validator_other`
+  |
+  = help: if you wanted to use a crate named `validator_other`, use `cargo add validator_other` to add it to your `Cargo.toml`
