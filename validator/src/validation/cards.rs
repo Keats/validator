@@ -9,11 +9,11 @@ pub trait ValidateCreditCard {
         CardValidate::from(&card_string).is_ok()
     }
 
-    fn as_credit_card_string(&self) -> Cow<str>;
+    fn as_credit_card_string(&self) -> Cow<'_, str>;
 }
 
 impl<T: AsRef<str>> ValidateCreditCard for T {
-    fn as_credit_card_string(&self) -> Cow<str> {
+    fn as_credit_card_string(&self) -> Cow<'_, str> {
         Cow::from(self.as_ref())
     }
 }

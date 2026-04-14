@@ -280,8 +280,7 @@ impl ValidationData {
         }
 
         if let Data::Struct(fields) = &self.data {
-            let original_fields: Vec<&Field> =
-                fields.fields.iter().map(|f| &f.original).collect();
+            let original_fields: Vec<&Field> = fields.fields.iter().map(|f| &f.original).collect();
             for f in &fields.fields {
                 f.parsed.validate(&self.ident, &original_fields, &f.original);
             }

@@ -16,7 +16,7 @@ pub trait ValidateUrl {
         }
     }
 
-    fn as_url_string(&self) -> Option<Cow<str>>;
+    fn as_url_string(&self) -> Option<Cow<'_, str>>;
 }
 
 macro_rules! validate_type_that_derefs {
@@ -25,7 +25,7 @@ macro_rules! validate_type_that_derefs {
         where
             T: ValidateUrl,
         {
-            fn as_url_string(&self) -> Option<Cow<str>> {
+            fn as_url_string(&self) -> Option<Cow<'_, str>> {
                 T::as_url_string(self)
             }
         }
@@ -42,7 +42,7 @@ validate_type_that_derefs!(RefMut<'_, T>);
 macro_rules! validate_type_of_str {
     ($type_:ty) => {
         impl ValidateUrl for $type_ {
-            fn as_url_string(&self) -> Option<Cow<str>> {
+            fn as_url_string(&self) -> Option<Cow<'_, str>> {
                 Some(Cow::Borrowed(self))
             }
         }
@@ -57,7 +57,7 @@ impl<T> ValidateUrl for Option<T>
 where
     T: ValidateUrl,
 {
-    fn as_url_string(&self) -> Option<Cow<str>> {
+    fn as_url_string(&self) -> Option<Cow<'_, str>> {
         let Some(u) = self else {
             return None;
         };
