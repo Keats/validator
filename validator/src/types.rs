@@ -212,11 +212,12 @@ pub struct ValidationErrorParams(HashMap<Cow<'static, str>, Value>);
 
 impl std::fmt::Display for ValidationErrorParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if f.alternate() {
-            f.write_str(&serde_json::to_string_pretty(&self.0).map_err(|_| std::fmt::Error)?)
+        let s = if f.alternate() {
+           serde_json::to_string_pretty(&self.0)
         } else {
-            f.write_str(&serde_json::to_string(&self.0).map_err(|_| std::fmt::Error)?)
-        }
+            serde_json::to_string(&self.0)
+        }.map_err(|_| std::fmt::Error)?;
+        f.write_str(&s);
     }
 }
 
