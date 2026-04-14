@@ -6,7 +6,7 @@ jobs:
     name: Continuous integration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Extract Rust version from Cargo.toml
         run: |
           MSRV=$(sed -n 's/^rust-version = "\([^"]*\)"/\1/p' Cargo.toml)
@@ -34,7 +34,7 @@ jobs:
         include:
           - rust: nightly
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
