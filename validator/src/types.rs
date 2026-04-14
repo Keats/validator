@@ -217,7 +217,7 @@ impl std::fmt::Display for ValidationErrorParams {
         } else {
             serde_json::to_string(&self.0)
         }.map_err(|_| std::fmt::Error)?;
-        f.write_str(&s);
+        f.write_str(&s)
     }
 }
 
