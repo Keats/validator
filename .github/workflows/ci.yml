@@ -6,7 +6,7 @@ jobs:
     name: Continuous integration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Extract Rust version from Cargo.toml
         run: |
           MSRV=$(sed -n 's/^rust-version = "\([^"]*\)"/\1/p' Cargo.toml)
@@ -16,6 +16,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable # actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ env.MSRV }}
+          components: clippy,rustfmt
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
       - name: Build System Info
@@ -26,6 +27,11 @@ jobs:
           cargo test --no-default-features
           cargo build --features derive --features card
           cargo test --features derive --features card
+      - name: Format check
+        run: cargo fmt --check
+      - name: Run Clippy
+        run: cargo clippy --all-targets --features derive --features card -- -D warnings
+
   test_validator-nightly:
     name: Continuous integration
     runs-on: ubuntu-latest
@@ -34,7 +40,7 @@ jobs:
         include:
           - rust: nightly
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:

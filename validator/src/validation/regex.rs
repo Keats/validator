@@ -6,11 +6,11 @@ use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use regex::Regex;
 
 pub trait AsRegex {
-    fn as_regex(&self) -> Cow<Regex>;
+    fn as_regex(&self) -> Cow<'_, Regex>;
 }
 
 impl AsRegex for Regex {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Borrowed(self)
     }
 }
@@ -19,43 +19,43 @@ impl<T> AsRegex for &T
 where
     T: AsRegex,
 {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         T::as_regex(self)
     }
 }
 
 impl AsRegex for &OnceLock<Regex> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Borrowed(self.get().unwrap())
     }
 }
 
 impl AsRegex for &Mutex<OnceCell<Regex>> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
 impl AsRegex for &Mutex<OnceLock<Regex>> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
 impl AsRegex for &Arc<Mutex<OnceCell<Regex>>> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
 impl AsRegex for &Arc<Mutex<OnceLock<Regex>>> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Owned(self.lock().unwrap().get().unwrap().clone())
     }
 }
 
 impl AsRegex for LazyLock<Regex> {
-    fn as_regex(&self) -> Cow<Regex> {
+    fn as_regex(&self) -> Cow<'_, Regex> {
         Cow::Borrowed(self)
     }
 }

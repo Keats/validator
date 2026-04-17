@@ -77,20 +77,20 @@ pub trait ValidateEmail {
         true
     }
 
-    fn as_email_string(&self) -> Option<Cow<str>>;
+    fn as_email_string(&self) -> Option<Cow<'_, str>>;
 }
 
 impl<T> ValidateEmail for &T
 where
     T: ValidateEmail,
 {
-    fn as_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
         T::as_email_string(self)
     }
 }
 
 impl ValidateEmail for String {
-    fn as_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
         Some(Cow::from(self))
     }
 }
@@ -99,7 +99,7 @@ impl<T> ValidateEmail for Option<T>
 where
     T: ValidateEmail,
 {
-    fn as_email_string(&self) -> Option<Cow<str>> {
+    fn as_email_string(&self) -> Option<Cow<'_, str>> {
         let Some(u) = self else {
             return None;
         };

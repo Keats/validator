@@ -1,6 +1,6 @@
 use serde::Serialize;
+use std::fmt;
 use validator::Validate;
-
 #[test]
 fn can_validate_ipv4() {
     #[derive(Validate)]
@@ -170,9 +170,9 @@ fn can_validate_custom_impl_for_ip() {
         val: CustomIp,
     }
 
-    impl ToString for CustomIp {
-        fn to_string(&self) -> String {
-            format!("{}.{}.{}.{}", self.a, self.b, self.c, self.d)
+    impl fmt::Display for CustomIp {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}.{}.{}.{}", self.a, self.b, self.c, self.d)
         }
     }
 
