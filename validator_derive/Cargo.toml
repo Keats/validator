@@ -19,7 +19,7 @@ syn = "2"
 quote = "1"
 proc-macro2 = "1"
 proc-macro-error2 = "2"
-darling = { version = "0.20", features = ["suggestions"] }
+darling = { version = "0.21", features = ["suggestions"] }
 
 [features]
 nightly_features = ["proc-macro-error2/nightly"]
