@@ -19,20 +19,21 @@ static EMAIL_LITERAL_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\[([a-fA-F0-9:\.]+)\]\z").unwrap());
 
 /// Checks if the domain is a valid domain and if not, check whether it's an IP
-#[must_use]
 fn validate_domain_part(domain_part: &str) -> bool {
-    if EMAIL_DOMAIN_RE.is_match(domain_part) {
+    // if it's a domain literal like [127.0.0.1]
+    if let Some(caps) = EMAIL_LITERAL_RE.captures(domain_part) {
+        return match caps.get(1) {
+            Some(c) => c.as_str().validate_ip(),
+            None => false,
+        };
+    }
+
+    // Check if domain matches pattern and contains at least one dot
+    if EMAIL_DOMAIN_RE.is_match(domain_part) && domain_part.contains('.') {
         return true;
     }
 
-    // maybe we have an ip as a domain?
-    match EMAIL_LITERAL_RE.captures(domain_part) {
-        Some(caps) => match caps.get(1) {
-            Some(c) => c.as_str().validate_ip(),
-            None => false,
-        },
-        None => false,
-    }
+    false
 }
 
 /// Validates whether the given string is an email based on the [HTML5 spec](https://html.spec.whatwg.org/multipage/forms.html#valid-e-mail-address).
@@ -154,7 +155,7 @@ mod tests {
             ("", false),
             ("abc", false),
             ("abc@", false),
-            ("abc@bar", true),
+            ("abc@bar", false),
             ("a @x.cz", false),
             ("abc@.com", false),
             ("something@@somewhere.com", false),
@@ -212,5 +213,11 @@ mod tests {
         // 256 character domain part
         let test = "a@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com";
         assert!(!test.validate_email());
+    }
+
+    #[test]
+    fn test_user_at_com_fails() {
+        let test = "user@com";
+        assert!(!test.validate_email(), "user@com should not be valid");
     }
 }
