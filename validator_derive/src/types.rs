@@ -67,6 +67,10 @@ pub struct ValidateField {
     pub custom: Vec<Custom>,
     pub skip: Option<bool>,
     pub nested: Option<bool>,
+    #[darling(skip)]
+    pub rename: Option<String>,
+    #[darling(skip)]
+    pub flatten: bool,
     /// Placeholder for the crate name, filled in by the [`ValidationData`](crate::ValidationData) value.
     #[darling(skip)]
     pub crate_name: CrateName,
