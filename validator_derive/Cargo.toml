@@ -18,8 +18,8 @@ proc-macro = true
 syn = "2"
 quote = "1"
 proc-macro2 = "1"
-proc-macro-error2 = "2"
+proc-macro-error3 = "3"
 darling = { version = "0.21", features = ["suggestions"] }
 
 [features]
-nightly_features = ["proc-macro-error2/nightly"]
+nightly_features = ["proc-macro-error3/nightly"]
