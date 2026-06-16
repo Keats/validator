@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use darling::util::Override;
 use darling::{FromField, FromMeta};
 
-use proc_macro_error2::abort;
+use proc_macro_error3::abort;
 use quote::quote;
 use syn::spanned::Spanned;
 use syn::{Expr, Field, Ident, Path};
