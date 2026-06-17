@@ -7,7 +7,7 @@ impl fmt::Display for ValidationError {
         if let Some(msg) = self.message.as_ref() {
             write!(fmt, "{}", msg)
         } else {
-            write!(fmt, "Validation error: {} [{:?}]", self.code, self.params)
+            write!(fmt, "Validation error: {} [{}]", self.code, self.params)
         }
     }
 }

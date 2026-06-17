@@ -1,3 +1,14 @@
+#[test]
+fn test_validation_error_display_without_message() {
+    use std::borrow::Cow;
+    use validator::ValidationError;
+
+    let mut err = ValidationError::new("length");
+    err.add_param(Cow::Borrowed("min"), &1);
+    let display = format!("{}", err);
+    assert_eq!(display, r#"Validation error: length [{"min":1}]"#);
+}
+
 #[cfg(feature = "derive")]
 mod tests {
     use validator::Validate;
