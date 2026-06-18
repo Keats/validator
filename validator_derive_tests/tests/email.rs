@@ -100,3 +100,24 @@ fn can_validate_custom_impl_for_email() {
     assert!(valid.validate().is_ok());
     assert!(invalid.validate().is_err());
 }
+
+#[test]
+fn top_level_domain_only_fails_validation() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(email)]
+        val: String,
+    }
+
+    let s = TestStruct { val: "user@com".to_string() };
+    let res = s.validate();
+    assert!(res.is_err());
+
+    let err = res.unwrap_err();
+    let errs = err.field_errors();
+
+    assert!(errs.contains_key("val"));
+    assert_eq!(errs["val"].len(), 1);
+    assert_eq!(errs["val"][0].code, "email");
+    assert_eq!(errs["val"][0].params["value"], "user@com");
+}
