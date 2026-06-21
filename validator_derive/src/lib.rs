@@ -211,7 +211,7 @@ impl ToTokens for ValidateField {
 
         let nested = if let Some(n) = self.nested {
             if n {
-                wrapper_closure(nested_tokens(&actual_field, &field_name_str))
+                wrapper_closure(nested_tokens(&actual_field, &field_name_str, &self.crate_name))
             } else {
                 quote!()
             }
