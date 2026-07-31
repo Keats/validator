@@ -910,3 +910,30 @@ where
     let errors = errors.clone();
     f(errors.errors().clone());
 }
+
+/// Sometimes users may want to use absolute path on struct, and validate in other module
+pub mod test_nest_field_with_absolute_path {
+    #[derive(validator::Validate)]
+    struct Parent {
+        #[validate(nested)]
+        child: Child,
+        #[validate(nested)]
+        child2: Child,
+    }
+
+    #[derive(validator::Validate)]
+    struct Child {
+        #[validate(length(min = 1))]
+        value: String,
+    }
+
+    #[test]
+    fn test() {
+        use validator::Validate;
+        let instance = Parent {
+            child: Child { value: String::from("1") },
+            child2: Child { value: String::from("2") },
+        };
+        assert!(instance.validate().is_ok());
+    }
+}
