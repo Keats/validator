@@ -162,7 +162,13 @@ impl ValidationErrors {
             })
             .collect::<HashMap<_, _>>()
     }
+    /// Add a field validation error to the struct, returning self
+    pub fn with_error(mut self, field: &'static str, error: ValidationError) -> ValidationErrors {
+        self.add(field, error);
+        self
+    }
 
+    /// Add a field validation error to the struct
     pub fn add(&mut self, field: &'static str, error: ValidationError) {
         if let ValidationErrorsKind::Field(ref mut vec) = self
             .0
