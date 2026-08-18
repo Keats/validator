@@ -262,8 +262,31 @@ pub struct Length {
     pub min: Option<Expr>,
     pub max: Option<Expr>,
     pub equal: Option<Expr>,
+    pub unit: Option<LengthUnit>,
     pub message: Option<String>,
     pub code: Option<String>,
+}
+
+/// The unit a `length` validator uses to measure a string, mirroring
+/// `validator::LengthUnit`. Accepted as `unit = "chars" | "utf16" | "bytes"`.
+#[derive(Debug, Clone, Copy)]
+pub enum LengthUnit {
+    Chars,
+    Utf16,
+    Bytes,
+}
+
+impl FromMeta for LengthUnit {
+    fn from_string(value: &str) -> darling::Result<Self> {
+        match value {
+            "chars" | "unicode" => Ok(LengthUnit::Chars),
+            "utf16" | "utf-16" => Ok(LengthUnit::Utf16),
+            "bytes" | "utf8" | "utf-8" => Ok(LengthUnit::Bytes),
+            _ => Err(darling::Error::custom(format!(
+                "unknown length unit `{value}`, expected one of: chars, utf16, bytes"
+            ))),
+        }
+    }
 }
 
 #[derive(Debug, Clone, FromMeta)]

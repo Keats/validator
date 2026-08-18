@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::types::Length;
+use crate::types::{Length, LengthUnit};
 use crate::utils::{CrateName, quote_code, quote_message};
 
 pub fn length_tokens(
@@ -25,16 +25,31 @@ pub fn length_tokens(
         (quote!(None), quote!())
     };
 
+    let (length_check, unit_err) = if let Some(unit) = length.unit {
+        let (variant, unit_str) = match unit {
+            LengthUnit::Chars => (quote!(Chars), "chars"),
+            LengthUnit::Utf16 => (quote!(Utf16), "utf16"),
+            LengthUnit::Bytes => (quote!(Bytes), "bytes"),
+        };
+        (
+            quote!(validate_length_with_unit(#crate_name::LengthUnit::#variant, #min, #max, #equal)),
+            quote!(err.add_param(::std::borrow::Cow::from("unit"), &#unit_str);),
+        )
+    } else {
+        (quote!(validate_length(#min, #max, #equal)), quote!())
+    };
+
     let message = quote_message(length.message);
     let code = quote_code(crate_name, length.code, "length");
 
     quote! {
-        if !#field_name.validate_length(#min, #max, #equal) {
+        if !#field_name.#length_check {
             #code
             #message
             #min_err
             #max_err
             #equal_err
+            #unit_err
             err.add_param(::std::borrow::Cow::from("value"), &#field_name);
             errors.add(#field_name_str, err);
         }

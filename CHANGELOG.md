@@ -1,5 +1,9 @@
 ## Changelog
 
+## Unreleased
+
+- Add a `unit` argument to the `length` validator to measure strings in UTF-16 code units or bytes (`unit = "utf16"` / `unit = "bytes"`) in addition to the default `char` count. Also exposes `LengthUnit` and `ValidateLength::validate_length_with_unit`.
+
 ## 0.21.0 (2026/07/09)
 
 - Replace dep proc-macro-error2 with proc-macro-error3
