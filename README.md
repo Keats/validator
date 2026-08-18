@@ -175,6 +175,14 @@ Using `equal` excludes the `min` or `max` and will result in a compilation error
 
 At least one argument is required with a maximum of 2 (having `min` and `max` at the same time).
 
+By default the length of a string is measured in Unicode scalar values (the number of `char`s). For strings you can measure it in a different `unit` instead:
+
+- `chars` (default): number of `char`s, i.e. Unicode scalar values
+- `utf16`: number of UTF-16 code units, matching JavaScript's `String.length` and the `maxlength` attribute of HTML form fields
+- `bytes`: number of bytes of the UTF-8 encoding
+
+The `unit` argument is ignored for collections (`Vec`, `HashMap`, ...), which are always measured by their number of elements.
+
 Examples:
 
 ```rust
@@ -186,6 +194,8 @@ const MAX_CONST: u64 = 10;
 #[validate(length(max = 10))]
 #[validate(length(equal = 10))]
 #[validate(length(min = "MIN_CONST", max = "MAX_CONST"))]
+#[validate(length(max = 10, unit = "utf16"))]
+#[validate(length(min = 1, max = 20, unit = "bytes"))]
 ```
 
 ### range

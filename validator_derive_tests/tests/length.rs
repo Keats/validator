@@ -232,3 +232,79 @@ fn can_validate_custom_impl_for_length() {
     assert!(ok.validate().is_ok());
     assert!(equals_ok.validate().is_ok());
 }
+
+#[test]
+fn can_validate_length_with_utf16_unit() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(length(max = 4, unit = "utf16"))]
+        val: String,
+    }
+
+    // "🖐🏽" is 2 chars but 4 UTF-16 code units, so max = 4 is exactly satisfied.
+    assert!(TestStruct { val: "🖐🏽".to_string() }.validate().is_ok());
+    // Two of them is 8 UTF-16 code units and must fail.
+    assert!(TestStruct { val: "🖐🏽🖐🏽".to_string() }.validate().is_err());
+}
+
+#[test]
+fn can_validate_length_with_bytes_unit() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(length(min = 2, max = 6, unit = "bytes"))]
+        val: String,
+    }
+
+    // "日本" is 2 chars but 6 UTF-8 bytes.
+    assert!(TestStruct { val: "日本".to_string() }.validate().is_ok());
+    // "日" alone is 3 bytes -> still ok, "a" is 1 byte -> too short.
+    assert!(TestStruct { val: "a".to_string() }.validate().is_err());
+}
+
+#[test]
+fn length_unit_defaults_to_chars() {
+    #[derive(Debug, Validate)]
+    struct WithUnit {
+        #[validate(length(equal = 2, unit = "chars"))]
+        val: String,
+    }
+
+    #[derive(Debug, Validate)]
+    struct WithoutUnit {
+        #[validate(length(equal = 2))]
+        val: String,
+    }
+
+    // Explicit `chars` must behave exactly like omitting the unit.
+    assert!(WithUnit { val: "日本".to_string() }.validate().is_ok());
+    assert!(WithoutUnit { val: "日本".to_string() }.validate().is_ok());
+}
+
+#[test]
+fn length_unit_is_exposed_as_a_param() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(length(max = 1, unit = "bytes"))]
+        val: String,
+    }
+
+    let err = TestStruct { val: "日本".to_string() }.validate().unwrap_err();
+    let errs = err.field_errors();
+    assert_eq!(errs["val"][0].code, "length");
+    assert_eq!(errs["val"][0].params["unit"], "bytes");
+    assert_eq!(errs["val"][0].params["max"], 1);
+}
+
+#[test]
+fn can_validate_length_with_unit_on_optional_string() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(length(max = 4, unit = "utf16"))]
+        val: Option<String>,
+    }
+
+    assert!(TestStruct { val: Some("🖐🏽".to_string()) }.validate().is_ok());
+    assert!(TestStruct { val: Some("🖐🏽🖐🏽".to_string()) }.validate().is_err());
+    // `None` skips the validation entirely.
+    assert!(TestStruct { val: None }.validate().is_ok());
+}

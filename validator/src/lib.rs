@@ -71,7 +71,7 @@ pub use validation::contains::ValidateContains;
 pub use validation::does_not_contain::ValidateDoesNotContain;
 pub use validation::email::ValidateEmail;
 pub use validation::ip::ValidateIp;
-pub use validation::length::ValidateLength;
+pub use validation::length::{LengthUnit, ValidateLength};
 pub use validation::must_match::validate_must_match;
 pub use validation::non_control_character::ValidateNonControlCharacter;
 pub use validation::range::ValidateRange;
