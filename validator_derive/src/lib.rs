@@ -178,12 +178,20 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
-        // Regex validation
-        let regex = if let Some(regex) = self.regex.clone() {
-            wrapper_closure(regex_tokens(&self.crate_name, regex, &actual_field, &field_name_str))
-        } else {
-            quote!()
-        };
+        // Regex validation (multiple allowed — restores pre-0.18 multi-regex attrs)
+        let mut regex = quote!();
+        for r in &self.regex {
+            let tokens =
+                regex_tokens(&self.crate_name, r.clone(), &actual_field, &field_name_str);
+            regex = quote!(
+                #regex
+
+                #tokens
+            );
+        }
+        if !self.regex.is_empty() {
+            regex = wrapper_closure(regex);
+        }
 
         // Custom validation
         let mut custom = quote!();
