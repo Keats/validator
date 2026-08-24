@@ -139,3 +139,49 @@ fn can_specify_lazy_lock_for_regex() {
     let t = TestStruct { val: "aaa".to_string() };
     assert!(t.validate().is_err());
 }
+
+
+static RE_ALPHA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-z]+$").unwrap());
+static RE_EXACT3: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^.{3}$").unwrap());
+
+#[test]
+fn can_validate_multiple_regex_on_one_field() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(regex(path = *crate::RE_ALPHA), regex(path = *crate::RE_EXACT3))]
+        val: String,
+    }
+
+    assert!(TestStruct { val: "abc".to_string() }.validate().is_ok());
+
+    // fails exact-length regex
+    let res = TestStruct { val: "ab".to_string() }.validate();
+    assert!(res.is_err());
+    assert_eq!(res.unwrap_err().field_errors()["val"].len(), 1);
+
+    // fails alpha regex
+    let res = TestStruct { val: "123".to_string() }.validate();
+    assert!(res.is_err());
+    assert_eq!(res.unwrap_err().field_errors()["val"].len(), 1);
+}
+
+#[test]
+fn multiple_regex_can_each_fail() {
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(
+            regex(path = *crate::RE_ALPHA, message = "alpha"),
+            regex(path = *crate::RE_EXACT3, message = "len3")
+        )]
+        val: String,
+    }
+
+    // fails both: not alpha and not length 3
+    let res = TestStruct { val: "12".to_string() }.validate();
+    assert!(res.is_err());
+    let errs = res.unwrap_err().field_errors()["val"].clone();
+    assert_eq!(errs.len(), 2);
+    let messages: Vec<_> = errs.into_iter().map(|e| e.message.unwrap()).collect();
+    assert!(messages.contains(&"alpha".into()));
+    assert!(messages.contains(&"len3".into()));
+}

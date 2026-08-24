@@ -62,7 +62,8 @@ pub struct ValidateField {
     pub range: Option<Range>,
     pub required: Option<Override<Required>>,
     pub url: Option<Override<Url>>,
-    pub regex: Option<Regex>,
+    #[darling(multiple)]
+    pub regex: Vec<Regex>,
     #[darling(multiple)]
     pub custom: Vec<Custom>,
     pub skip: Option<bool>,

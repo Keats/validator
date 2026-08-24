@@ -137,7 +137,7 @@ pub fn quote_use_stmts(
             );
         }
 
-        if f.regex.is_some() {
+        if !f.regex.is_empty() {
             regex = quote!(
                 use #crate_name::ValidateRegex;
             );
