@@ -91,3 +91,22 @@ fn can_specify_message_for_does_not_contain() {
     assert_eq!(errs["val"].len(), 1);
     assert_eq!(errs["val"][0].clone().message.unwrap(), "oops");
 }
+
+#[test]
+fn does_not_contain_skips_none_values() {
+    type MaybeName = Option<String>;
+
+    #[derive(Debug, Validate)]
+    struct TestStruct {
+        #[validate(does_not_contain(pattern = "he"))]
+        val: MaybeName,
+        #[validate(does_not_contain(pattern = "he"))]
+        opt: Option<String>,
+    }
+
+    let s = TestStruct { val: None, opt: None };
+    assert!(s.validate().is_ok());
+
+    let s = TestStruct { val: Some("hello".to_string()), opt: None };
+    assert!(s.validate().is_err());
+}
