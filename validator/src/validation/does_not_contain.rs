@@ -9,7 +9,8 @@ where
     T: ValidateContains,
 {
     fn validate_does_not_contain(&self, needle: &str) -> bool {
-        !self.validate_contains(needle)
+        // an absent value has nothing to contain, so the rule is skipped as it is for `contains`
+        self.contains_is_absent() || !self.validate_contains(needle)
     }
 }
 
@@ -50,6 +51,22 @@ mod tests {
         assert!(test.validate_does_not_contain("b"));
         let test: Cow<'static, str> = String::from("hey").into();
         assert!(test.validate_does_not_contain("b"));
+    }
+
+    #[test]
+    fn test_validate_does_not_contain_option_none_is_skipped() {
+        let none: Option<String> = None;
+        assert!(none.validate_contains("hey"));
+        assert!(none.validate_does_not_contain("hey"));
+        let none: Option<Option<String>> = Some(None);
+        assert!(none.validate_does_not_contain("hey"));
+    }
+
+    #[test]
+    fn test_validate_does_not_contain_option_some_still_checked() {
+        let some = Some("hey".to_string());
+        assert!(!some.validate_does_not_contain("e"));
+        assert!(some.validate_does_not_contain("bob"));
     }
 
     #[test]

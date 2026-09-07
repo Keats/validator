@@ -4,6 +4,11 @@ use std::hash::BuildHasher;
 
 pub trait ValidateContains {
     fn validate_contains(&self, needle: &str) -> bool;
+
+    /// `true` when there is no value to check, so contains-style rules are skipped.
+    fn contains_is_absent(&self) -> bool {
+        false
+    }
 }
 
 impl ValidateContains for String {
@@ -22,6 +27,10 @@ where
         } else {
             true
         }
+    }
+
+    fn contains_is_absent(&self) -> bool {
+        self.as_ref().is_none_or(T::contains_is_absent)
     }
 }
 
