@@ -1,3 +1,5 @@
+use std::num::NonZero;
+
 /// Validates that the given `value` is inside the defined range.
 /// The `max`, `min`, `exclusive_max` and `exclusive_min` parameters are
 /// optional and will only be validated if they are not `None`
@@ -130,18 +132,64 @@ macro_rules! impl_val_range {
     };
 }
 
-impl_val_range!(u8);
-impl_val_range!(u16);
-impl_val_range!(u32);
-impl_val_range!(u64);
-impl_val_range!(u128);
-impl_val_range!(usize);
-impl_val_range!(i8);
-impl_val_range!(i16);
-impl_val_range!(i32);
-impl_val_range!(i64);
-impl_val_range!(i128);
-impl_val_range!(isize);
+macro_rules! impl_val_range_nz {
+    ($t:tt) => {
+        impl_val_range!($t);
+
+        impl ValidateRange<NonZero<$t>> for NonZero<$t> {
+            fn greater_than(&self, max: NonZero<$t>) -> Option<bool> {
+                Some(self > &max)
+            }
+
+            fn less_than(&self, min: NonZero<$t>) -> Option<bool> {
+                Some(self < &min)
+            }
+        }
+
+        impl ValidateRange<$t> for NonZero<$t> {
+            fn greater_than(&self, max: $t) -> Option<bool> {
+                Some(self.get() > max)
+            }
+
+            fn less_than(&self, min: $t) -> Option<bool> {
+                Some(self.get() < min)
+            }
+        }
+
+        impl ValidateRange<NonZero<$t>> for Option<NonZero<$t>> {
+            fn greater_than(&self, max: NonZero<$t>) -> Option<bool> {
+                self.map(|r| r > max)
+            }
+
+            fn less_than(&self, min: NonZero<$t>) -> Option<bool> {
+                self.map(|r| r < min)
+            }
+        }
+
+        impl ValidateRange<$t> for Option<NonZero<$t>> {
+            fn greater_than(&self, max: $t) -> Option<bool> {
+                self.map(|r| r.get() > max)
+            }
+
+            fn less_than(&self, min: $t) -> Option<bool> {
+                self.map(|r| r.get() < min)
+            }
+        }
+    };
+}
+
+impl_val_range_nz!(u8);
+impl_val_range_nz!(u16);
+impl_val_range_nz!(u32);
+impl_val_range_nz!(u64);
+impl_val_range_nz!(u128);
+impl_val_range_nz!(usize);
+impl_val_range_nz!(i8);
+impl_val_range_nz!(i16);
+impl_val_range_nz!(i32);
+impl_val_range_nz!(i64);
+impl_val_range_nz!(i128);
+impl_val_range_nz!(isize);
 impl_val_range!(f32);
 impl_val_range!(f64);
 
@@ -233,5 +281,27 @@ mod tests {
         assert!(none.validate_range(Some(1), Some(10), None, None));
         assert!(none.validate_range(Some(1), None, None, Some(10)));
         assert!(none_none.validate_range(Some(1), Some(10), None, None));
+    }
+
+    #[test]
+    fn test_nonzero() {
+        use std::num::NonZeroU16;
+
+        let nz5 = NonZeroU16::new(5).unwrap();
+
+        assert!(nz5.validate_range(
+            Some(NonZeroU16::new(1).unwrap()),
+            Some(NonZeroU16::new(10).unwrap()),
+            None,
+            None
+        ));
+        assert!(!nz5.validate_range(
+            Some(NonZeroU16::new(6).unwrap()),
+            Some(NonZeroU16::new(10).unwrap()),
+            None,
+            None
+        ));
+        assert!(nz5.validate_range(Some(1), Some(10), None, None));
+        assert!(!nz5.validate_range(Some(6), Some(10), None, None));
     }
 }
