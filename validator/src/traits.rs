@@ -16,6 +16,12 @@ impl<T: Validate> Validate for &T {
     }
 }
 
+impl<T: Validate> Validate for Box<T> {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        T::validate(self)
+    }
+}
+
 macro_rules! impl_validate_list {
     ($container:ty) => {
         impl<T: Validate> Validate for $container {
