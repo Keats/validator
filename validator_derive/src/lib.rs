@@ -27,8 +27,11 @@ mod tokens;
 mod types;
 mod utils;
 
-impl ToTokens for ValidateField {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+impl ValidateField {
+    fn quote_tokens(
+        &self,
+        field_option_counts: &std::collections::HashMap<String, u8>,
+    ) -> proc_macro2::TokenStream {
         let field_name = self.ident.clone().unwrap();
         let field_name_str = self.ident.clone().unwrap().to_string();
 
@@ -167,12 +170,23 @@ impl ToTokens for ValidateField {
 
         // Must match validation
         let must_match = if let Some(must_match) = self.must_match.clone() {
-            // TODO: handle option for other
+            let field_ref = if self.number_options() == 0 || is_number {
+                quote!(&#actual_field)
+            } else {
+                quote!(#actual_field)
+            };
+            let other_ident = must_match
+                .other
+                .get_ident()
+                .expect("Cannot get ident from `other` field value")
+                .to_string();
+            let other_number_options = field_option_counts.get(&other_ident).copied().unwrap_or(0);
             wrapper_closure(must_match_tokens(
                 &self.crate_name,
                 must_match,
-                &actual_field,
+                &field_ref,
                 &field_name_str,
+                other_number_options,
             ))
         } else {
             quote!()
@@ -219,7 +233,7 @@ impl ToTokens for ValidateField {
             quote!()
         };
 
-        tokens.extend(quote! {
+        quote! {
             #length
             #email
             #card
@@ -234,7 +248,7 @@ impl ToTokens for ValidateField {
             #regex
             #custom
             #nested
-        });
+        }
     }
 }
 
@@ -313,14 +327,17 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!(())
     };
 
+    let all_fields: Vec<ValidateField> =
+        validation_data.data.take_struct().unwrap().fields.into_iter().map(|f| f.parsed).collect();
+
+    let field_option_counts: std::collections::HashMap<String, u8> = all_fields
+        .iter()
+        .filter_map(|f| f.ident.as_ref().map(|id| (id.to_string(), f.number_options())))
+        .collect();
+
     // get all the fields to quote them below
-    let mut validation_fields: Vec<ValidateField> = validation_data
-        .data
-        .take_struct()
-        .unwrap()
-        .fields
+    let mut validation_fields: Vec<ValidateField> = all_fields
         .into_iter()
-        .map(|f| f.parsed)
         // skip fields with #[validate(skip)] attribute
         .filter(|f| if let Some(s) = f.skip { !s } else { true })
         .map(|f| ValidateField { crate_name: crate_name.clone(), ..f })
@@ -391,6 +408,9 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         quote!()
     };
 
+    let validation_field_tokens: Vec<proc_macro2::TokenStream> =
+        validation_fields.iter().map(|f| f.quote_tokens(&field_option_counts)).collect();
+
     quote!(
         #argless_validation
 
@@ -404,7 +424,7 @@ pub fn derive_validation(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 
                 let mut errors = #crate_name::ValidationErrors::new();
 
-                #(#validation_fields)*
+                #(#validation_field_tokens)*
 
                 #schema
 
