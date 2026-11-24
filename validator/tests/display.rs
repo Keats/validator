@@ -52,4 +52,32 @@ mod tests {
         let err = format!("{}", bad_baz.validate().unwrap_err());
         assert_eq!(err, "baz[0].foo: Please provide a valid foo!");
     }
+
+    #[derive(Validate)]
+    struct Pagination {
+        #[validate(range(min = 1, message = "Page must be greater than 0."))]
+        page: u64,
+        #[validate(range(min = 1, max = 100, message = "The page size must be between 1 and 100."))]
+        size: u64,
+    }
+
+    #[derive(Validate)]
+    struct Query {
+        #[validate(nested)]
+        pagination: Pagination,
+    }
+
+    #[test]
+    fn test_nested_multiple_field_errors_are_delimited() {
+        let q = Query {
+            pagination: Pagination { page: 0, size: 0 },
+        };
+        let err = format!("{}", q.validate().unwrap_err());
+        assert!(
+            err.contains('\n'),
+            "multiple nested field errors should be separated by a newline, got: {err:?}"
+        );
+        assert!(err.contains("pagination.page:"));
+        assert!(err.contains("pagination.size:"));
+    }
 }

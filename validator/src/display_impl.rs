@@ -25,10 +25,14 @@ fn display_errors(
         let mut full_path = String::new();
         write!(&mut full_path, "{path}.")?;
         let base_len = full_path.len();
-        for (path, err) in errs.errors() {
+        let len = errs.errors().len();
+        for (idx, (path, err)) in errs.errors().iter().enumerate() {
             write!(&mut full_path, "{path}")?;
             display_errors(fmt, err, &full_path)?;
             full_path.truncate(base_len);
+            if idx + 1 < len {
+                writeln!(fmt)?;
+            }
         }
         Ok(())
     }
@@ -51,10 +55,14 @@ fn display_errors(
             let mut full_path = String::new();
             write!(&mut full_path, "{path}")?;
             let base_len = full_path.len();
-            for (idx, err) in errs.iter() {
+            let len = errs.len();
+            for (i, (idx, err)) in errs.iter().enumerate() {
                 write!(&mut full_path, "[{idx}]")?;
                 display_struct(fmt, err, &full_path)?;
                 full_path.truncate(base_len);
+                if i + 1 < len {
+                    writeln!(fmt)?;
+                }
             }
             Ok(())
         }

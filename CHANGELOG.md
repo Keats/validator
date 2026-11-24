@@ -1,5 +1,9 @@
 ## Changelog
 
+## Unreleased
+
+- Separate nested struct field validation errors with a newline when formatting `ValidationErrors`
+
 ## 0.21.0 (2026/07/09)
 
 - Replace dep proc-macro-error2 with proc-macro-error3
